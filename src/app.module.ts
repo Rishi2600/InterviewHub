@@ -6,9 +6,10 @@ import { UsersService } from './users/users.service';
 import { UsersModule } from './users/users.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { ChatModule } from './chat/chat.module';
+import { ContestsModule } from './contests/contests.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, RoomsModule, ChatModule],
+  imports: [AuthModule, UsersModule, RoomsModule, ChatModule, ContestsModule],
   controllers: [AppController],
   providers: [AppService, UsersService],
 })
