@@ -7,9 +7,10 @@ import { UsersModule } from './users/users.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { ChatModule } from './chat/chat.module';
 import { ContestsModule } from './contests/contests.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, RoomsModule, ChatModule, ContestsModule],
+  imports: [AuthModule, UsersModule, RoomsModule, ChatModule, ContestsModule, LeaderboardModule],
   controllers: [AppController],
   providers: [AppService, UsersService],
 })
