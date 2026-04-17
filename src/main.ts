@@ -83,7 +83,7 @@ async function bootstrap() {
   // 6. Start
   const port = config.get<number>('PORT') ?? 3000;
   await app.listen(port);
-  console.log(`App running at http://localhost:${port}/api/v1`);
+  console.log(`Listening at http://localhost:${port}/api/v1`);
 }
 
 bootstrap();
