@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { LeaderboardService } from './leaderboard.service';
-import { LeaderboardGateway } from './leaderboard/leaderboard.gateway';
+import { LeaderboardGateway } from './leaderboard.gateway';
 
 @Module({
-  providers: [LeaderboardService, LeaderboardGateway]
+  providers: [LeaderboardService, LeaderboardGateway],
+  exports: [LeaderboardService], // ContestsModule needs LeaderboardService
 })
 export class LeaderboardModule {}
