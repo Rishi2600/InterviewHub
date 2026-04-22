@@ -7,6 +7,7 @@ export type ContestEntryDocument = ContestEntry & Document;
 
 @Schema({ timestamps: true })
 export class ContestEntry {
+
   @Prop({ type: Types.ObjectId, ref: 'Contest', required: true })
   contestId: Types.ObjectId;
 
@@ -24,7 +25,9 @@ export class ContestEntry {
   score: number;
 
   // Final rank computed when contest ends
-  @Prop({ default: null })
+  // Must use { type: Number } explicitly — Mongoose cannot infer
+  // the type from a TypeScript union (number | null)
+  @Prop({ type: Number, default: null })
   rank: number | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Room', required: true })
