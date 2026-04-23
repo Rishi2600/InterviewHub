@@ -4,7 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
-import { UserDocument } from '../users/schemas/user.schema';
+import type { UserDocument } from '../users/schemas/user.schema';
 
 // All routes here are prefixed with /api/v1/auth (global prefix + this prefix)
 @Controller('auth')
