@@ -13,7 +13,7 @@ import { RoomsModule } from '../rooms/rooms.module';
       { name: Contest.name, schema: ContestSchema },
       { name: ContestEntry.name, schema: ContestEntrySchema },
     ]),
-    LeaderboardModule, // ContestsService calls LeaderboardService to award scores
+    LeaderboardModule,
     RoomsModule,
   ],
   controllers: [ContestsController],
