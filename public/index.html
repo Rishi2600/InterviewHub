@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InterviewHub — Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h1 { font-size: 22px; color: #fff; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 28px; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #111; border-radius: 8px; padding: 4px; }
+    .tab {
+      flex: 1; padding: 8px; border: none; border-radius: 6px;
+      background: transparent; color: #666; font-size: 13px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .tab.active { background: #2a2a2a; color: #fff; }
+
+    .form { display: none; flex-direction: column; gap: 14px; }
+    .form.active { display: flex; }
+
+    label { font-size: 12px; color: #888; margin-bottom: 4px; display: block; }
+
+    input, select {
+      width: 100%; padding: 10px 12px;
+      background: #111; border: 1px solid #2a2a2a; border-radius: 8px;
+      color: #e0e0e0; font-size: 14px; outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus { border-color: #444; }
+    select option { background: #1a1a1a; }
+
+    button[type="submit"] {
+      padding: 11px; background: #fff; color: #000;
+      border: none; border-radius: 8px; font-size: 14px;
+      font-weight: 500; cursor: pointer; margin-top: 4px;
+      transition: opacity 0.15s;
+    }
+    button[type="submit"]:hover { opacity: 0.88; }
+    button[type="submit"]:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .error {
+      display: none; background: #2a1010; border: 1px solid #5a2020;
+      color: #f87171; padding: 10px 12px; border-radius: 8px; font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>InterviewHub</h1>
+  <p class="subtitle">Real-time interview platform</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Login</button>
+    <button class="tab" onclick="switchTab('register')">Register</button>
+  </div>
+
+  <!-- Login form -->
+  <form class="form active" id="loginForm">
+    <div>
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com" required />
+    </div>
+    <div>
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••" required />
+    </div>
+    <div id="loginError" class="error"></div>
+    <button type="submit">Login</button>
+  </form>
+
+  <!-- Register form -->
+  <form class="form" id="registerForm">
+    <div>
+      <label>Username</label>
+      <input type="text" id="regUsername" placeholder="johndoe" required />
+    </div>
+    <div>
+      <label>Email</label>
+      <input type="email" id="regEmail" placeholder="you@example.com" required />
+    </div>
+    <div>
+      <label>Password</label>
+      <input type="password" id="regPassword" placeholder="min 6 characters" required />
+    </div>
+    <div>
+      <label>Role</label>
+      <select id="regRole">
+        <option value="candidate">Candidate</option>
+        <option value="interviewer">Interviewer</option>
+      </select>
+    </div>
+    <div id="registerError" class="error"></div>
+    <button type="submit">Create account</button>
+  </form>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  // Already logged in — go straight to the dashboard
+  if (getToken()) window.location.href = '/room.html';
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0) === (tab === 'login'));
+    });
+    document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+    document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError('loginError');
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+      const data = await api('POST', '/auth/login', {
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPassword').value,
+      });
+      saveSession(data.access_token, data.user);
+      window.location.href = '/room.html';
+    } catch (err) {
+      showError('loginError', err.message);
+      btn.disabled = false;
+      btn.textContent = 'Login';
+    }
+  });
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError('registerError');
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      const data = await api('POST', '/auth/register', {
+        username: document.getElementById('regUsername').value,
+        email: document.getElementById('regEmail').value,
+        password: document.getElementById('regPassword').value,
+        role: document.getElementById('regRole').value,
+      });
+      saveSession(data.access_token, data.user);
+      window.location.href = '/room.html';
+    } catch (err) {
+      showError('registerError', err.message);
+      btn.disabled = false;
+      btn.textContent = 'Create account';
+    }
+  });
+</script>
+</body>
+</html>
