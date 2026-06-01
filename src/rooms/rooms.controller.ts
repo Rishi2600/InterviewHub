@@ -13,39 +13,45 @@ import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomStateDto } from './dto/update-room-state.dto';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
+import { RolesGuard } from '../common/roles.guard';
+import { RoomOwnerGuard } from '../common/room-owner.guard';
+import { Roles } from '../common/roles.decorator';
 import { CurrentUser } from '../common/current-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
 
 @Controller('rooms')
-@UseGuards(JwtAuthGuard) // every route in this controller requires a valid JWT
+@UseGuards(JwtAuthGuard)
 export class RoomsController {
   constructor(private roomsService: RoomsService) {}
 
-  // POST /api/v1/rooms
-  // Only interviewers can create — enforced inside RoomsService.create()
+  // Guard chain: JwtAuthGuard → RolesGuard → @Roles('interviewer')
+  // Only interviewers can create rooms
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('interviewer')
   create(@Body() dto: CreateRoomDto, @CurrentUser() user: UserDocument) {
     return this.roomsService.create(dto, user);
   }
 
-  // GET /api/v1/rooms/:id
-  // Any authenticated user can fetch a room by its MongoDB _id
+  // Guard chain: JwtAuthGuard only
+  // Any authenticated user can view a room
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.roomsService.findById(id);
   }
 
-  // POST /api/v1/rooms/:code/join
-  // Candidate enters the 5-char join code to enter a room
-  // :code is the short code (e.g. "XK92T"), not the MongoDB _id
+  // Guard chain: JwtAuthGuard only
+  // Any authenticated user can join via a code
   @Post(':code/join')
   join(@Param('code') code: string, @CurrentUser() user: UserDocument) {
     return this.roomsService.join(code, user);
   }
 
-  // PATCH /api/v1/rooms/:id/state
-  // Interviewer transitions: waiting → active → ended
+  // Guard chain: JwtAuthGuard → RolesGuard → RoomOwnerGuard
+  // Must be an interviewer AND the creator of this specific room
   @Patch(':id/state')
+  @UseGuards(RolesGuard, RoomOwnerGuard)
+  @Roles('interviewer')
   changeState(
     @Param('id') id: string,
     @Body() dto: UpdateRoomStateDto,
