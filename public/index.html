@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InterviewHub — Sign in</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>InterviewHub</h1>
+    <p class="sub">Register or sign in to continue</p>
+
+    <div class="tabs">
+      <button id="tab-login" class="tab active">Login</button>
+      <button id="tab-register" class="tab">Register</button>
+    </div>
+
+    <form id="login-form" class="form">
+      <label>Email <input type="email" id="login-email" required /></label>
+      <label>Password <input type="password" id="login-password" required /></label>
+      <button type="submit" class="primary">Sign in</button>
+    </form>
+
+    <form id="register-form" class="form hidden">
+      <label>Username <input type="text" id="reg-username" required /></label>
+      <label>Email <input type="email" id="reg-email" required /></label>
+      <label>Password <input type="password" id="reg-password" minlength="6" required /></label>
+      <label>Role
+        <select id="reg-role">
+          <option value="candidate">Candidate</option>
+          <option value="interviewer">Interviewer</option>
+        </select>
+      </label>
+      <button type="submit" class="primary">Create account</button>
+    </form>
+
+    <p id="msg" class="msg"></p>
+
+    <nav class="links">
+      <a href="/room.html">Go to a room &rarr;</a>
+      <a href="/leaderboard.html">Contests &amp; leaderboard &rarr;</a>
+    </nav>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const msg = $('msg');
+
+    $('tab-login').onclick = () => switchTab('login');
+    $('tab-register').onclick = () => switchTab('register');
+    function switchTab(which) {
+      $('tab-login').classList.toggle('active', which === 'login');
+      $('tab-register').classList.toggle('active', which === 'register');
+      $('login-form').classList.toggle('hidden', which !== 'login');
+      $('register-form').classList.toggle('hidden', which !== 'register');
+      msg.textContent = '';
+    }
+
+    $('login-form').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const res = await api('/auth/login', 'POST', {
+          email: $('login-email').value,
+          password: $('login-password').value,
+        });
+        saveSession(res.accessToken, res.user);
+        msg.className = 'msg ok';
+        msg.textContent = 'Signed in as ' + res.user.username + ' (' + res.user.role + ')';
+      } catch (err) {
+        msg.className = 'msg err';
+        msg.textContent = err.message;
+      }
+    };
+
+    $('register-form').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const res = await api('/auth/register', 'POST', {
+          username: $('reg-username').value,
+          email: $('reg-email').value,
+          password: $('reg-password').value,
+          role: $('reg-role').value,
+        });
+        saveSession(res.accessToken, res.user);
+        msg.className = 'msg ok';
+        msg.textContent = 'Account created — signed in as ' + res.user.username;
+      } catch (err) {
+        msg.className = 'msg err';
+        msg.textContent = err.message;
+      }
+    };
+
+    const s = getSession();
+    if (s.user) {
+      msg.className = 'msg ok';
+      msg.textContent = 'Already signed in as ' + s.user.username + ' (' + s.user.role + ')';
+    }
+  </script>
+</body>
+</html>
