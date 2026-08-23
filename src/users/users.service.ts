@@ -48,14 +48,6 @@ export class UsersService {
     return user;
   }
 
-  async setAvatarBase64(id: string, avatarBase64: string): Promise<UserDocument> {
-    const user = await this.userModel
-      .findByIdAndUpdate(id, { avatarBase64 }, { new: true })
-      .exec();
-    if (!user) throw new NotFoundException('User not found');
-    return user;
-  }
-
   /** Strips the password hash before returning a user to a client. */
   toSafe(user: UserDocument) {
     return {

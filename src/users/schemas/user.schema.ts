@@ -24,10 +24,6 @@ export class User {
 
   @Prop({ type: String, default: null })
   avatarUrl: string | null;
-
-  // Kept for the Base64 learning contrast endpoint. Marked for removal (roadmap C1).
-  @Prop({ type: String, default: null })
-  avatarBase64: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

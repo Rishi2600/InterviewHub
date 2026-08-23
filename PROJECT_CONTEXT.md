@@ -31,10 +31,10 @@ through `draft → active → ended`.
 ### It is a learning project
 
 Worth knowing up front, because it explains several design choices: the commit
-history includes messages like `test: learning guards -1/-2/-3`, and
-[`src/users/schemas/user.schema.ts`](src/users/schemas/user.schema.ts) carries a
-comment about "the Base64 learning contrast endpoint" that is "slated for
-removal (roadmap C1)". The codebase is a deliberately broad tour of NestJS —
+history includes messages like `test: learning guards -1/-2/-3`, and until
+roadmap C1 removed it, `src/users/schemas/user.schema.ts` carried a "Base64
+learning contrast endpoint" kept purely to demonstrate the wrong way to store
+uploads. The codebase is a deliberately broad tour of NestJS —
 guards, interceptors, filters, pipes, gateways, custom decorators, Mongoose
 schemas, multer, Redis — rather than a minimal solution to a business problem.
 
@@ -164,7 +164,7 @@ results.
 
 | Collection        | Notes                                                                        |
 | ----------------- | ---------------------------------------------------------------------------- |
-| `users`           | `passwordHash`, `role`, `avatarUrl`, plus a legacy `avatarBase64`             |
+| `users`           | `passwordHash`, `role`, `avatarUrl`                                           |
 | `rooms`           | `code` (unique), `ownerId`, `state`, **embedded** `participants[]`, `pinnedQuestion` |
 | `messages`        | `roomId`, `senderId` (null for system), **denormalized** `senderName`, `type` |
 | `contests`        | `ownerId`, `state`, `endedAt`                                                 |
@@ -182,14 +182,14 @@ Both are enforced server-side, not just in the UI:
 
 ### 4.7 File uploads
 
-Two avatar endpoints, kept side by side on purpose:
+One avatar endpoint:
 
-- `POST /users/:id/avatar` — **the correct one.** multer `diskStorage` writes
-  to `./uploads/avatars`, only the URL goes into Mongo. Image mimetypes only,
-  2 MB cap.
-- `POST /users/:id/avatar/base64` — **a learning contrast.** Buffers in RAM and
-  stores a Base64 data URI in Mongo, capped at 64 KB. The source comments say
-  it exists to demonstrate why this is a bad idea, and is slated for removal.
+- `POST /users/:id/avatar` — multer `diskStorage` writes to `./uploads/avatars`,
+  only the URL goes into Mongo. Image mimetypes only, 2 MB cap.
+
+A second endpoint, `POST /users/:id/avatar/base64`, used to sit beside it as a
+deliberate "learning contrast" — it buffered uploads in RAM and stored a Base64
+data URI in Mongo. It was removed under roadmap C1.
 
 ---
 
@@ -222,7 +222,6 @@ values (defaults to `candidate`).
 | ------ | -------------------------- | ----------------------------------------- |
 | GET    | `/users/:id`               | Safe user (no password hash)              |
 | POST   | `/users/:id/avatar`        | multipart, field `file`. Self-only.       |
-| POST   | `/users/:id/avatar/base64` | multipart, field `file`. Self-only.       |
 
 **Rooms** (Bearer)
 
@@ -352,8 +351,11 @@ machines, or either gateway.
 [`leaderboard.service.spec.ts`](src/leaderboard/leaderboard.service.spec.ts)
 both open with `//@ts-nocheck`, so they are excluded from type checking.
 
-**Marked for removal.** The Base64 avatar endpoint and the `avatarBase64` field
-are annotated "roadmap C1".
+**Stale `avatarBase64` data.** The Base64 avatar endpoint and the schema field
+(roadmap C1) have been removed from the code, but `users` documents written
+before the removal may still carry an `avatarBase64` value in MongoDB. Mongoose
+no longer maps it, so it is inert — but the stored data (potentially large
+Base64 blobs) is still on disk. No migration has been written.
 
 ---
 
@@ -468,7 +470,6 @@ Because `role` is baked into the token at login and `JWT_EXPIRES_IN=1d`:
 | **Weak password policy** | `@MinLength(6)` only — no complexity or breach-list check. |
 | **Unbounded score delta** | `ScoreDto.delta` is `@IsInt()` with no range. Host-only, so impact is low. |
 | **Unvalidated id → 500** | `UsersService.findById` does not call `Types.ObjectId.isValid`, so a malformed id raises a Mongoose `CastError` and a 500 rather than a 404. Rooms and contests do validate. |
-| **Base64 avatar endpoint** | Buffers uploads in RAM and stores them in Mongo. Capped at 64 KB, and already marked for removal. |
 | **`@ts-nocheck`** | [`leaderboard.gateway.ts`](src/leaderboard/leaderboard.gateway.ts) and its spec are excluded from type checking, which can conceal defects. |
 
 ### 7.8 What is done correctly
@@ -681,10 +682,8 @@ Roughly in priority order:
 2. **Unblock MongoDB** so the app can actually be exercised end to end.
 3. **Decide the fate of `public/`** — delete it and the `ServeStaticModule`
    entry for it, or keep it deliberately.
-4. **Remove the Base64 avatar endpoint** and the `avatarBase64` field
-   ("roadmap C1").
-5. **Remove the two `@ts-nocheck` pragmas** and fix the underlying types.
-6. **Add tests** for guards, both state machines, and the gateways.
-7. **Add list endpoints** (`GET /rooms`, `GET /contests`) so clients need not
+4. **Remove the two `@ts-nocheck` pragmas** and fix the underlying types.
+5. **Add tests** for guards, both state machines, and the gateways.
+6. **Add list endpoints** (`GET /rooms`, `GET /contests`) so clients need not
    keep a localStorage index.
-8. **Commit `frontend/`.**
+7. **Commit `frontend/`.**
