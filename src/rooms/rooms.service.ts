@@ -9,6 +9,8 @@ import { Room, RoomDocument, RoomState } from './schemas/room.schema';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
 const CODE_LENGTH = 5;
+// Caps the list endpoint so a long-lived account cannot pull an unbounded set.
+const LIST_LIMIT = 50;
 
 @Injectable()
 export class RoomsService {
@@ -45,6 +47,20 @@ export class RoomsService {
     return room.save();
   }
 
+  /**
+   * Rooms the user owns or has joined, most recently updated first. Scoped to
+   * the caller: there is deliberately no "all rooms" listing.
+   */
+  listForUser(user: { userId: string }): Promise<RoomDocument[]> {
+    if (!Types.ObjectId.isValid(user.userId)) return Promise.resolve([]);
+    const uid = new Types.ObjectId(user.userId);
+    return this.roomModel
+      .find({ $or: [{ ownerId: uid }, { 'participants.userId': uid }] })
+      .sort({ updatedAt: -1 })
+      .limit(LIST_LIMIT)
+      .exec();
+  }
+
   /** Used by guards; returns the raw doc (or null) without throwing. */
   findByIdRaw(id: string): Promise<RoomDocument | null> {
     if (!Types.ObjectId.isValid(id)) return Promise.resolve(null);
@@ -55,6 +71,16 @@ export class RoomsService {
     const room = await this.findByIdRaw(id);
     if (!room) throw new NotFoundException('Room not found');
     return room;
+  }
+
+  /**
+   * The single ownership rule for rooms: the creator, or any admin. Shared by
+   * RoomOwnerGuard (HTTP) and ChatGateway (WebSocket) so both transports agree
+   * on who may mutate a room.
+   */
+  isOwnedBy(room: RoomDocument, user: { userId: string; role: string }): boolean {
+    if (user.role === 'admin') return true;
+    return room.ownerId.toString() === user.userId;
   }
 
   async findByCode(code: string): Promise<RoomDocument> {

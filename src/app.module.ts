@@ -29,18 +29,13 @@ import { AppController } from './app.controller';
       }),
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
-    // Serve uploaded files at /uploads/** and the frontend at /
-    ServeStaticModule.forRoot(
-      {
-        rootPath: join(__dirname, '..', 'uploads'),
-        serveRoot: '/uploads',
-        serveStaticOptions: { index: false },
-      },
-      {
-        rootPath: join(__dirname, '..', 'public'),
-        serveRoot: '/',
-      },
-    ),
+    // Serve uploaded files at /uploads/**. The React client in frontend/ is
+    // built and served separately, so nothing is served at /.
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+      serveStaticOptions: { index: false },
+    }),
     RedisModule,
     AuthModule,
     UsersModule,

@@ -5,10 +5,8 @@ import { toast } from 'sonner'
 import { ArrowRight, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { useAuth } from '@/hooks/useAuth'
 import { joinRoomByCode } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
-import { rememberRecent } from '@/lib/recents'
 
 const CODE_LENGTH = 5
 // Matches the backend's unambiguous alphabet (no I, O, 0, 1).
@@ -16,14 +14,12 @@ const ALLOWED = /[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/
 
 export function JoinRoom() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: (value: string) => joinRoomByCode(value),
     onSuccess: (room) => {
-      if (user) rememberRecent(user.id, { kind: 'room', id: room._id, title: room.title, code: room.code })
       toast.success(`Joined “${room.title}”`)
       navigate(`/rooms/${room._id}`)
     },

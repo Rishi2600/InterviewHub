@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, QueryFilter, Types } from 'mongoose';
 import { Contest, ContestDocument, ContestState } from './schemas/contest.schema';
 import {
   ContestEntry,
@@ -13,6 +13,9 @@ import {
 } from './schemas/contest-entry.schema';
 import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import { LeaderboardGateway } from '../leaderboard/leaderboard.gateway';
+
+// Caps the list endpoint so a long-lived account cannot pull an unbounded set.
+const LIST_LIMIT = 50;
 
 @Injectable()
 export class ContestsService {
@@ -31,6 +34,37 @@ export class ContestsService {
       ownerId: new Types.ObjectId(ownerId),
       state: 'draft',
     });
+  }
+
+  /**
+   * Contests the user owns or has joined, newest first, optionally narrowed to
+   * one state. Scoped to the caller: there is deliberately no "all contests"
+   * listing. Joined contests are resolved through the user's entries.
+   */
+  async listForUser(
+    user: { userId: string },
+    state?: ContestState,
+  ): Promise<ContestDocument[]> {
+    if (!Types.ObjectId.isValid(user.userId)) return [];
+    const uid = new Types.ObjectId(user.userId);
+
+    const entries = await this.entryModel
+      .find({ userId: uid })
+      .select('contestId')
+      .lean()
+      .exec();
+    const joinedIds = entries.map((e) => e.contestId);
+
+    const filter: QueryFilter<Contest> = {
+      $or: [{ ownerId: uid }, { _id: { $in: joinedIds } }],
+    };
+    if (state) filter.state = state;
+
+    return this.contestModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(LIST_LIMIT)
+      .exec();
   }
 
   async findById(id: string): Promise<ContestDocument> {

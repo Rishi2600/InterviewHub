@@ -19,7 +19,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { useChatSocket } from '@/hooks/useChatSocket'
 import { getRoom, setRoomState } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
-import { rememberRecent } from '@/lib/recents'
 import { copyToClipboard } from '@/lib/utils'
 import type { RoomState } from '@/types'
 
@@ -48,17 +47,6 @@ export function Room() {
     if (room) chat.setPinnedQuestion(room.pinnedQuestion)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?._id])
-
-  useEffect(() => {
-    if (room && user) {
-      rememberRecent(user.id, {
-        kind: 'room',
-        id: room._id,
-        title: room.title,
-        code: room.code,
-      })
-    }
-  }, [room, user])
 
   const stateMutation = useMutation({
     mutationFn: (state: RoomState) => setRoomState(id!, state),

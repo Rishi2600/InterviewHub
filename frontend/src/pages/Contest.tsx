@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -21,7 +21,6 @@ import {
   scoreContestant,
 } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
-import { rememberRecent } from '@/lib/recents'
 
 export function Contest() {
   const { id } = useParams<{ id: string }>()
@@ -57,12 +56,6 @@ export function Contest() {
   const isOwner = Boolean(contest && user && contest.ownerId === user.id)
   const canHost = isOwner || user?.role === 'admin'
   const hasJoined = entries.some((e) => e.userId === user?.id)
-
-  useEffect(() => {
-    if (contest && user) {
-      rememberRecent(user.id, { kind: 'contest', id: contest._id, title: contest.title })
-    }
-  }, [contest, user])
 
   function refreshEntries() {
     void queryClient.invalidateQueries({ queryKey: ['contest-entries', id] })

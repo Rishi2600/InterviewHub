@@ -7,6 +7,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsJwtGuard } from '../common/guards/ws-jwt.guard';
@@ -130,7 +131,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('question:pin')
-  async onPin(@MessageBody() body: PinQuestionWsDto) {
+  async onPin(
+    @MessageBody() body: PinQuestionWsDto,
+    @WsCurrentUser() user: AuthUser,
+  ) {
+    await this.assertRoomOwner(body.roomId, user);
     const room = await this.roomsService.pinQuestion(body.roomId, body.question ?? '');
     this.server
       .to(this.roomChannel(body.roomId))
@@ -139,12 +144,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('question:unpin')
-  async onUnpin(@MessageBody() body: RoomEventDto) {
+  async onUnpin(
+    @MessageBody() body: RoomEventDto,
+    @WsCurrentUser() user: AuthUser,
+  ) {
+    await this.assertRoomOwner(body.roomId, user);
     await this.roomsService.unpinQuestion(body.roomId);
     this.server
       .to(this.roomChannel(body.roomId))
       .emit('question:unpinned', {});
     return { ok: true };
+  }
+
+  /**
+   * Socket-side counterpart to RoomOwnerGuard. The HTTP pin/unpin routes are
+   * guarded there; without this the gateway would let any authenticated
+   * participant pin. Throws before any mutation, so the room is left untouched
+   * and WsExceptionsFilter emits 'error' to the caller.
+   */
+  private async assertRoomOwner(roomId: string, user: AuthUser): Promise<void> {
+    const room = await this.roomsService.findById(roomId);
+    if (!this.roomsService.isOwnedBy(room, user)) {
+      throw new WsException('You do not own this room');
+    }
   }
 
   private roomChannel(roomId: string): string {

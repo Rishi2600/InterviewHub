@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -13,6 +14,7 @@ import { Role } from '../common/enums/role.enum';
 import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator';
 import { ContestsService } from './contests.service';
 import { CreateContestDto } from './dto/create-contest.dto';
+import { ListContestsDto } from './dto/list-contests.dto';
 import { ScoreDto } from './dto/score.dto';
 
 @UseGuards(JwtAuthGuard)
@@ -25,6 +27,12 @@ export class ContestsController {
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateContestDto) {
     return this.contestsService.create(user.userId, dto.title);
+  }
+
+  // Contests the caller owns or has joined. Scoped to the caller, capped.
+  @Get()
+  list(@CurrentUser() user: AuthUser, @Query() query: ListContestsDto) {
+    return this.contestsService.listForUser(user, query.state);
   }
 
   @Get(':id')

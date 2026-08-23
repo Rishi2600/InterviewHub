@@ -31,6 +31,12 @@ export class RoomsController {
     return this.roomsService.create(user.userId, dto.title);
   }
 
+  // Rooms the caller owns or has joined. Scoped to the caller, capped.
+  @Get()
+  list(@CurrentUser() user: AuthUser) {
+    return this.roomsService.listForUser(user);
+  }
+
   @Get(':id')
   get(@Param('id') id: string) {
     return this.roomsService.findById(id);

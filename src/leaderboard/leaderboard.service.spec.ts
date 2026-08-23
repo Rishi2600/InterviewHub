@@ -1,5 +1,3 @@
-//@ts-nocheck
-
 import { LeaderboardService } from './leaderboard.service';
 
 describe('LeaderboardService (in-memory fallback)', () => {

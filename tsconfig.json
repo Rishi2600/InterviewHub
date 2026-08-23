@@ -20,5 +20,9 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "resolveJsonModule": true
-  }
+  },
+  // Without these, the backend build also sweeps in frontend/, which is a
+  // separate Vite project with its own tsconfig and JSX settings.
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist", "frontend"]
 }

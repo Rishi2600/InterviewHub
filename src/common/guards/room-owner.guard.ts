@@ -30,9 +30,7 @@ export class RoomOwnerGuard implements CanActivate {
       throw new NotFoundException('Room not found');
     }
 
-    if (user.role === 'admin') return true;
-
-    if (room.ownerId.toString() !== user.userId) {
+    if (!this.roomsService.isOwnedBy(room, user)) {
       throw new ForbiddenException('You do not own this room');
     }
     return true;

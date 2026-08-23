@@ -3,6 +3,7 @@ import type {
   AuthPayload,
   Contest,
   ContestEntry,
+  ContestState,
   HealthResponse,
   MeResponse,
   Role,
@@ -67,6 +68,11 @@ export function createRoom(title: string) {
   return http.post<Room>('/rooms', { title })
 }
 
+/** Rooms the current user owns or has joined. Scoped and capped server-side. */
+export function listRooms() {
+  return http.get<Room[]>('/rooms')
+}
+
 export function getRoom(id: string) {
   return http.get<Room>(`/rooms/${id}`)
 }
@@ -91,6 +97,13 @@ export function unpinQuestion(id: string) {
 
 export function createContest(title: string) {
   return http.post<Contest>('/contests', { title })
+}
+
+/** Contests the current user owns or has joined. Scoped and capped server-side. */
+export function listContests(state?: ContestState) {
+  return http.get<Contest[]>('/contests', {
+    params: state ? { state } : undefined,
+  })
 }
 
 export function getContest(id: string) {

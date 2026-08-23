@@ -74,16 +74,16 @@ Three quirks worth knowing, all handled at the API boundary:
   rank }`. The contest screen resolves display names from
   `GET /contests/:id/results`, whose entries do carry `username`, and falls
   back to a shortened id for anyone not yet in that roster.
-- **There are no list endpoints.** Rooms and contests are reachable only by id
-  or join code, so the dashboard keeps a per-user "recently visited" index in
-  `localStorage` (`src/lib/recents.ts`). It is a convenience cache, not a
-  source of truth — documents are always re-fetched on open.
+- **The list endpoints are scoped to the caller.** `GET /rooms` and
+  `GET /contests` return only what the current user owns or has joined, capped
+  server-side. The dashboard reads them directly; there is no client-side
+  "recently visited" cache any more.
 
 ## Structure
 
 ```
 src/
-  lib/          api.ts, endpoints.ts, session.ts, sockets.ts, recents.ts, utils.ts
+  lib/          api.ts, endpoints.ts, session.ts, sockets.ts, utils.ts
   context/      AuthContext.tsx
   hooks/        useAuth.ts, useChatSocket.ts, useLeaderboardSocket.ts
   components/

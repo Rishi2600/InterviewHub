@@ -80,7 +80,6 @@ interviewhub/
 │   └── leaderboard/        Redis/in-memory scoring, /leaderboard gateway
 │
 ├── frontend/               React client (Vite + TS) — see §8
-├── public/                 Legacy vanilla-JS frontend (see §6)
 ├── uploads/avatars/        Disk destination for avatar uploads (gitignored)
 ├── test/                   Jest e2e config + one health-controller spec
 ├── dist/                   Compiled backend output (gitignored)
@@ -228,6 +227,7 @@ values (defaults to `candidate`).
 | Method | Path                  | Notes                                   |
 | ------ | --------------------- | --------------------------------------- |
 | POST   | `/rooms`              | Interviewer/admin only                  |
+| GET    | `/rooms`              | Rooms the caller owns or joined. Max 50, newest activity first |
 | GET    | `/rooms/:id`          | —                                       |
 | POST   | `/rooms/:code/join`   | Join by 5-char code                     |
 | PATCH  | `/rooms/:id/state`    | Owner only. `{ state }`                 |
@@ -239,6 +239,7 @@ values (defaults to `candidate`).
 | Method | Path                     | Notes                                          |
 | ------ | ------------------------ | ---------------------------------------------- |
 | POST   | `/contests`              | Interviewer/admin only                         |
+| GET    | `/contests`              | Contests the caller owns or joined. Optional `?state=draft\|active\|ended`. Max 50, newest first |
 | GET    | `/contests/:id`          | —                                              |
 | GET    | `/contests/:id/results`  | Entries sorted by `finalScore`                 |
 | POST   | `/contests/:id/activate` | Owner/admin (checked in the service)           |
@@ -287,8 +288,9 @@ Any client has to handle these:
    concept, two field names.
 2. **The leaderboard payload has no usernames** — only ids. Display names must
    be resolved from `GET /contests/:id/results`, whose entries carry `username`.
-3. **There are no list endpoints.** Rooms and contests are reachable only by id
-   or join code. Nothing enumerates "my rooms".
+3. **The list endpoints are caller-scoped.** `GET /rooms` and `GET /contests`
+   return only what the current user owns or has joined, capped at 50. There is
+   deliberately no "all rooms" or "all contests" listing.
 
 ---
 
@@ -335,21 +337,26 @@ verified only by reading source and by compile/build checks.
 XSS chain in avatar upload. They are significant enough to have their own
 section.
 
-**Legacy frontend still served.** [`public/`](public/) holds the original
-vanilla-JS client (`index.html`, `room.html`, `leaderboard.html`, `app.js`,
-`styles.css`) and `app.module.ts` still serves it at `/` via
-`ServeStaticModule`. It is superseded by `frontend/` but has not been removed,
-so the backend root and the React dev server show different UIs.
+**Legacy frontend removed.** `public/` held the original vanilla-JS client and
+was served at `/` via `ServeStaticModule`. Both the directory and that
+`ServeStaticModule` entry are gone; only `/uploads` is still served statically.
+`frontend/` is now the only client.
 
-**Test coverage is thin.** Two spec files total: a `LeaderboardService`
-unit test covering the in-memory fallback, and an e2e spec that only asserts the
-health controller. There are no tests for auth, guards, room/contest state
-machines, or either gateway.
+**Test coverage.** Eight spec files: the `LeaderboardService` in-memory
+fallback, all four guards (`RolesGuard`, `SelfGuard`, `RoomOwnerGuard`,
+`WsJwtGuard`), both state machines (`RoomsService`, `ContestsService`), and
+`ChatGateway` pin authorization — plus an e2e spec asserting the health
+controller. There are still no tests for the auth module itself, the chat
+message path, or the leaderboard gateway.
 
-**`@ts-nocheck` in two files.**
+**`@ts-nocheck` removed — from three files, not two.**
 [`leaderboard.gateway.ts`](src/leaderboard/leaderboard.gateway.ts) and
 [`leaderboard.service.spec.ts`](src/leaderboard/leaderboard.service.spec.ts)
-both open with `//@ts-nocheck`, so they are excluded from type checking.
+type-check clean with no code changes; those two pragmas were masking nothing.
+[`auth.module.ts`](src/auth/auth.module.ts) also carried one, and it *was*
+hiding a real error: `JwtModule.registerAsync` types `expiresIn` as a narrow
+literal union that `ConfigService.get<string>()` cannot satisfy. Fixed with a
+named `ExpiresIn` type derived from `JwtModuleOptions`.
 
 **Stale `avatarBase64` data.** The Base64 avatar endpoint and the schema field
 (roadmap C1) have been removed from the code, but `users` documents written
@@ -385,7 +392,7 @@ the client and acts on it.
 | ----- | ----------- |
 | `room:join` | Any authenticated user can join **any** room by id — no participant check, no join code — and immediately receives `chat:history`: the last 100 messages. **Full interview transcript disclosure.** |
 | `chat:send` | Can post into any room, impersonating presence in an interview they were never invited to. Also unchecked against room state, so `ended` rooms still accept messages. |
-| `question:pin` / `question:unpin` | Can pin or unpin for the whole room. The HTTP equivalent *is* guarded by `RoomOwnerGuard` ([rooms.controller.ts:51-55](src/rooms/rooms.controller.ts#L51-L55)); the socket path ([chat.gateway.ts:132-148](src/chat/chat.gateway.ts#L132-L148)) is not. |
+| `question:pin` / `question:unpin` | **Fixed.** Both handlers now load the room and require ownership (or admin) via `RoomsService.isOwnedBy` before mutating, matching the HTTP routes' `RoomOwnerGuard`. A non-owner gets a WS `error` and the room is untouched. |
 | `leaderboard:join` | Any user can subscribe to any contest's live board. Lower impact, same root cause. |
 
 The React client only shows host controls to owners — cosmetic only, since the
@@ -470,7 +477,6 @@ Because `role` is baked into the token at login and `JWT_EXPIRES_IN=1d`:
 | **Weak password policy** | `@MinLength(6)` only — no complexity or breach-list check. |
 | **Unbounded score delta** | `ScoreDto.delta` is `@IsInt()` with no range. Host-only, so impact is low. |
 | **Unvalidated id → 500** | `UsersService.findById` does not call `Types.ObjectId.isValid`, so a malformed id raises a Mongoose `CastError` and a 500 rather than a 404. Rooms and contests do validate. |
-| **`@ts-nocheck`** | [`leaderboard.gateway.ts`](src/leaderboard/leaderboard.gateway.ts) and its spec are excluded from type checking, which can conceal defects. |
 
 ### 7.8 What is done correctly
 
@@ -515,7 +521,6 @@ sonner, lucide-react.
 | `src/lib/api.ts`              | The one axios instance. Request interceptor attaches the JWT; response interceptor unwraps the envelope and normalizes errors (including array messages) and clears the session on 401. Exports typed `http.*` helpers because the interceptor changes what axios resolves to. |
 | `src/lib/endpoints.ts`        | Every backend call, in one place                                     |
 | `src/lib/sockets.ts`          | Socket factories passing the token in the handshake                  |
-| `src/lib/recents.ts`          | localStorage "recently visited" index — works around the absent list endpoints |
 | `src/context/AuthContext.tsx` | Session bootstrap against `/auth/me`, login/register/logout           |
 | `src/hooks/useChatSocket.ts`  | Owns the `/chat` socket; re-joins on every reconnect                  |
 | `src/hooks/useLeaderboardSocket.ts` | Owns the `/leaderboard` socket; same reconnect handling         |
@@ -677,13 +682,11 @@ Startup then logs `Leaderboard backend: Redis` and
 
 Roughly in priority order:
 
-1. **Work through the security findings in §7**, starting with the WebSocket
-   authorization gaps (§7.1) and the avatar-upload XSS chain (§7.2).
+1. **Work through the remaining security findings in §7** — the `room:join` /
+   `chat:send` authorization gaps (§7.1) and the avatar-upload XSS chain (§7.2).
+   The `question:pin` / `question:unpin` gap is now closed.
 2. **Unblock MongoDB** so the app can actually be exercised end to end.
-3. **Decide the fate of `public/`** — delete it and the `ServeStaticModule`
-   entry for it, or keep it deliberately.
-4. **Remove the two `@ts-nocheck` pragmas** and fix the underlying types.
-5. **Add tests** for guards, both state machines, and the gateways.
-6. **Add list endpoints** (`GET /rooms`, `GET /contests`) so clients need not
-   keep a localStorage index.
-7. **Commit `frontend/`.**
+3. **Extend test coverage** to the auth module, the chat message path, and the
+   leaderboard gateway.
+4. **Decide whether the list endpoints need pagination** — both are currently
+   capped at 50 with no cursor.
