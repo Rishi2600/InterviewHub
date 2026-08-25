@@ -2,17 +2,17 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ArrowRight, Clock, LogIn, Plus, Trophy, Video } from 'lucide-react'
+import { ArrowRight, Clock, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader } from '@/components/ui/Card'
+import { Section, SectionHeader } from '@/components/ui/Section'
 import { Dialog } from '@/components/ui/Dialog'
 import { Input } from '@/components/ui/Input'
-import { EmptyState } from '@/components/ui/States'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth, useCanHost } from '@/hooks/useAuth'
 import { createContest, createRoom, listContests, listRooms } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 import { formatDateTime } from '@/lib/utils'
+import type { Contest, Room } from '@/types'
 
 export function Dashboard() {
   const { user } = useAuth()
@@ -64,145 +64,126 @@ export function Dashboard() {
   const rooms = roomsQuery.data ?? []
   const contests = contestsQuery.data ?? []
 
+  const liveContest = contests.find((c) => c.state === 'active')
+  const liveRoom = rooms.find((r) => r.state === 'active')
+
   return (
-    <div className="flex flex-col gap-6">
-      <header className="animate-rise">
-        <h1 className="text-display font-semibold text-ink">
-          Hey {user?.username?.split(' ')[0] ?? 'there'}
+    <div className="animate-rise">
+      <header className="pb-8">
+        <p className="label mb-3">Dashboard</p>
+        <h1 className="text-display text-ink">
+          {user?.username?.split(' ')[0] ?? 'there'}
         </h1>
-        <p className="mt-1 text-body text-ink-muted">
+        <p className="mt-2 text-caption text-ink-muted">
           {canHost
             ? 'Start an interview room or run a scored contest.'
             : 'Join a room with a code, or open a contest you were invited to.'}
         </p>
+
+        <dl className="mt-6 flex gap-8">
+          <Stat label="Rooms" value={rooms.length} />
+          <Stat label="Contests" value={contests.length} />
+        </dl>
       </header>
 
-      {/* Primary actions */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="flex flex-col justify-between gap-4">
-          <div>
-            <span
-              aria-hidden
-              className="mb-3 grid size-9 place-items-center rounded-[var(--radius-control)] bg-accent-soft text-accent"
-            >
-              <LogIn className="size-4" />
-            </span>
-            <h2 className="text-subheading font-semibold text-ink">Join a room</h2>
-            <p className="mt-1 text-caption text-ink-muted">
-              Enter the 5-character code an interviewer shared with you.
-            </p>
-          </div>
-          <Button variant="secondary" onClick={() => navigate('/rooms/join')} fullWidth>
-            Enter a code
-            <ArrowRight className="size-4" aria-hidden />
-          </Button>
-        </Card>
+      {/* The one hot surface, and the only gradient in the product. Never
+          empty: it falls back to the next thing worth doing. */}
+      <LiveBanner
+        contest={liveContest}
+        room={liveRoom}
+        canHost={canHost}
+        onCreateContest={() => setContestDialogOpen(true)}
+      />
 
-        {canHost && (
-          <>
-            <Card className="flex flex-col justify-between gap-4">
-              <div>
-                <span
-                  aria-hidden
-                  className="mb-3 grid size-9 place-items-center rounded-[var(--radius-control)] bg-accent-soft text-accent"
-                >
-                  <Video className="size-4" />
-                </span>
-                <h2 className="text-subheading font-semibold text-ink">New interview room</h2>
-                <p className="mt-1 text-caption text-ink-muted">
-                  Creates a room with a shareable join code and live chat.
-                </p>
-              </div>
-              <Button onClick={() => setRoomDialogOpen(true)} fullWidth leadingIcon={<Plus className="size-4" />}>
+      <Section>
+        <SectionHeader
+          label="Start"
+          title="Open a room or a contest"
+          description="Rooms carry a 5-character join code. Contests score participants live."
+        />
+        <div className="flex flex-wrap gap-2">
+          {canHost ? (
+            <>
+              {/* The single primary action on this screen. */}
+              <Button onClick={() => setRoomDialogOpen(true)} leadingIcon={<Plus className="size-3.5" />}>
                 Create room
               </Button>
-            </Card>
-
-            <Card className="flex flex-col justify-between gap-4">
-              <div>
-                <span
-                  aria-hidden
-                  className="mb-3 grid size-9 place-items-center rounded-[var(--radius-control)] bg-accent-soft text-accent"
-                >
-                  <Trophy className="size-4" />
-                </span>
-                <h2 className="text-subheading font-semibold text-ink">New contest</h2>
-                <p className="mt-1 text-caption text-ink-muted">
-                  Score participants live on a leaderboard everyone can watch.
-                </p>
-              </div>
-              <Button onClick={() => setContestDialogOpen(true)} fullWidth leadingIcon={<Plus className="size-4" />}>
+              <Button
+                variant="secondary"
+                onClick={() => setContestDialogOpen(true)}
+                leadingIcon={<Plus className="size-3.5" />}
+              >
                 Create contest
               </Button>
-            </Card>
-          </>
+              <Button variant="ghost" onClick={() => navigate('/rooms/join')}>
+                Enter a code
+                <ArrowRight className="size-3.5" aria-hidden />
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => navigate('/rooms/join')}>
+              Enter a code
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Button>
+          )}
+        </div>
+      </Section>
+
+      <Section>
+        <SectionHeader label="Rooms" title="Your rooms" description="Rooms you own or have joined." />
+        {rooms.length === 0 ? (
+          <Prompt
+            text={
+              canHost
+                ? 'Nothing open yet. Create a room to get a join code you can share.'
+                : 'Nothing open yet. Enter a code to join your first room.'
+            }
+          />
+        ) : (
+          <ul>
+            {rooms.map((room) => (
+              <ListRow
+                key={room._id}
+                title={room.title}
+                timestamp={room.updatedAt}
+                badge={room.code}
+                badgeTone={room.state === 'active' ? 'live' : 'neutral'}
+                to={`/rooms/${room._id}`}
+              />
+            ))}
+          </ul>
         )}
-      </div>
+      </Section>
 
-      {/* Your rooms and contests, straight from the backend */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader
-            title="Your rooms"
-            description="Rooms you own or have joined."
+      <Section>
+        <SectionHeader
+          label="Contests"
+          title="Your contests"
+          description="Contests you own or have joined."
+        />
+        {contests.length === 0 ? (
+          <Prompt
+            text={
+              canHost
+                ? 'No contests yet. Create one to start scoring participants live.'
+                : 'No contests yet. Contests you join will be listed here.'
+            }
           />
-          {rooms.length === 0 ? (
-            <EmptyState
-              icon={<Video className="size-6" />}
-              title="No rooms yet"
-              description={
-                canHost
-                  ? 'Create a room to get a join code you can share.'
-                  : 'Join a room with a code and it will show up here.'
-              }
-              className="border-0 py-8"
-            />
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {rooms.map((room) => (
-                <ListRow
-                  key={room._id}
-                  title={room.title}
-                  timestamp={room.updatedAt}
-                  badge={room.code}
-                  to={`/rooms/${room._id}`}
-                />
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        <Card>
-          <CardHeader
-            title="Your contests"
-            description="Contests you own or have joined."
-          />
-          {contests.length === 0 ? (
-            <EmptyState
-              icon={<Trophy className="size-6" />}
-              title="No contests yet"
-              description={
-                canHost
-                  ? 'Create a contest to start scoring participants live.'
-                  : 'Contests you join will be listed here for quick access.'
-              }
-              className="border-0 py-8"
-            />
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {contests.map((contest) => (
-                <ListRow
-                  key={contest._id}
-                  title={contest.title}
-                  timestamp={contest.createdAt}
-                  badge={contest.state}
-                  to={`/contests/${contest._id}`}
-                />
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
+        ) : (
+          <ul>
+            {contests.map((contest) => (
+              <ListRow
+                key={contest._id}
+                title={contest.title}
+                timestamp={contest.createdAt}
+                badge={contest.state}
+                badgeTone={contest.state === 'active' ? 'live' : 'neutral'}
+                to={`/contests/${contest._id}`}
+              />
+            ))}
+          </ul>
+        )}
+      </Section>
 
       <Dialog
         open={roomDialogOpen}
@@ -272,28 +253,133 @@ export function Dashboard() {
   )
 }
 
+/** Every number is mono and tabular. */
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <dt className="label">{label}</dt>
+      <dd className="num mt-1.5 text-heading text-ink">{value}</dd>
+    </div>
+  )
+}
+
+/**
+ * The live banner. Absence of a live contest is never rendered as a void --
+ * it degrades to the next real thing: a live room, then an invitation to
+ * start one.
+ */
+function LiveBanner({
+  contest,
+  room,
+  canHost,
+  onCreateContest,
+}: {
+  contest?: Contest
+  room?: Room
+  canHost: boolean
+  onCreateContest: () => void
+}) {
+  const body = contest
+    ? {
+        label: 'Live now',
+        title: contest.title,
+        meta: 'Scoring is open',
+        to: `/contests/${contest._id}`,
+        cta: 'Open contest',
+      }
+    : room
+      ? {
+          label: 'In progress',
+          title: room.title,
+          meta: `Join code ${room.code}`,
+          to: `/rooms/${room._id}`,
+          cta: 'Open room',
+        }
+      : null
+
+  return (
+    <div className="gradient-live rounded-[var(--radius-container)] border border-line px-6 py-6">
+      {body ? (
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <span className="label flex items-center gap-2 text-sand">
+              <span
+                aria-hidden
+                className="size-1.5 rounded-[var(--radius-pill)] bg-sand animate-[var(--animate-live)]"
+              />
+              {body.label}
+            </span>
+            <p className="display-tight mt-3 truncate text-heading text-ink">{body.title}</p>
+            <p className="num mt-1.5 text-micro text-ink-muted">{body.meta}</p>
+          </div>
+          <Link
+            to={body.to}
+            className="text-caption text-sand hover:underline"
+          >
+            {body.cta}
+            <ArrowRight className="ml-1 inline size-3.5" aria-hidden />
+          </Link>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="label">Nothing live</p>
+            <p className="display-tight mt-3 text-heading text-ink">
+              {canHost ? 'Run the next contest' : 'Join a room to get started'}
+            </p>
+            <p className="mt-1.5 text-micro text-ink-muted">
+              {canHost
+                ? 'Contests score participants on a leaderboard everyone watches.'
+                : 'Ask an interviewer for a 5-character join code.'}
+            </p>
+          </div>
+          {canHost && (
+            <button onClick={onCreateContest} className="text-caption text-sand hover:underline">
+              Create contest
+              <ArrowRight className="ml-1 inline size-3.5" aria-hidden />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Prompt({ text }: { text: string }) {
+  return <p className="py-2 text-caption text-ink-faint">{text}</p>
+}
+
 function ListRow({
   title,
   timestamp,
   badge,
+  badgeTone = 'neutral',
   to,
 }: {
   title: string
   timestamp: string
   badge?: string
+  badgeTone?: 'neutral' | 'live'
   to: string
 }) {
   return (
-    <li className="group flex items-center gap-2 rounded-[var(--radius-control)] transition-colors hover:bg-surface-raised">
-      <Link to={to} className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-2">
+    <li className="border-t border-line first:border-t-0">
+      <Link
+        to={to}
+        className="flex items-center gap-4 px-1 py-3.5 transition-colors duration-[var(--duration-fast)] hover:bg-surface"
+      >
         <div className="min-w-0 flex-1">
-          <p className="truncate text-body text-ink">{title}</p>
-          <p className="flex items-center gap-1 text-micro text-ink-faint">
+          <p className="truncate text-caption text-ink">{title}</p>
+          <p className="num mt-1 flex items-center gap-1.5 text-micro text-ink-faint">
             <Clock className="size-3" aria-hidden />
             {formatDateTime(timestamp)}
           </p>
         </div>
-        {badge && <Badge tone="neutral" className="font-mono">{badge}</Badge>}
+        {badge && (
+          <Badge tone={badgeTone} dot={badgeTone === 'live'}>
+            {badge}
+          </Badge>
+        )}
       </Link>
     </li>
   )

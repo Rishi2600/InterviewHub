@@ -40,13 +40,13 @@ export function ScorePanel({
   return (
     <div className="flex flex-col gap-3">
       {disabled && disabledReason && (
-        <p className="rounded-[var(--radius-control)] bg-surface-raised px-3 py-2 text-caption text-ink-muted">
+        <p className="border-l-2 border-line-strong bg-surface px-3 py-2 text-micro text-ink-muted">
           {disabledReason}
         </p>
       )}
 
       <div className="flex items-center gap-2">
-        <label htmlFor="custom-delta" className="text-caption text-ink-muted">
+        <label htmlFor="custom-delta" className="label">
           Custom points
         </label>
         <input
@@ -57,11 +57,11 @@ export function ScorePanel({
           onChange={(e) => setCustomDelta(e.target.value)}
           placeholder="e.g. 25"
           disabled={disabled}
-          className="h-8 w-24 rounded-[var(--radius-control)] border border-line bg-ground px-2 text-caption text-ink placeholder:text-ink-faint disabled:opacity-60"
+          className="num h-8 w-24 rounded-[var(--radius-control)] border border-line bg-surface px-2 text-caption text-ink transition-colors duration-[var(--duration-fast)] hover:border-line-strong focus:border-line-strong disabled:text-ink-disabled"
         />
       </div>
 
-      <ul className="flex flex-col gap-1.5">
+      <ul>
         {entries.map((entry) => {
           const isPending = pendingUserId === entry.userId
           const custom = Number(customDelta)
@@ -70,10 +70,12 @@ export function ScorePanel({
           return (
             <li
               key={entry.userId}
-              className="flex flex-wrap items-center gap-2 rounded-[var(--radius-control)] bg-surface-raised px-3 py-2"
+              className="flex flex-wrap items-center gap-2 border-t border-line px-2 py-2.5 first:border-t-0"
             >
               <Avatar name={entry.username} id={entry.userId} size="sm" />
-              <span className="min-w-0 flex-1 truncate text-body text-ink">{entry.username}</span>
+              <span className="min-w-0 flex-1 truncate text-caption text-ink">
+                {entry.username}
+              </span>
 
               <div className="flex items-center gap-1">
                 <Button
@@ -96,7 +98,7 @@ export function ScorePanel({
                     aria-label={`Add ${delta} points to ${entry.username}`}
                   >
                     <Plus className="size-3 opacity-60" aria-hidden />
-                    {delta}
+                    <span className="num">{delta}</span>
                   </Button>
                 ))}
 
@@ -108,7 +110,7 @@ export function ScorePanel({
                     onClick={() => onScore(entry.userId, custom)}
                     aria-label={`Add ${custom} points to ${entry.username}`}
                   >
-                    {custom > 0 ? `+${custom}` : custom}
+                    <span className="num">{custom > 0 ? `+${custom}` : custom}</span>
                   </Button>
                 )}
               </div>

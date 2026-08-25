@@ -16,16 +16,13 @@ export function TypingIndicator({ users }: { users: TypingUser[] }) {
   return (
     <div className="h-6 px-4" aria-live="polite" aria-atomic="true">
       {users.length > 0 && (
-        <p className="flex animate-fade items-center gap-1.5 text-caption text-ink-faint">
-          <span aria-hidden className="flex gap-0.5">
-            {[0, 150, 300].map((delay) => (
-              <span
-                key={delay}
-                className="size-1 animate-bounce rounded-full bg-ink-faint"
-                style={{ animationDelay: `${delay}ms` }}
-              />
-            ))}
-          </span>
+        <p className="flex animate-fade items-center gap-2 text-micro text-ink-faint">
+          {/* Motion reports the state; under reduced motion the dot simply
+              sits there and the text still says what is happening. */}
+          <span
+            aria-hidden
+            className="size-1 shrink-0 rounded-[var(--radius-pill)] bg-ink-faint animate-[var(--animate-live)]"
+          />
           {phrase(users)}
         </p>
       )}

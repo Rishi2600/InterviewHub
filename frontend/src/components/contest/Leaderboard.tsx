@@ -1,17 +1,19 @@
 import { useEffect, useRef } from 'react'
-import { Crown, Medal, Trophy } from 'lucide-react'
+import { Crown, Trophy } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { EmptyState } from '@/components/ui/States'
 import { SkeletonRows } from '@/components/ui/Skeleton'
 import { cn, shortId } from '@/lib/utils'
 import type { LeaderboardRow } from '@/types'
 
-/** Podium treatment for the top three; plain rank number after that. */
+/**
+ * Only first place is marked, and it is the one sand element on the board.
+ * Everything below is a plain mono rank -- restrained, not a podium of
+ * medals.
+ */
 function RankMark({ rank }: { rank: number }) {
-  if (rank === 1) return <Crown aria-hidden className="size-4 text-warning" />
-  if (rank === 2) return <Medal aria-hidden className="size-4 text-ink-muted" />
-  if (rank === 3) return <Medal aria-hidden className="size-4 text-danger" />
-  return <span className="text-caption tabular-nums text-ink-faint">{rank}</span>
+  if (rank === 1) return <Crown aria-hidden className="size-3.5 text-sand" />
+  return <span className="num text-micro text-ink-faint">{rank}</span>
 }
 
 function Row({
@@ -33,9 +35,9 @@ function Row({
       const el = scoreRef.current
       prevScore.current = row.score
       if (el) {
-        el.classList.remove('animate-pulse-once')
+        el.classList.remove('animate-flash')
         void el.offsetWidth // restart the animation
-        el.classList.add('animate-pulse-once')
+        el.classList.add('animate-flash')
       }
     }
   }, [row.score])
@@ -43,27 +45,26 @@ function Row({
   return (
     <li
       className={cn(
-        'flex items-center gap-3 rounded-[var(--radius-control)] border px-3 py-2.5',
-        'transition-all duration-200 ease-[var(--ease-out-soft)]',
-        isCurrentUser
-          ? 'border-accent/50 bg-accent-soft/30'
-          : 'border-transparent bg-surface-raised hover:border-line',
+        'flex items-center gap-3 border-t border-line px-2 py-2.5 first:border-t-0',
+        'transition-colors duration-[var(--duration-base)] ease-[var(--ease-peaks)]',
+        // A tinted row is the only other place sand fill appears.
+        isCurrentUser ? 'bg-sand-soft' : 'hover:bg-surface',
       )}
     >
-      <span className="grid w-6 shrink-0 place-items-center">
+      <span className="grid w-5 shrink-0 place-items-center">
         <RankMark rank={row.rank} />
       </span>
 
       <Avatar name={name} id={row.userId} size="sm" />
 
-      <span className="min-w-0 flex-1 truncate text-body text-ink">
+      <span className="min-w-0 flex-1 truncate text-caption text-ink">
         {name}
-        {isCurrentUser && <span className="ml-1.5 text-caption text-accent">you</span>}
+        {isCurrentUser && <span className="label ml-2 text-sand">you</span>}
       </span>
 
       <span
         ref={scoreRef}
-        className="rounded-[var(--radius-control)] px-2 py-0.5 text-subheading font-semibold tabular-nums text-ink"
+        className="num rounded-[var(--radius-control)] px-2 py-0.5 text-subheading text-ink"
       >
         {row.score}
       </span>
@@ -88,16 +89,15 @@ export function Leaderboard({
   if (rows.length === 0) {
     return (
       <EmptyState
-        icon={<Trophy className="size-7" />}
+        icon={<Trophy className="size-5" />}
         title="No one on the board yet"
         description="Scores appear here the moment participants join and start earning points."
-        className="border-0"
       />
     )
   }
 
   return (
-    <ol className="flex flex-col gap-1.5">
+    <ol>
       {rows.map((row) => (
         <Row
           key={row.userId}

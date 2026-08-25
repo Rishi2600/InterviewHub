@@ -2,14 +2,20 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import type { ContestState, Role, RoomState } from '@/types'
 
-type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger'
+type Tone = 'neutral' | 'live' | 'success' | 'warning' | 'danger' | 'baseline'
 
+/**
+ * Badges carry the label style -- mono, uppercase, tracked -- because labels
+ * are the only uppercase in this UI. `live` is sand and is reserved for
+ * genuinely live state.
+ */
 const TONES: Record<Tone, string> = {
-  neutral: 'bg-surface-raised text-ink-muted border-line',
-  accent: 'bg-accent-soft text-ink border-accent/40',
-  success: 'bg-success-soft text-success border-success/40',
-  warning: 'bg-warning-soft text-warning border-warning/40',
-  danger: 'bg-danger-soft text-danger border-danger/40',
+  neutral: 'bg-surface text-ink-muted',
+  live: 'bg-sand-soft text-sand',
+  success: 'bg-surface text-sage',
+  warning: 'bg-surface text-wheat',
+  danger: 'bg-surface text-clay',
+  baseline: 'bg-surface text-taupe',
 }
 
 export function Badge({
@@ -26,13 +32,20 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5',
-        'text-micro font-medium uppercase tracking-wide',
+        'label inline-flex items-center gap-1.5 rounded-[var(--radius-control)] px-1.5 py-1',
         TONES[tone],
         className,
       )}
     >
-      {dot && <span aria-hidden className="size-1.5 rounded-full bg-current" />}
+      {dot && (
+        <span
+          aria-hidden
+          className={cn(
+            'size-1.5 rounded-[var(--radius-pill)] bg-current',
+            tone === 'live' && 'animate-[var(--animate-live)]',
+          )}
+        />
+      )}
       {children}
     </span>
   )
@@ -40,7 +53,7 @@ export function Badge({
 
 const ROOM_TONES: Record<RoomState, Tone> = {
   waiting: 'warning',
-  active: 'success',
+  active: 'live',
   ended: 'neutral',
 }
 
@@ -54,8 +67,8 @@ export function RoomStateBadge({ state }: { state: RoomState }) {
 
 const CONTEST_TONES: Record<ContestState, Tone> = {
   draft: 'neutral',
-  active: 'success',
-  ended: 'danger',
+  active: 'live',
+  ended: 'neutral',
 }
 
 export function ContestStateBadge({ state }: { state: ContestState }) {
@@ -67,5 +80,5 @@ export function ContestStateBadge({ state }: { state: ContestState }) {
 }
 
 export function RoleBadge({ role }: { role: Role }) {
-  return <Badge tone={role === 'candidate' ? 'neutral' : 'accent'}>{role}</Badge>
+  return <Badge tone={role === 'candidate' ? 'neutral' : 'baseline'}>{role}</Badge>
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { MessagesSquare, Radio, Trophy } from 'lucide-react'
+import { MessagesSquare, Mountain, Radio, Trophy } from 'lucide-react'
 
 const HIGHLIGHTS = [
   { icon: MessagesSquare, text: 'Live interview rooms with real-time chat' },
@@ -8,7 +8,8 @@ const HIGHLIGHTS = [
 ]
 
 /** Split layout: the form on the left, a quiet product pitch on the right
- *  that collapses away on narrow screens. */
+ *  that collapses away on narrow screens. Structure is hairlines and space --
+ *  no glows, no cards. */
 export function AuthLayout({
   title,
   subtitle,
@@ -20,45 +21,29 @@ export function AuthLayout({
 }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center px-4 py-10">
+      <div className="flex items-center justify-center px-gutter py-12">
         <div className="w-full max-w-sm animate-rise">
-          <div className="mb-7 flex items-center gap-2">
-            <span
-              aria-hidden
-              className="grid size-8 place-items-center rounded-[var(--radius-control)] bg-accent text-accent-ink"
-            >
-              <Radio className="size-4" />
-            </span>
-            <span className="text-subheading font-semibold tracking-tight">InterviewHub</span>
+          <div className="mb-10 flex items-center gap-2">
+            <Mountain className="size-4 text-sand" aria-hidden />
+            <span className="display-tight text-subheading text-ink">InterviewHub</span>
           </div>
 
-          <h1 className="text-display font-semibold text-ink">{title}</h1>
-          <p className="mt-2 mb-7 text-body text-ink-muted">{subtitle}</p>
+          <h1 className="text-heading text-ink">{title}</h1>
+          <p className="mt-2 mb-8 text-caption text-ink-muted">{subtitle}</p>
 
           {children}
         </div>
       </div>
 
-      <aside className="relative hidden items-center justify-center overflow-hidden border-l border-line bg-surface lg:flex">
-        <div
-          aria-hidden
-          className="absolute -top-24 -right-24 size-96 rounded-full bg-accent/20 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="absolute -bottom-32 -left-16 size-80 rounded-full bg-accent/10 blur-3xl"
-        />
-
-        <ul className="relative z-10 flex max-w-sm flex-col gap-6 px-10">
-          {HIGHLIGHTS.map(({ icon: Icon, text }) => (
-            <li key={text} className="flex items-start gap-3">
-              <span
-                aria-hidden
-                className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-[var(--radius-control)] border border-line bg-surface-raised text-accent"
-              >
-                <Icon className="size-4" />
-              </span>
-              <p className="text-body text-ink-muted">{text}</p>
+      <aside className="hidden items-center justify-center border-l border-line bg-surface lg:flex">
+        <ul className="flex max-w-sm flex-col px-12">
+          {HIGHLIGHTS.map(({ icon: Icon, text }, i) => (
+            <li
+              key={text}
+              className={`flex items-start gap-4 py-6 ${i > 0 ? 'border-t border-line' : ''}`}
+            >
+              <Icon className="mt-0.5 size-4 shrink-0 text-taupe" aria-hidden />
+              <p className="text-caption text-ink-muted">{text}</p>
             </li>
           ))}
         </ul>

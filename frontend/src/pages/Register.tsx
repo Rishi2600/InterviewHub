@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AtSign, KeyRound, UserPlus } from 'lucide-react'
+import { AtSign, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/hooks/useAuth'
@@ -94,10 +94,8 @@ export function Register() {
           error={errors.password?.message}
         />
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className="mb-1.5 text-caption font-medium text-ink-muted">
-            I'm signing up as
-          </legend>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="label mb-2">I'm signing up as</legend>
           <div className="grid grid-cols-2 gap-2">
             {ROLES.map((role) => {
               const isSelected = selectedRole === role.value
@@ -108,13 +106,16 @@ export function Register() {
                   aria-pressed={isSelected}
                   onClick={() => setValue('role', role.value, { shouldValidate: true })}
                   className={cn(
-                    'rounded-[var(--radius-control)] border px-3 py-2.5 text-left transition-colors duration-150',
+                    'rounded-[var(--radius-control)] border px-3 py-2.5 text-left',
+                    'transition-colors duration-[var(--duration-fast)] ease-[var(--ease-peaks)]',
                     isSelected
-                      ? 'border-accent bg-accent-soft/40'
+                      ? 'border-line-strong bg-raised'
                       : 'border-line bg-surface hover:border-line-strong',
                   )}
                 >
-                  <span className="block text-caption font-medium text-ink">{role.label}</span>
+                  <span className={cn('block text-caption', isSelected ? 'text-ink' : 'text-ink-muted')}>
+                    {role.label}
+                  </span>
                   <span className="block text-micro text-ink-faint">{role.blurb}</span>
                 </button>
               )
@@ -123,25 +124,23 @@ export function Register() {
         </fieldset>
 
         {formError && (
-          <p role="alert" className="rounded-[var(--radius-control)] border border-danger/40 bg-danger-soft/40 px-3 py-2 text-caption text-ink">
+          <p
+            role="alert"
+            className="border-l-2 border-clay bg-surface px-3 py-2 text-caption text-ink"
+          >
             {formError}
           </p>
         )}
 
-        <Button
-          type="submit"
-          size="lg"
-          fullWidth
-          isLoading={isSubmitting}
-          leadingIcon={<UserPlus className="size-4" />}
-        >
+        {/* The one primary action on this screen. */}
+        <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} className="mt-2">
           Create account
         </Button>
       </form>
 
-      <p className="mt-5 text-center text-caption text-ink-muted">
+      <p className="mt-8 border-t border-line pt-5 text-caption text-ink-faint">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-accent hover:underline">
+        <Link to="/login" className="text-sand hover:underline">
           Sign in
         </Link>
       </p>

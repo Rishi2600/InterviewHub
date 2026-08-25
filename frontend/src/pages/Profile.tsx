@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { Upload } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader } from '@/components/ui/Card'
+import { Section, SectionHeader } from '@/components/ui/Section'
 import { RoleBadge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { uploadAvatar } from '@/lib/endpoints'
@@ -55,13 +55,20 @@ export function Profile() {
   if (!user) return null
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <h1 className="animate-rise text-display font-semibold text-ink">Profile</h1>
+    <div className="mx-auto max-w-2xl animate-rise">
+      <header className="pb-8">
+        <p className="label mb-3">Baseline</p>
+        <h1 className="text-display text-ink">Profile</h1>
+      </header>
 
-      <Card className="animate-rise">
-        <CardHeader title="Avatar" description="PNG, JPEG, WebP or GIF, up to 2 MB." />
+      <Section>
+        <SectionHeader
+          label="Avatar"
+          title="Your picture"
+          description="PNG, JPEG, WebP or GIF, up to 2 MB."
+        />
 
-        <div className="flex flex-wrap items-center gap-5">
+        <div className="flex flex-wrap items-center gap-6">
           <Avatar
             name={user.username}
             id={user.id}
@@ -82,48 +89,50 @@ export function Profile() {
                 e.target.value = ''
               }}
             />
+            {/* The one primary action on this screen. */}
             <Button
-              variant="secondary"
               onClick={() => fileInputRef.current?.click()}
               isLoading={mutation.isPending}
-              leadingIcon={<Upload className="size-4" />}
+              leadingIcon={<Upload className="size-3.5" />}
             >
               {user.avatarUrl ? 'Replace image' : 'Upload image'}
             </Button>
             {validationError && (
-              <p role="alert" className="text-caption text-danger">
+              <p role="alert" className="text-micro text-clay">
                 {validationError}
               </p>
             )}
           </div>
         </div>
-      </Card>
+      </Section>
 
-      <Card className="animate-rise">
-        <CardHeader title="Account" description="These details come from your registration." />
-        <dl className="divide-y divide-line">
+      <Section>
+        <SectionHeader
+          label="Account"
+          title="Your details"
+          description="These come from your registration."
+        />
+        <dl>
           <Field label="Username" value={user.username} />
           <Field label="Email" value={user.email} />
-          <div className="flex items-center justify-between gap-4 py-3">
-            <dt className="text-caption text-ink-muted">Role</dt>
+          <div className="flex items-center justify-between gap-4 border-t border-line py-3.5">
+            <dt className="label">Role</dt>
             <dd>
               <RoleBadge role={user.role} />
             </dd>
           </div>
           <Field label="User ID" value={user.id} mono />
         </dl>
-      </Card>
+      </Section>
     </div>
   )
 }
 
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <dt className="text-caption text-ink-muted">{label}</dt>
-      <dd className={`truncate text-body text-ink ${mono ? 'font-mono text-caption' : ''}`}>
-        {value}
-      </dd>
+    <div className="flex items-center justify-between gap-4 border-t border-line py-3.5 first:border-t-0">
+      <dt className="label">{label}</dt>
+      <dd className={`truncate text-caption text-ink ${mono ? 'num' : ''}`}>{value}</dd>
     </div>
   )
 }

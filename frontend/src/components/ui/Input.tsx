@@ -7,10 +7,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string
   hint?: string
   leadingIcon?: ReactNode
+  /** Codes, ids and other figures render mono + tabular. */
+  numeric?: boolean
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, hint, leadingIcon, className, id, ...rest },
+  { label, error, hint, leadingIcon, numeric = false, className, id, ...rest },
   ref,
 ) {
   const generatedId = useId()
@@ -18,9 +20,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const describedBy = error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       {label && (
-        <label htmlFor={inputId} className="text-caption font-medium text-ink-muted">
+        <label htmlFor={inputId} className="label">
           {label}
         </label>
       )}
@@ -42,23 +44,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           aria-describedby={describedBy}
           className={cn(
             'h-10 w-full rounded-[var(--radius-control)] border bg-surface px-3 text-body text-ink',
-            'placeholder:text-ink-faint',
-            'transition-colors duration-150 ease-[var(--ease-out-soft)]',
-            'hover:border-line-strong',
-            'disabled:cursor-not-allowed disabled:opacity-60',
+            'transition-colors duration-[var(--duration-fast)] ease-[var(--ease-peaks)]',
+            'hover:border-line-strong focus:border-line-strong',
+            'disabled:cursor-not-allowed disabled:text-ink-disabled',
             leadingIcon && 'pl-9',
-            error ? 'border-danger' : 'border-line',
+            numeric && 'num',
+            error ? 'border-clay' : 'border-line',
             className,
           )}
         />
       </div>
 
       {error ? (
-        <p id={`${inputId}-error`} role="alert" className="text-caption text-danger">
+        <p id={`${inputId}-error`} role="alert" className="text-micro text-clay">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${inputId}-hint`} className="text-caption text-ink-faint">
+        <p id={`${inputId}-hint`} className="text-micro text-ink-faint">
           {hint}
         </p>
       ) : null}

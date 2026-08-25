@@ -82,10 +82,9 @@ export function MessageList({
       >
         {messages.length === 0 ? (
           <EmptyState
-            icon={<MessagesSquare className="size-7" />}
+            icon={<MessagesSquare className="size-5" />}
             title="No messages yet"
             description="Say hello — messages appear here in real time for everyone in the room."
-            className="mt-8 border-0"
           />
         ) : (
           <ul className="flex flex-col gap-2.5">
@@ -117,10 +116,16 @@ export function MessageList({
             size="sm"
             variant="secondary"
             onClick={() => scrollToBottom()}
-            leadingIcon={<ArrowDown className="size-3.5" />}
-            className="pointer-events-auto animate-rise shadow-pop"
+            leadingIcon={<ArrowDown className="size-3" />}
+            className="pointer-events-auto animate-rise bg-raised"
           >
-            {unreadCount > 0 ? `${unreadCount} new` : 'Jump to latest'}
+            {unreadCount > 0 ? (
+              <>
+                <span className="num">{unreadCount}</span> new
+              </>
+            ) : (
+              'Jump to latest'
+            )}
           </Button>
         </div>
       )}

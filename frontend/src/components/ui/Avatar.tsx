@@ -1,10 +1,24 @@
-import { cn, hueFromId, initials } from '@/lib/utils'
+import { cn, hashId, initials } from '@/lib/utils'
 
 const SIZES = {
-  sm: 'size-7 text-micro',
-  md: 'size-9 text-caption',
-  lg: 'size-20 text-heading',
+  sm: 'size-6 text-[0.625rem]',
+  md: 'size-8 text-micro',
+  lg: 'size-16 text-heading',
 } as const
+
+/**
+ * Fallback tints stay inside the warm palette rather than generating an
+ * arbitrary hue per user -- a rainbow of avatars would fight the system.
+ * The pick is deterministic, so a given user keeps the same tint.
+ */
+const TONES = [
+  'bg-sand-soft text-sand',
+  'bg-surface text-taupe',
+  'bg-raised text-sage',
+  'bg-surface text-mist',
+  'bg-raised text-wheat',
+  'bg-sand-soft text-taupe',
+] as const
 
 export function Avatar({
   name,
@@ -19,15 +33,13 @@ export function Avatar({
   size?: keyof typeof SIZES
   className?: string
 }) {
-  const hue = hueFromId(id)
-
   if (src) {
     return (
       <img
         src={src}
         alt=""
         className={cn(
-          'shrink-0 rounded-full border border-line object-cover',
+          'shrink-0 rounded-[var(--radius-pill)] border border-line object-cover',
           SIZES[size],
           className,
         )}
@@ -38,12 +50,10 @@ export function Avatar({
   return (
     <span
       aria-hidden
-      style={{
-        backgroundColor: `oklch(0.35 0.09 ${hue})`,
-        color: `oklch(0.9 0.09 ${hue})`,
-      }}
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold',
+        'inline-flex shrink-0 items-center justify-center rounded-[var(--radius-pill)]',
+        'font-medium',
+        TONES[hashId(id) % TONES.length],
         SIZES[size],
         className,
       )}

@@ -31,11 +31,12 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-/** Deterministic hue per id, so a given user keeps the same avatar color. */
-export function hueFromId(id: string): number {
+/** Stable hash of an id, used to pick a fixed tint from a fixed palette so a
+ *  given user always renders the same way. */
+export function hashId(id: string): number {
   let hash = 0
   for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) % 360
+    hash = (hash * 31 + id.charCodeAt(i)) % 100003
   }
   return hash
 }

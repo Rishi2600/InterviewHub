@@ -7,7 +7,7 @@ export function FullPageLoader({ label = 'Loading…' }: { label?: string }) {
       aria-live="polite"
       className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ground"
     >
-      <Loader2 aria-hidden className="size-6 animate-spin text-accent" />
+      <Loader2 aria-hidden className="size-5 animate-spin text-sand" />
       <p className="text-caption text-ink-muted">{label}</p>
     </div>
   )

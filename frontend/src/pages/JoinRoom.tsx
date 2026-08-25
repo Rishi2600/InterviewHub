@@ -4,7 +4,6 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ArrowRight, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
 import { joinRoomByCode } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 
@@ -47,32 +46,31 @@ export function JoinRoom() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-4 py-8">
-      <div className="animate-rise text-center">
-        <span
-          aria-hidden
-          className="mx-auto mb-4 grid size-11 place-items-center rounded-[var(--radius-card)] bg-accent-soft text-accent"
-        >
-          <KeyRound className="size-5" />
-        </span>
-        <h1 className="text-display font-semibold text-ink">Join a room</h1>
-        <p className="mt-1.5 text-body text-ink-muted">
-          Enter the {CODE_LENGTH}-character code your interviewer shared.
+    <div className="mx-auto flex max-w-md flex-col py-8">
+      <div className="animate-rise">
+        <p className="label mb-3 flex items-center gap-2">
+          <KeyRound className="size-3" aria-hidden />
+          Join room
+        </p>
+        <h1 className="text-heading text-ink">Enter your join code</h1>
+        <p className="mt-2 text-caption text-ink-muted">
+          The {CODE_LENGTH}-character code your interviewer shared.
         </p>
       </div>
 
-      <Card className="animate-rise">
+      <div className="mt-8 animate-rise border-t border-line pt-8">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             submit()
           }}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-5"
         >
           <div>
             <label htmlFor="room-code" className="sr-only">
               Room code
             </label>
+            {/* The code is a figure: mono, tabular, and wide-tracked. */}
             <input
               id="room-code"
               value={code}
@@ -85,19 +83,20 @@ export function JoinRoom() {
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? 'room-code-error' : 'room-code-hint'}
               onChange={(e) => handleChange(e.target.value)}
-              className="h-16 w-full rounded-[var(--radius-card)] border border-line bg-ground text-center font-mono text-display uppercase tracking-[0.35em] text-ink placeholder:text-ink-faint/40 hover:border-line-strong"
+              className="num h-16 w-full rounded-[var(--radius-container)] border border-line bg-surface text-center text-display uppercase tracking-[0.35em] text-ink hover:border-line-strong focus:border-line-strong"
             />
             {error ? (
-              <p id="room-code-error" role="alert" className="mt-2 text-center text-caption text-danger">
+              <p id="room-code-error" role="alert" className="mt-3 text-micro text-clay">
                 {error}
               </p>
             ) : (
-              <p id="room-code-hint" className="mt-2 text-center text-caption text-ink-faint">
+              <p id="room-code-hint" className="num mt-3 text-micro text-ink-faint">
                 {code.length}/{CODE_LENGTH} characters
               </p>
             )}
           </div>
 
+          {/* The one primary action on this screen. */}
           <Button
             type="submit"
             size="lg"
@@ -106,10 +105,10 @@ export function JoinRoom() {
             isLoading={mutation.isPending}
           >
             Join room
-            <ArrowRight className="size-4" aria-hidden />
+            <ArrowRight className="size-3.5" aria-hidden />
           </Button>
         </form>
-      </Card>
+      </div>
     </div>
   )
 }

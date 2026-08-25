@@ -1,80 +1,127 @@
 @import 'tailwindcss';
 
 /* ---------------------------------------------------------------------------
-   InterviewHub design tokens.
+   Peaks design tokens.
 
-   Dark-first product UI: near-black ground, layered panels, one confident
-   violet accent. Every color/space/radius used in the app comes from here —
-   components must not invent one-off values.
+   Tone: technical, calm, dense, warm. A quiet room with one hot surface.
+   Dark mode is primary. This @theme block is the SINGLE SOURCE OF TRUTH --
+   every color, font, radius and motion value in the product is a token here
+   and generates a utility. Components consume utilities and must never
+   introduce a raw hex value or a default Tailwind gray.
+
+   The five rules this system enforces are written up in DESIGN.md.
 --------------------------------------------------------------------------- */
 @theme {
-  /* Surfaces, from furthest back to furthest forward. */
-  --color-ground: oklch(0.16 0.012 275);
-  --color-surface: oklch(0.2 0.014 275);
-  --color-surface-raised: oklch(0.245 0.016 275);
-  --color-surface-hover: oklch(0.28 0.018 275);
-  --color-line: oklch(0.32 0.018 275);
-  --color-line-strong: oklch(0.42 0.022 275);
+  /* -- Surfaces ---------------------------------------------------------
+     Elevation is a surface step plus a hairline, never a shadow.
+     ground -> surface -> raised.                                        */
+  --color-ground: #1b2023;
+  --color-surface: #232a2d;
+  --color-raised: #2c3438;
 
-  /* Text. */
-  --color-ink: oklch(0.97 0.004 275);
-  --color-ink-muted: oklch(0.75 0.014 275);
-  --color-ink-faint: oklch(0.6 0.016 275);
+  /* Structure. The 1px rule is the main structural device in this UI. */
+  --color-line: #394347;
+  --color-line-strong: #4c575c;
 
-  /* One accent, used for primary actions, focus and live highlights. */
-  --color-accent: oklch(0.62 0.21 285);
-  --color-accent-hover: oklch(0.68 0.21 285);
-  --color-accent-soft: oklch(0.35 0.1 285);
-  --color-accent-ink: oklch(0.99 0 0);
+  /* -- Text -------------------------------------------------------------
+     Warm bone, never pure white.                                        */
+  --color-ink: #ede7dd;
+  --color-ink-muted: #a2aaac;
+  --color-ink-faint: #737d80;
+  --color-ink-disabled: #4e585b;
 
-  /* Semantic. */
-  --color-success: oklch(0.72 0.16 155);
-  --color-success-soft: oklch(0.32 0.07 155);
-  --color-warning: oklch(0.79 0.15 80);
-  --color-warning-soft: oklch(0.35 0.07 80);
-  --color-danger: oklch(0.65 0.2 20);
-  --color-danger-soft: oklch(0.33 0.09 20);
+  /* -- The accent -------------------------------------------------------
+     sand means LIVE or PRIMARY. Active nav, focus ring, countdowns, and
+     the one primary button per view. Anywhere else is a bug.            */
+  --color-sand: #d6a87b;
+  --color-sand-soft: #3b342b;
 
-  /* Type scale. */
-  --text-display: 2.25rem;
-  --text-display--line-height: 2.5rem;
-  --text-display--letter-spacing: -0.02em;
-  --text-heading: 1.375rem;
-  --text-heading--line-height: 1.75rem;
+  /* Baseline layer: practice, community, secondary numbers. */
+  --color-taupe: #9a8b76;
+
+  /* -- State palette ---------------------------------------------------- */
+  --color-sage: #a8b79b;
+  --color-clay: #c4705a;
+  --color-wheat: #dcc182;
+  --color-mist: #8fa3a8;
+
+  /* Semantic aliases. Use these when you mean the state; use the raw
+     name above when you mean the color.                                 */
+  --color-success: var(--color-sage);
+  --color-error: var(--color-clay);
+  --color-warning: var(--color-wheat);
+  --color-info: var(--color-mist);
+
+  /* Light-mode ground. Defined for later; no light theme is built yet. */
+  --color-bone: #e8dfd1;
+
+  /* Stops for the single product gradient (see the gradient-live
+     utility). Nothing else in the product uses a gradient.              */
+  --color-live-a: #1b2023;
+  --color-live-b: #242726;
+  --color-live-c: #3a362e;
+  --color-live-d: #4e4335;
+
+  /* -- Type -------------------------------------------------------------
+     Archivo for display and UI, JetBrains Mono for every number.        */
+  --font-display:
+    'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+
+  /* Scale. Body sits at 15px / 1.6. */
+  --text-display: 2rem;
+  --text-display--line-height: 2.25rem;
+  --text-display--letter-spacing: -0.015em;
+  --text-heading: 1.3125rem;
+  --text-heading--line-height: 1.7rem;
   --text-heading--letter-spacing: -0.01em;
   --text-subheading: 1rem;
-  --text-subheading--line-height: 1.5rem;
+  --text-subheading--line-height: 1.45rem;
   --text-body: 0.9375rem;
-  --text-body--line-height: 1.5rem;
-  --text-caption: 0.8125rem;
-  --text-caption--line-height: 1.25rem;
-  --text-micro: 0.6875rem;
-  --text-micro--line-height: 1rem;
+  --text-body--line-height: 1.6;
+  --text-caption: 0.84375rem;
+  --text-caption--line-height: 1.5;
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.4;
 
-  --font-sans:
-    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  /* -- Radius -----------------------------------------------------------
+     4px controls, 6px containers, 999px only on avatars and dots.       */
+  --radius-control: 0.25rem;
+  --radius-container: 0.375rem;
+  --radius-pill: 999px;
 
-  /* One card radius, one pill. */
-  --radius-card: 0.75rem;
-  --radius-control: 0.5rem;
+  /* -- Motion -----------------------------------------------------------
+     Motion reports state; it never decorates.                           */
+  --ease-peaks: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 160ms;
+  --duration-slow: 200ms;
 
-  /* Two elevation levels, no more. */
-  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0 0 0 / 0.25);
-  --shadow-pop: 0 4px 8px oklch(0 0 0 / 0.4), 0 16px 48px oklch(0 0 0 / 0.45);
+  --animate-rise: rise var(--duration-slow) var(--ease-peaks) both;
+  --animate-fade: fade var(--duration-base) var(--ease-peaks) both;
+  --animate-live: live-pulse 2s var(--ease-peaks) infinite;
+  --animate-flash: flash 600ms var(--ease-peaks);
 
-  /* Motion: short and purposeful. */
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* -- Layout -----------------------------------------------------------
+     12 columns, 24px gutters, 1440 content max. 1680 full-bleed is
+     reserved for contest/duel surfaces later.                           */
+  --spacing-gutter: 1.5rem;
+  --container-content: 90rem;
+  --container-bleed: 105rem;
+  --container-rail: 12.5rem;
 
-  --animate-rise: rise 180ms var(--ease-out-soft) both;
-  --animate-fade: fade 150ms var(--ease-out-soft) both;
-  --animate-pulse-once: pulse-once 600ms var(--ease-out-soft);
+  /* Nav collapses twice: full rail -> icon rail at 1180, icon rail ->
+     bottom bar at 820. Mobile is not for a code editor. */
+  --breakpoint-bar: 51.25rem;
+  --breakpoint-rail: 73.75rem;
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -91,17 +138,89 @@
   }
 }
 
-@keyframes pulse-once {
+/* A value changed. Reports the update on rows that do not move. */
+@keyframes flash {
   0% {
-    background-color: var(--color-accent-soft);
+    background-color: var(--color-sand-soft);
+    color: var(--color-sand);
   }
   100% {
     background-color: transparent;
   }
 }
 
+/* Live state. Under reduced motion this is replaced by a flat color. */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+--------------------------------------------------------------------------- */
+
+/* Every number in the product: ratings, ranks, timers, counts, scores.
+   Mono and tabular so digits never shift width as values change. */
+@utility num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-weight: 500;
+}
+
+/* The only uppercase in the UI. */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+/* Display type: Archivo narrowed and heavy. */
+@utility display-tight {
+  font-family: var(--font-display);
+  font-stretch: 84%;
+  font-weight: 750;
+}
+
+/* The ONE gradient in the whole product. Live / next-contest banner only.
+   Using it anywhere else is a bug. */
+@utility gradient-live {
+  background-color: var(--color-live-a);
+  background-image:
+    radial-gradient(
+      58% 82% at 88% 92%,
+      color-mix(in oklab, var(--color-sand) 30%, transparent),
+      transparent 68%
+    ),
+    linear-gradient(
+      104deg,
+      var(--color-live-a),
+      var(--color-live-b),
+      var(--color-live-c),
+      var(--color-live-d)
+    );
+}
+
+/* Full-width hairline. The main structural device: sections are separated
+   by a rule and space, not by a card. */
+@utility rule {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+
 @layer base {
-  * {
+  *,
+  *::before,
+  *::after {
     border-color: var(--color-line);
   }
 
@@ -111,26 +230,61 @@
 
   body {
     background-color: var(--color-ground);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
+    color: var(--color-ink-muted);
+    font-family: var(--font-display);
+    font-stretch: 100%;
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* A single, consistent focus ring across every interactive element. */
+  /* Headers run narrow and heavy; body runs normal width. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-stretch: 84%;
+    font-weight: 750;
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+  }
+
+  /* Numbers default to mono + tabular even without the .num utility, so a
+     stray figure never renders in proportional type. */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* One focus ring across the product, and it is sand. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-sand);
     outline-offset: 2px;
-    border-radius: 2px;
+    border-radius: var(--radius-control);
   }
 
   ::selection {
-    background-color: var(--color-accent-soft);
+    background-color: var(--color-sand-soft);
     color: var(--color-ink);
   }
 
-  /* Scrollbars that match the surfaces instead of punching a hole in them. */
+  ::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  :disabled {
+    color: var(--color-ink-disabled);
+  }
+
+  /* Scrollbars sit inside the surface rather than punching through it. */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -140,7 +294,7 @@
   }
   ::-webkit-scrollbar-thumb {
     background-color: var(--color-line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 3px solid transparent;
     background-clip: content-box;
   }
@@ -148,12 +302,16 @@
     background-color: var(--color-line-strong);
   }
 
+  /* Motion reports state. With reduced motion we keep the state legible
+     through color alone and drop the movement. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }

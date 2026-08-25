@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Flag, LogIn, Play, Trophy, Users, Wifi, WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader } from '@/components/ui/Card'
 import { ContestStateBadge } from '@/components/ui/Badge'
 import { Skeleton, SkeletonRows } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
@@ -115,75 +114,77 @@ export function Contest() {
   const isActive = contest.state === 'active'
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card className="animate-rise">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-heading font-semibold text-ink">{contest.title}</h1>
-              <ContestStateBadge state={contest.state} />
-              <ConnectionPill status={board.status} />
-            </div>
-            <p className="mt-1.5 text-caption text-ink-muted">
-              {isEnded
-                ? 'Final standings below.'
-                : isActive
-                  ? 'Scores update live for everyone watching.'
-                  : 'In draft — activate it to start scoring.'}
-            </p>
+    <div className="animate-rise">
+      <header className="flex flex-wrap items-start justify-between gap-6 pb-6">
+        <div className="min-w-0">
+          <p className="label mb-3">Contest</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-heading text-ink">{contest.title}</h1>
+            <ContestStateBadge state={contest.state} />
+            <ConnectionPill status={board.status} />
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            {!hasJoined && !isEnded && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => joinMutation.mutate()}
-                isLoading={joinMutation.isPending}
-                leadingIcon={<LogIn className="size-3.5" />}
-              >
-                Join contest
-              </Button>
-            )}
-
-            {canHost && contest.state === 'draft' && (
-              <Button
-                size="sm"
-                onClick={() => activateMutation.mutate()}
-                isLoading={activateMutation.isPending}
-                leadingIcon={<Play className="size-3.5" />}
-              >
-                Activate
-              </Button>
-            )}
-
-            {canHost && isActive && (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => endMutation.mutate()}
-                isLoading={endMutation.isPending}
-                leadingIcon={<Flag className="size-3.5" />}
-              >
-                End contest
-              </Button>
-            )}
-          </div>
+          <p className="mt-2 text-caption text-ink-muted">
+            {isEnded
+              ? 'Final standings below.'
+              : isActive
+                ? 'Scores update live for everyone watching.'
+                : 'In draft — activate it to start scoring.'}
+          </p>
         </div>
-      </Card>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-        {/* The board is the hero. */}
-        <Card className="animate-rise">
-          <CardHeader
-            title={
-              <span className="flex items-center gap-2">
-                <Trophy className="size-4 text-ink-faint" aria-hidden />
-                {isEnded ? 'Final standings' : 'Live leaderboard'}
-              </span>
-            }
-            description={isEnded ? undefined : 'Top 10, updated the moment a score changes.'}
-          />
+        <div className="flex flex-wrap gap-2">
+          {!hasJoined && !isEnded && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => joinMutation.mutate()}
+              isLoading={joinMutation.isPending}
+              leadingIcon={<LogIn className="size-3" />}
+            >
+              Join contest
+            </Button>
+          )}
+
+          {/* Activate is the single primary action, and only while drafting. */}
+          {canHost && contest.state === 'draft' && (
+            <Button
+              size="sm"
+              onClick={() => activateMutation.mutate()}
+              isLoading={activateMutation.isPending}
+              leadingIcon={<Play className="size-3" />}
+            >
+              Activate
+            </Button>
+          )}
+
+          {canHost && isActive && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => endMutation.mutate()}
+              isLoading={endMutation.isPending}
+              leadingIcon={<Flag className="size-3" />}
+            >
+              End contest
+            </Button>
+          )}
+        </div>
+      </header>
+
+      <div className="grid gap-8 border-t border-line pt-6 lg:grid-cols-[1fr_19rem]">
+        {/* The board is the hero and the hot surface. */}
+        <section>
+          <div className="mb-4">
+            <p className="label flex items-center gap-2">
+              <Trophy className="size-3" aria-hidden />
+              {isEnded ? 'Final standings' : 'Live leaderboard'}
+            </p>
+            {!isEnded && (
+              <p className="mt-1.5 text-micro text-ink-faint">
+                Top 10, updated the moment a score changes.
+              </p>
+            )}
+          </div>
 
           {isEnded ? (
             <FinalStandings
@@ -199,12 +200,13 @@ export function Contest() {
               isLoading={!board.hasLoaded && board.status === 'connecting'}
             />
           )}
-        </Card>
+        </section>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-8">
           {canHost && !isEnded && (
-            <Card className="animate-rise">
-              <CardHeader title="Award points" description="Only you and admins see this." />
+            <section>
+              <p className="label mb-1.5">Award points</p>
+              <p className="mb-4 text-micro text-ink-faint">Only you and admins see this.</p>
               {entriesQuery.isLoading ? (
                 <SkeletonRows rows={3} />
               ) : (
@@ -218,33 +220,28 @@ export function Contest() {
                   onScore={(userId, delta) => scoreMutation.mutate({ userId, delta })}
                 />
               )}
-            </Card>
+            </section>
           )}
 
-          <Card className="animate-rise">
-            <CardHeader
-              title={
-                <span className="flex items-center gap-2">
-                  <Users className="size-4 text-ink-faint" aria-hidden />
-                  Participants
-                  <span className="text-caption font-normal text-ink-faint">{entries.length}</span>
-                </span>
-              }
-            />
+          <section>
+            <p className="label mb-4 flex items-center gap-2">
+              <Users className="size-3" aria-hidden />
+              Participants
+              <span className="num text-ink-muted">{entries.length}</span>
+            </p>
             {entriesQuery.isLoading ? (
               <SkeletonRows rows={3} />
             ) : entries.length === 0 ? (
               <EmptyState
                 title="No participants yet"
                 description="Anyone with the link can join while the contest is open."
-                className="border-0 py-8"
               />
             ) : (
-              <ul className="flex flex-col gap-1">
+              <ul>
                 {entries.map((entry) => (
                   <li
                     key={entry.userId}
-                    className="flex items-center justify-between gap-2 rounded-[var(--radius-control)] px-2 py-1.5 hover:bg-surface-raised"
+                    className="flex items-center justify-between gap-2 border-t border-line px-1 py-2.5 first:border-t-0 hover:bg-surface"
                   >
                     <span className="truncate text-caption text-ink">
                       {entry.username}
@@ -256,7 +253,7 @@ export function Contest() {
                 ))}
               </ul>
             )}
-          </Card>
+          </section>
         </div>
       </div>
     </div>
@@ -277,32 +274,27 @@ function FinalStandings({
   if (entries.length === 0) {
     return (
       <EmptyState
-        icon={<Trophy className="size-7" />}
+        icon={<Trophy className="size-5" />}
         title="No final scores"
         description="This contest ended without any scored participants."
-        className="border-0"
       />
     )
   }
 
   return (
-    <ol className="flex flex-col gap-1.5">
+    <ol>
       {entries.map((entry, index) => (
         <li
           key={entry.userId}
-          className={`flex items-center gap-3 rounded-[var(--radius-control)] border px-3 py-2.5 ${
-            entry.userId === currentUserId
-              ? 'border-accent/50 bg-accent-soft/30'
-              : 'border-transparent bg-surface-raised'
+          className={`flex items-center gap-3 border-t border-line px-2 py-2.5 first:border-t-0 ${
+            entry.userId === currentUserId ? 'bg-sand-soft' : ''
           }`}
         >
-          <span className="w-6 text-center text-caption tabular-nums text-ink-faint">
+          <span className="num w-5 text-center text-micro text-ink-faint">
             {entry.finalRank || index + 1}
           </span>
-          <span className="min-w-0 flex-1 truncate text-body text-ink">{entry.username}</span>
-          <span className="text-subheading font-semibold tabular-nums text-ink">
-            {entry.finalScore}
-          </span>
+          <span className="min-w-0 flex-1 truncate text-caption text-ink">{entry.username}</span>
+          <span className="num text-subheading text-ink">{entry.finalScore}</span>
         </li>
       ))}
     </ol>
@@ -315,7 +307,7 @@ function ConnectionPill({ status }: { status: string }) {
     <span
       role="status"
       className={`inline-flex items-center gap-1.5 text-micro ${
-        connected ? 'text-success' : 'text-warning'
+        connected ? 'text-sage' : 'text-wheat'
       }`}
     >
       {connected ? <Wifi className="size-3" aria-hidden /> : <WifiOff className="size-3" aria-hidden />}
@@ -326,20 +318,20 @@ function ConnectionPill({ status }: { status: string }) {
 
 function ContestSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
+    <div>
+      <div className="pb-6">
         <Skeleton className="h-6 w-56" />
         <Skeleton className="mt-3 h-4 w-72" />
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-        <Card>
+      </div>
+      <div className="grid gap-8 border-t border-line pt-6 lg:grid-cols-[1fr_19rem]">
+        <div>
           <Skeleton className="mb-4 h-5 w-40" />
           <SkeletonRows rows={5} />
-        </Card>
-        <Card>
+        </div>
+        <div>
           <Skeleton className="mb-4 h-5 w-32" />
           <SkeletonRows rows={3} />
-        </Card>
+        </div>
       </div>
     </div>
   )

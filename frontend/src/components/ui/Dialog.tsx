@@ -76,37 +76,40 @@ export function Dialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 animate-fade bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 animate-fade bg-ground/75"
         onClick={onClose}
         aria-hidden
       />
+      {/* Elevation is the surface step (ground -> raised) plus a hairline. */}
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
         aria-describedby={description ? 'dialog-description' : undefined}
-        className="relative z-10 w-full max-w-md animate-rise rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-pop"
+        className="relative z-10 w-full max-w-md animate-rise rounded-[var(--radius-container)] border border-line bg-raised p-6"
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h2 id="dialog-title" className="text-subheading font-semibold text-ink">
+            <h2 id="dialog-title" className="text-subheading text-ink">
               {title}
             </h2>
             {description && (
-              <p id="dialog-description" className="mt-1 text-caption text-ink-muted">
+              <p id="dialog-description" className="mt-1.5 text-caption text-ink-muted">
                 {description}
               </p>
             )}
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close dialog">
-            <X className="size-4" />
+            <X className="size-3.5" />
           </Button>
         </div>
 
         {children}
 
-        {footer && <div className="mt-5 flex justify-end gap-2">{footer}</div>}
+        {footer && (
+          <div className="mt-6 flex justify-end gap-2 border-t border-line pt-4">{footer}</div>
+        )}
       </div>
     </div>
   )

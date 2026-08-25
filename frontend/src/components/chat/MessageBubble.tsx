@@ -6,7 +6,7 @@ import type { Message } from '@/types'
 function SystemLine({ message }: { message: Message }) {
   return (
     <li className="my-1 flex animate-fade justify-center">
-      <span className="rounded-full bg-surface px-3 py-1 text-micro text-ink-faint">
+      <span className="rounded-[var(--radius-control)] bg-surface px-2.5 py-1 text-micro text-ink-faint">
         {message.content}
       </span>
     </li>
@@ -26,7 +26,7 @@ export function MessageBubble({
 
   return (
     <li className={cn('flex animate-rise gap-2.5', isOwn && 'flex-row-reverse')}>
-      <div className="w-7 shrink-0">
+      <div className="w-6 shrink-0">
         {showAuthor && (
           <Avatar name={message.senderName} id={message.senderId ?? message.id} size="sm" />
         )}
@@ -38,20 +38,19 @@ export function MessageBubble({
             {isOwn ? 'You' : message.senderName}
           </span>
         )}
+        {/* Own vs other is a surface step and a hairline, not a color -- sand
+            is reserved for live and primary. */}
         <div
           className={cn(
-            'rounded-[var(--radius-card)] px-3 py-2 text-body break-words',
+            'rounded-[var(--radius-container)] border px-3 py-2 text-caption break-words',
             isOwn
-              ? 'bg-accent text-accent-ink rounded-br-sm'
-              : 'bg-surface-raised text-ink rounded-bl-sm',
+              ? 'border-line-strong bg-raised text-ink'
+              : 'border-line bg-surface text-ink',
           )}
         >
           <p className="whitespace-pre-wrap">{message.content}</p>
         </div>
-        <time
-          dateTime={message.createdAt}
-          className="px-1 text-micro text-ink-faint tabular-nums"
-        >
+        <time dateTime={message.createdAt} className="num px-1 text-micro text-ink-faint">
           {formatTime(message.createdAt)}
         </time>
       </div>

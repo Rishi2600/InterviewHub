@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Check, Copy, Pin, Play, Square, Users, Wifi, WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader } from '@/components/ui/Card'
 import { Dialog } from '@/components/ui/Dialog'
 import { Input } from '@/components/ui/Input'
 import { RoomStateBadge } from '@/components/ui/Badge'
@@ -83,82 +82,80 @@ export function Room() {
   const isEnded = room.state === 'ended'
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="animate-rise">
       {/* Header */}
-      <Card className="animate-rise">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-heading font-semibold text-ink">{room.title}</h1>
-              <RoomStateBadge state={room.state} />
-              <ConnectionPill status={chat.status} />
-            </div>
-
-            <button
-              onClick={handleCopyCode}
-              className="mt-2 inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-line bg-ground px-2.5 py-1 transition-colors hover:border-line-strong"
-              aria-label={`Room code ${room.code.split('').join(' ')}. Click to copy.`}
-            >
-              <span className="font-mono text-body tracking-[0.2em] text-ink">{room.code}</span>
-              {copied ? (
-                <Check className="size-3.5 text-success" aria-hidden />
-              ) : (
-                <Copy className="size-3.5 text-ink-faint" aria-hidden />
-              )}
-              <span className="sr-only" role="status">
-                {copied ? 'Code copied' : ''}
-              </span>
-            </button>
+      <header className="flex flex-wrap items-start justify-between gap-6 pb-6">
+        <div className="min-w-0">
+          <p className="label mb-3">Interview room</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-heading text-ink">{room.title}</h1>
+            <RoomStateBadge state={room.state} />
+            <ConnectionPill status={chat.status} />
           </div>
 
-          {canControl && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setPinDraft(chat.pinnedQuestion ?? '')
-                  setPinDialogOpen(true)
-                }}
-                leadingIcon={<Pin className="size-3.5" />}
-                disabled={isEnded}
-              >
-                {chat.pinnedQuestion ? 'Edit question' : 'Pin question'}
-              </Button>
-
-              {room.state === 'waiting' && (
-                <Button
-                  size="sm"
-                  onClick={() => stateMutation.mutate('active')}
-                  isLoading={stateMutation.isPending}
-                  leadingIcon={<Play className="size-3.5" />}
-                >
-                  Start
-                </Button>
-              )}
-
-              {!isEnded && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => stateMutation.mutate('ended')}
-                  isLoading={stateMutation.isPending}
-                  leadingIcon={<Square className="size-3.5" />}
-                >
-                  End
-                </Button>
-              )}
-            </div>
-          )}
+          <button
+            onClick={handleCopyCode}
+            className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface px-2.5 py-1.5 transition-colors duration-[var(--duration-fast)] hover:border-line-strong"
+            aria-label={`Room code ${room.code.split('').join(' ')}. Click to copy.`}
+          >
+            <span className="num text-caption tracking-[0.2em] text-ink">{room.code}</span>
+            {copied ? (
+              <Check className="size-3 text-sage" aria-hidden />
+            ) : (
+              <Copy className="size-3 text-ink-faint" aria-hidden />
+            )}
+            <span className="sr-only" role="status">
+              {copied ? 'Code copied' : ''}
+            </span>
+          </button>
         </div>
-      </Card>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
+        {canControl && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPinDraft(chat.pinnedQuestion ?? '')
+                setPinDialogOpen(true)
+              }}
+              leadingIcon={<Pin className="size-3" />}
+              disabled={isEnded}
+            >
+              {chat.pinnedQuestion ? 'Edit question' : 'Pin question'}
+            </Button>
+
+            {/* Start is the one primary action while the room is waiting;
+                once it is running, nothing on this screen is sand. */}
+            {room.state === 'waiting' && (
+              <Button
+                size="sm"
+                onClick={() => stateMutation.mutate('active')}
+                isLoading={stateMutation.isPending}
+                leadingIcon={<Play className="size-3" />}
+              >
+                Start
+              </Button>
+            )}
+
+            {!isEnded && (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => stateMutation.mutate('ended')}
+                isLoading={stateMutation.isPending}
+                leadingIcon={<Square className="size-3" />}
+              >
+                End
+              </Button>
+            )}
+          </div>
+        )}
+      </header>
+
+      <div className="grid gap-6 border-t border-line pt-6 lg:grid-cols-[1fr_17rem]">
         {/* Chat */}
-        <Card
-          padded={false}
-          className="flex h-[clamp(28rem,68vh,44rem)] animate-rise flex-col overflow-hidden"
-        >
+        <div className="flex h-[clamp(28rem,68vh,44rem)] flex-col overflow-hidden rounded-[var(--radius-container)] border border-line bg-surface">
           {chat.pinnedQuestion && (
             <PinnedBanner
               question={chat.pinnedQuestion}
@@ -188,27 +185,21 @@ export function Room() {
                   : undefined
             }
           />
-        </Card>
+        </div>
 
         {/* Participants */}
-        <Card className="animate-rise lg:sticky lg:top-20 lg:self-start">
-          <CardHeader
-            title={
-              <span className="flex items-center gap-2">
-                <Users className="size-4 text-ink-faint" aria-hidden />
-                Participants
-                <span className="text-caption font-normal text-ink-faint">
-                  {room.participants.length}
-                </span>
-              </span>
-            }
-          />
+        <aside className="lg:sticky lg:top-8 lg:self-start">
+          <p className="label mb-4 flex items-center gap-2">
+            <Users className="size-3" aria-hidden />
+            Participants
+            <span className="num text-ink-muted">{room.participants.length}</span>
+          </p>
           <ParticipantsList
             participants={room.participants}
             ownerId={room.ownerId}
             currentUserId={user?.id ?? ''}
           />
-        </Card>
+        </aside>
       </div>
 
       <Dialog
@@ -257,7 +248,7 @@ function ConnectionPill({ status }: { status: string }) {
     <span
       role="status"
       className={`inline-flex items-center gap-1.5 text-micro ${
-        connected ? 'text-success' : 'text-warning'
+        connected ? 'text-sage' : 'text-wheat'
       }`}
     >
       {connected ? (
@@ -272,19 +263,19 @@ function ConnectionPill({ status }: { status: string }) {
 
 function RoomSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
+    <div>
+      <div className="pb-6">
         <Skeleton className="h-6 w-64" />
         <Skeleton className="mt-3 h-7 w-28" />
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-        <Card className="h-[clamp(28rem,68vh,44rem)]">
+      </div>
+      <div className="grid gap-6 border-t border-line pt-6 lg:grid-cols-[1fr_17rem]">
+        <div className="h-[clamp(28rem,68vh,44rem)] rounded-[var(--radius-container)] border border-line bg-surface p-5">
           <SkeletonRows rows={6} />
-        </Card>
-        <Card>
+        </div>
+        <div>
           <Skeleton className="mb-4 h-5 w-32" />
           <SkeletonRows rows={3} />
-        </Card>
+        </div>
       </div>
     </div>
   )

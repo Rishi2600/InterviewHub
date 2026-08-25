@@ -70,9 +70,9 @@ export function Composer({
   }
 
   return (
-    <div className="border-t border-line bg-surface p-3">
+    <div className="border-t border-line p-3">
       {disabled && disabledReason && (
-        <p className="mb-2 text-center text-caption text-ink-faint">{disabledReason}</p>
+        <p className="mb-2 text-micro text-ink-faint">{disabledReason}</p>
       )}
       <form
         className="flex items-end gap-2"
@@ -103,15 +103,16 @@ export function Composer({
               submit()
             }
           }}
-          className="max-h-[140px] min-h-10 flex-1 resize-none rounded-[var(--radius-control)] border border-line bg-ground px-3 py-2 text-body text-ink placeholder:text-ink-faint hover:border-line-strong disabled:cursor-not-allowed disabled:opacity-60"
+          className="max-h-[140px] min-h-9 flex-1 resize-none rounded-[var(--radius-control)] border border-line bg-ground px-3 py-2 text-caption text-ink transition-colors duration-[var(--duration-fast)] hover:border-line-strong focus:border-line-strong disabled:cursor-not-allowed disabled:text-ink-disabled"
         />
+        {/* Sending is the primary action inside the chat panel. */}
         <Button
           type="submit"
           disabled={disabled || !value.trim()}
           aria-label="Send message"
           className="shrink-0"
         >
-          <SendHorizontal className="size-4" aria-hidden />
+          <SendHorizontal className="size-3.5" aria-hidden />
           <span className="hidden sm:inline">Send</span>
         </Button>
       </form>

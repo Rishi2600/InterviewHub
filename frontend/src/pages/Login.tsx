@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AtSign, KeyRound, Radio } from 'lucide-react'
+import { AtSign, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/hooks/useAuth'
@@ -69,19 +69,23 @@ export function Login() {
         />
 
         {formError && (
-          <p role="alert" className="rounded-[var(--radius-control)] border border-danger/40 bg-danger-soft/40 px-3 py-2 text-caption text-ink">
+          <p
+            role="alert"
+            className="border-l-2 border-clay bg-surface px-3 py-2 text-caption text-ink"
+          >
             {formError}
           </p>
         )}
 
-        <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} leadingIcon={<Radio className="size-4" />}>
+        {/* The one primary action on this screen. */}
+        <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} className="mt-2">
           Sign in
         </Button>
       </form>
 
-      <p className="mt-5 text-center text-caption text-ink-muted">
+      <p className="mt-8 border-t border-line pt-5 text-caption text-ink-faint">
         New here?{' '}
-        <Link to="/register" className="font-medium text-accent hover:underline">
+        <Link to="/register" className="text-sand hover:underline">
           Create an account
         </Link>
       </p>
