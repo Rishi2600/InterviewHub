@@ -5,3 +5,4 @@
 *.log
 /uploads/avatars/*
 !/uploads/avatars/.gitkeep
+/PROJECT_CONTEXT.md

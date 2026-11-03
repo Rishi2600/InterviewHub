@@ -1,0 +1,27 @@
+# Local development MongoDB. Credentials come from the root .env
+# (MONGO_ROOT_USERNAME / MONGO_ROOT_PASSWORD), which docker compose reads
+# automatically. They only apply the first time the volume is created.
+#
+# Pinned to 7.0: MongoDB 8.x refuses to start on Linux kernels 6.19-7.0.13
+# (TCMalloc/rseq incompatibility, SERVER-121912). 7.0 uses the older
+# allocator and is unaffected. Move to 8.x once the host kernel is >= 7.0.14.
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: interviewhub-mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?set MONGO_ROOT_USERNAME in .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env}
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mongo-data:
