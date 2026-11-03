@@ -6,3 +6,5 @@
 /uploads/avatars/*
 !/uploads/avatars/.gitkeep
 /docs/
+/CLAUDE.md
+/.claude/skills/
