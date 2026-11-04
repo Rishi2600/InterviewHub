@@ -1,7 +1,8 @@
 import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from '@/context/AuthContext'
 import { AppShell } from '@/components/layout/AppShell'
 import { ProtectedRoute, RoleRoute } from '@/components/layout/ProtectedRoute'
@@ -34,46 +35,38 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<FullPageLoader />}>
-            <Routes>
-              {/* Public */}
-              <Route element={<RedirectIfAuthed />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-              </Route>
-
-              {/* Authenticated */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppShell />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="/rooms/join" element={<JoinRoom />} />
-                  <Route path="/rooms/:id" element={<Room />} />
-                  <Route path="/contests/:id" element={<Contest />} />
-                  <Route path="/profile" element={<Profile />} />
-
-                  {/* Host-only area. Kept as a nested guard so adding
-                      interviewer-only screens later needs no new plumbing. */}
-                  <Route element={<RoleRoute />}>
-                    <Route path="/host" element={<Navigate to="/" replace />} />
-                  </Route>
-
-                  <Route path="*" element={<NotFound />} />
+          <TooltipProvider>
+            <Suspense fallback={<FullPageLoader />}>
+              <Routes>
+                {/* Public */}
+                <Route element={<RedirectIfAuthed />}>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
                 </Route>
-              </Route>
-            </Routes>
-          </Suspense>
 
-          <Toaster
-            theme="dark"
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: 'var(--color-raised)',
-                border: '1px solid var(--color-line)',
-                color: 'var(--color-ink)',
-              },
-            }}
-          />
+                {/* Authenticated */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AppShell />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="/rooms/join" element={<JoinRoom />} />
+                    <Route path="/rooms/:id" element={<Room />} />
+                    <Route path="/contests/:id" element={<Contest />} />
+                    <Route path="/profile" element={<Profile />} />
+
+                    {/* Host-only area. Kept as a nested guard so adding
+                        interviewer-only screens later needs no new plumbing. */}
+                    <Route element={<RoleRoute />}>
+                      <Route path="/host" element={<Navigate to="/" replace />} />
+                    </Route>
+
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Route>
+              </Routes>
+            </Suspense>
+
+            <Toaster position="bottom-right" />
+          </TooltipProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

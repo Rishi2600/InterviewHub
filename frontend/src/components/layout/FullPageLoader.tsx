@@ -5,10 +5,10 @@ export function FullPageLoader({ label = 'Loading…' }: { label?: string }) {
     <div
       role="status"
       aria-live="polite"
-      className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ground"
+      className="flex min-h-svh flex-col items-center justify-center gap-3 bg-background"
     >
-      <Loader2 aria-hidden className="size-5 animate-spin text-sand" />
-      <p className="text-caption text-ink-muted">{label}</p>
+      <Loader2 aria-hidden className="size-5 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   )
 }
