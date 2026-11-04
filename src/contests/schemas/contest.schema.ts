@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 export type ContestDocument = HydratedDocument<Contest>;
 export type ContestState = 'draft' | 'active' | 'ended';
@@ -9,7 +9,12 @@ export class Contest {
   @Prop({ required: true, trim: true })
   title: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true,
+  })
   ownerId: Types.ObjectId;
 
   @Prop({ type: String, enum: ['draft', 'active', 'ended'], default: 'draft' })

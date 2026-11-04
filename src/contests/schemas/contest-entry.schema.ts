@@ -1,14 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 export type ContestEntryDocument = HydratedDocument<ContestEntry>;
 
 @Schema({ timestamps: true, collection: 'contest_entries' })
 export class ContestEntry {
-  @Prop({ type: Types.ObjectId, ref: 'Contest', required: true, index: true })
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: 'Contest',
+    required: true,
+    index: true,
+  })
   contestId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
   @Prop({ required: true })

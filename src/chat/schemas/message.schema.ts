@@ -1,15 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 export type MessageDocument = HydratedDocument<Message>;
 export type MessageType = 'user' | 'system';
 
 @Schema({ timestamps: true, collection: 'messages' })
 export class Message {
-  @Prop({ type: Types.ObjectId, ref: 'Room', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Room', required: true })
   roomId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', default: null })
   senderId: Types.ObjectId | null;
 
   // Denormalized at write time so history loads never populate user refs.

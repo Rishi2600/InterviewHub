@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 export type RoomDocument = HydratedDocument<Room>;
 export type RoomState = 'waiting' | 'active' | 'ended';
 
 @Schema({ _id: false })
 export class Participant {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
   @Prop({ required: true })
@@ -28,7 +28,12 @@ export class Room {
   @Prop({ required: true, unique: true, index: true })
   code: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true,
+  })
   ownerId: Types.ObjectId;
 
   @Prop({
