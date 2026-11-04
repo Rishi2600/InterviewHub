@@ -34,7 +34,20 @@ import { AppController } from './app.controller';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
-      serveStaticOptions: { index: false },
+      serveStaticOptions: {
+        index: false,
+        // Defence in depth for user uploads: never sniff a type, download
+        // instead of rendering when opened directly (<img> still works), and
+        // forbid any script even if a non-image ever got stored.
+        setHeaders: (res) => {
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+          res.setHeader('Content-Disposition', 'attachment');
+          res.setHeader(
+            'Content-Security-Policy',
+            "default-src 'none'; sandbox",
+          );
+        },
+      },
     }),
     RedisModule,
     AuthModule,

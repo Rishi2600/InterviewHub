@@ -11,12 +11,12 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { randomUUID } from 'crypto';
+import { unlink } from 'fs/promises';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { SelfGuard } from '../common/guards/self.guard';
 import { UsersService } from './users.service';
-
-const IMAGE_MIME = /image\/(png|jpe?g|webp|gif)/;
+import { AVATAR_TYPES, hasImageSignature, readFileHead } from './avatar-file';
 
 @Controller('users')
 export class UsersController {
@@ -33,8 +33,11 @@ export class UsersController {
   }
 
   /**
-   * Production-correct path: write file to disk, store only the URL in Mongo.
-   * SelfGuard ensures a user can only upload their own avatar.
+   * Writes the file to disk and stores only its URL in Mongo. SelfGuard limits
+   * a user to their own avatar. The declared type must be on the allowlist, the
+   * stored extension comes from that type (never the client's filename), and
+   * the file's first bytes must match it, so an HTML page cannot be uploaded
+   * under an image label.
    */
   @UseGuards(JwtAuthGuard, SelfGuard)
   @Post(':id/avatar')
@@ -43,14 +46,13 @@ export class UsersController {
       storage: diskStorage({
         destination: './uploads/avatars',
         filename: (_req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
+          cb(null, `${randomUUID()}${AVATAR_TYPES[file.mimetype]}`);
         },
       }),
       fileFilter: (_req, file, cb) => {
-        if (!IMAGE_MIME.test(file.mimetype)) {
+        if (!AVATAR_TYPES[file.mimetype]) {
           return cb(
-            new BadRequestException('Only image files are allowed'),
+            new BadRequestException('Only PNG, JPEG, GIF or WebP images'),
             false,
           );
         }
@@ -64,6 +66,11 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
+    const head = await readFileHead(file.path);
+    if (!hasImageSignature(head, file.mimetype)) {
+      await unlink(file.path);
+      throw new BadRequestException('File content is not a valid image');
+    }
     const base = this.config.get<string>('PUBLIC_BASE_URL');
     const avatarUrl = `${base}/uploads/avatars/${file.filename}`;
     const user = await this.usersService.setAvatarUrl(id, avatarUrl);
