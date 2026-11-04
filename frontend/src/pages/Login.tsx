@@ -3,9 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AtSign, KeyRound } from 'lucide-react'
-import { Button } from '@/components/legacy/Button'
-import { Input } from '@/components/legacy/Input'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { Alert, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { errorMessage } from '@/lib/api'
 import { AuthLayout } from './AuthLayout'
@@ -23,7 +25,6 @@ export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [formError, setFormError] = useState<string | null>(null)
-
   const from = (location.state as { from?: string } | null)?.from ?? '/'
 
   const {
@@ -43,52 +44,50 @@ export function Login() {
   }
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to run interviews, join rooms and follow live contests."
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-        <Input
-          {...register('email')}
-          type="email"
-          label="Email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          leadingIcon={<AtSign className="size-4" />}
-          error={errors.email?.message}
-        />
-
-        <Input
-          {...register('password')}
-          type="password"
-          label="Password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          leadingIcon={<KeyRound className="size-4" />}
-          error={errors.password?.message}
-        />
-
-        {formError && (
-          <p
-            role="alert"
-            className="border-l-2 border-clay bg-surface px-3 py-2 text-caption text-ink"
-          >
-            {formError}
+    <AuthLayout title="Sign in" subtitle="Run interviews, join rooms and follow live contests.">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <FieldGroup>
+          <Field data-invalid={Boolean(errors.email) || undefined}>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              aria-invalid={Boolean(errors.email) || undefined}
+              {...register('email')}
+            />
+            <FieldError errors={[errors.email]} />
+          </Field>
+          <Field data-invalid={Boolean(errors.password) || undefined}>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              aria-invalid={Boolean(errors.password) || undefined}
+              {...register('password')}
+            />
+            <FieldError errors={[errors.password]} />
+          </Field>
+          {formError && (
+            <Alert variant="destructive">
+              <AlertCircle aria-hidden />
+              <AlertTitle>{formError}</AlertTitle>
+            </Alert>
+          )}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="animate-spin" aria-hidden />}
+            Sign in
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            New here?{' '}
+            <Link to="/register" className="text-foreground underline underline-offset-4">
+              Create an account
+            </Link>
           </p>
-        )}
-
-        {/* The one primary action on this screen. */}
-        <Button type="submit" size="lg" fullWidth isLoading={isSubmitting} className="mt-2">
-          Sign in
-        </Button>
+        </FieldGroup>
       </form>
-
-      <p className="mt-8 border-t border-line pt-5 text-caption text-ink-faint">
-        New here?{' '}
-        <Link to="/register" className="text-sand hover:underline">
-          Create an account
-        </Link>
-      </p>
     </AuthLayout>
   )
 }

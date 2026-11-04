@@ -1,114 +1,68 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { ArrowRight, KeyRound } from 'lucide-react'
-import { Button } from '@/components/legacy/Button'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { JOIN_CODE_LENGTH, JoinCodeInput } from '@/components/common/JoinCodeInput'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { joinRoomByCode } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 
-const CODE_LENGTH = 5
-// Matches the backend's unambiguous alphabet (no I, O, 0, 1).
-const ALLOWED = /[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/
-
 export function JoinRoom() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const mutation = useMutation({
-    mutationFn: (value: string) => joinRoomByCode(value),
+  const join = useMutation({
+    mutationFn: joinRoomByCode,
     onSuccess: (room) => {
-      toast.success(`Joined “${room.title}”`)
+      void queryClient.invalidateQueries({ queryKey: ['rooms'] })
+      toast.success(`Joined ${room.title}`)
       navigate(`/rooms/${room._id}`)
     },
     onError: (err) => setError(errorMessage(err, 'Could not join that room')),
   })
-
-  function submit() {
-    setError(null)
-    if (code.length !== CODE_LENGTH) {
-      setError(`Room codes are ${CODE_LENGTH} characters long`)
-      return
-    }
-    mutation.mutate(code)
-  }
-
-  function handleChange(value: string) {
-    const cleaned = value
-      .toUpperCase()
-      .split('')
-      .filter((c) => ALLOWED.test(c))
-      .join('')
-      .slice(0, CODE_LENGTH)
-    setCode(cleaned)
-    setError(null)
-  }
+  const ready = code.length === JOIN_CODE_LENGTH
 
   return (
-    <div className="mx-auto flex max-w-md flex-col py-8">
-      <div className="animate-rise">
-        <p className="label mb-3 flex items-center gap-2">
-          <KeyRound className="size-3" aria-hidden />
-          Join room
-        </p>
-        <h1 className="text-heading text-ink">Enter your join code</h1>
-        <p className="mt-2 text-caption text-ink-muted">
-          The {CODE_LENGTH}-character code your interviewer shared.
-        </p>
-      </div>
-
-      <div className="mt-8 animate-rise border-t border-line pt-8">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            submit()
-          }}
-          className="flex flex-col gap-5"
-        >
-          <div>
-            <label htmlFor="room-code" className="sr-only">
-              Room code
-            </label>
-            {/* The code is a figure: mono, tabular, and wide-tracked. */}
-            <input
-              id="room-code"
-              value={code}
-              autoFocus
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              inputMode="text"
-              placeholder="AB3D9"
-              aria-invalid={error ? true : undefined}
-              aria-describedby={error ? 'room-code-error' : 'room-code-hint'}
-              onChange={(e) => handleChange(e.target.value)}
-              className="num h-16 w-full rounded-[var(--radius-container)] border border-line bg-surface text-center text-display uppercase tracking-[0.35em] text-ink hover:border-line-strong focus:border-line-strong"
-            />
-            {error ? (
-              <p id="room-code-error" role="alert" className="mt-3 text-micro text-clay">
-                {error}
-              </p>
-            ) : (
-              <p id="room-code-hint" className="num mt-3 text-micro text-ink-faint">
-                {code.length}/{CODE_LENGTH} characters
-              </p>
-            )}
-          </div>
-
-          {/* The one primary action on this screen. */}
-          <Button
-            type="submit"
-            size="lg"
-            fullWidth
-            disabled={code.length !== CODE_LENGTH}
-            isLoading={mutation.isPending}
+    <>
+      <PageHeader title={<span>Join a room</span>} />
+      <Card className="mx-auto mt-8 w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="font-heading text-xl">Enter your join code</CardTitle>
+          <CardDescription>The {JOIN_CODE_LENGTH}-character code your interviewer shared.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid justify-items-center gap-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (ready) join.mutate(code)
+            }}
           >
-            Join room
-            <ArrowRight className="size-3.5" aria-hidden />
-          </Button>
-        </form>
-      </div>
-    </div>
+            <JoinCodeInput
+              value={code}
+              size="lg"
+              autoFocus
+              invalid={Boolean(error)}
+              onChange={(next) => {
+                setCode(next)
+                setError(null)
+              }}
+            />
+            <p role={error ? 'alert' : undefined} className={error ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>
+              {error ?? `${code.length} of ${JOIN_CODE_LENGTH} characters`}
+            </p>
+            <Button type="submit" className="w-full" disabled={!ready || join.isPending}>
+              {join.isPending && <Loader2 className="animate-spin" aria-hidden />}
+              Join room
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </>
   )
 }

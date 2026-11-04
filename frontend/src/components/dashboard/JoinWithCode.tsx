@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { JOIN_CODE_LENGTH, JoinCodeInput } from '@/components/common/JoinCodeInput'
 import { joinRoomByCode } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 
@@ -23,7 +22,7 @@ export function JoinWithCode() {
     },
     onError: (err) => toast.error(errorMessage(err, 'Could not join that room')),
   })
-  const ready = code.length === 5
+  const ready = code.length === JOIN_CODE_LENGTH
 
   return (
     <Card>
@@ -39,19 +38,7 @@ export function JoinWithCode() {
             if (ready) join.mutate(code)
           }}
         >
-          <InputOTP
-            maxLength={5}
-            pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
-            value={code}
-            onChange={(v) => setCode(v.toUpperCase())}
-            aria-label="Join code"
-          >
-            <InputOTPGroup>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <InputOTPSlot key={i} index={i} className="size-11 font-mono text-base" />
-              ))}
-            </InputOTPGroup>
-          </InputOTP>
+          <JoinCodeInput value={code} onChange={setCode} />
           <Button type="submit" variant="secondary" disabled={!ready || join.isPending}>
             {join.isPending && <Loader2 className="animate-spin" aria-hidden />}
             Join room

@@ -34,16 +34,6 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-/** Stable hash of an id, used to pick a fixed tint from a fixed palette so a
- *  given user always renders the same way. */
-export function hashId(id: string): number {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) % 100003
-  }
-  return hash
-}
-
 /** Last 6 characters of a Mongo id — a readable stand-in when no name exists. */
 export function shortId(id: string): string {
   return id.length <= 6 ? id : `…${id.slice(-6)}`

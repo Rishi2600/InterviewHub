@@ -1,14 +1,19 @@
+import type { ReactNode } from 'react'
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Upload } from 'lucide-react'
-import { Avatar } from '@/components/legacy/Avatar'
-import { Button } from '@/components/legacy/Button'
-import { Section, SectionHeader } from '@/components/legacy/Section'
-import { RoleBadge } from '@/components/legacy/Badge'
+import { Loader2, Upload } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { UserAvatar } from '@/components/common/UserAvatar'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/hooks/useAuth'
 import { uploadAvatar } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
+import { cn } from '@/lib/utils'
+
+const ROLE = { candidate: 'Candidate', interviewer: 'Interviewer', admin: 'Admin' } as const
 
 // Matches the backend's multer limits and mime filter.
 const MAX_BYTES = 2 * 1024 * 1024
@@ -25,11 +30,11 @@ export function Profile() {
     onSuccess: (updated) => {
       patchUser({ avatarUrl: updated.avatarUrl ?? null })
       setPreview(null)
-      toast.success('Avatar updated')
+      toast.success('Picture updated')
     },
     onError: (err) => {
       setPreview(null)
-      toast.error(errorMessage(err, 'Could not upload your avatar'))
+      toast.error(errorMessage(err, 'Could not upload your picture'))
     },
   })
 
@@ -55,84 +60,77 @@ export function Profile() {
   if (!user) return null
 
   return (
-    <div className="mx-auto max-w-2xl animate-rise">
-      <header className="pb-8">
-        <p className="label mb-3">Baseline</p>
-        <h1 className="text-display text-ink">Profile</h1>
-      </header>
+    <>
+      <PageHeader title={<span>Profile</span>} />
+      <div className="mx-auto grid w-full max-w-2xl gap-4">
+        <h1 className="text-2xl font-semibold">Profile</h1>
 
-      <Section>
-        <SectionHeader
-          label="Avatar"
-          title="Your picture"
-          description="PNG, JPEG, WebP or GIF, up to 2 MB."
-        />
-
-        <div className="flex flex-wrap items-center gap-6">
-          <Avatar
-            name={user.username}
-            id={user.id}
-            src={preview ?? user.avatarUrl}
-            size="lg"
-            className={mutation.isPending ? 'opacity-60' : undefined}
-          />
-
-          <div className="flex flex-col gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED.join(',')}
-              className="sr-only"
-              onChange={(e) => {
-                handleFile(e.target.files?.[0])
-                // Reset so picking the same file twice still fires onChange.
-                e.target.value = ''
-              }}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading">Picture</CardTitle>
+            <CardDescription>PNG, JPEG, WebP or GIF, up to 2 MB.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-6">
+            <UserAvatar
+              name={user.username}
+              src={preview ?? user.avatarUrl}
+              size="lg"
+              className={cn(mutation.isPending && 'opacity-60')}
             />
-            {/* The one primary action on this screen. */}
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              isLoading={mutation.isPending}
-              leadingIcon={<Upload className="size-3.5" />}
-            >
-              {user.avatarUrl ? 'Replace image' : 'Upload image'}
-            </Button>
-            {validationError && (
-              <p role="alert" className="text-micro text-clay">
-                {validationError}
-              </p>
-            )}
-          </div>
-        </div>
-      </Section>
+            <div className="grid gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED.join(',')}
+                className="sr-only"
+                tabIndex={-1}
+                onChange={(e) => {
+                  handleFile(e.target.files?.[0])
+                  // Reset so picking the same file twice still fires onChange.
+                  e.target.value = ''
+                }}
+              />
+              <Button onClick={() => fileInputRef.current?.click()} disabled={mutation.isPending}>
+                {mutation.isPending ? <Loader2 className="animate-spin" aria-hidden /> : <Upload aria-hidden />}
+                {user.avatarUrl ? 'Replace picture' : 'Upload picture'}
+              </Button>
+              {validationError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {validationError}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <Section>
-        <SectionHeader
-          label="Account"
-          title="Your details"
-          description="These come from your registration."
-        />
-        <dl>
-          <Field label="Username" value={user.username} />
-          <Field label="Email" value={user.email} />
-          <div className="flex items-center justify-between gap-4 border-t border-line py-3.5">
-            <dt className="label">Role</dt>
-            <dd>
-              <RoleBadge role={user.role} />
-            </dd>
-          </div>
-          <Field label="User ID" value={user.id} mono />
-        </dl>
-      </Section>
-    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading">Account</CardTitle>
+            <CardDescription>The details you registered with.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="divide-y text-sm">
+              <Row label="Name">{user.username}</Row>
+              <Row label="Email">{user.email}</Row>
+              <Row label="Role">
+                <Badge variant="secondary">{ROLE[user.role]}</Badge>
+              </Row>
+              <Row label="User ID">
+                <span className="font-mono text-xs">{user.id}</span>
+              </Row>
+            </dl>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   )
 }
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-line py-3.5 first:border-t-0">
-      <dt className="label">{label}</dt>
-      <dd className={`truncate text-caption text-ink ${mono ? 'num' : ''}`}>{value}</dd>
+    <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 truncate font-medium">{children}</dd>
     </div>
   )
 }
