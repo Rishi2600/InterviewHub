@@ -38,7 +38,7 @@ import { PinQuestionWsDto } from './dto/pin-question-ws.dto';
 @UseFilters(WsExceptionsFilter)
 @UseGuards(WsJwtGuard)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/chat' })
+@WebSocketGateway({ namespace: '/chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(ChatGateway.name);

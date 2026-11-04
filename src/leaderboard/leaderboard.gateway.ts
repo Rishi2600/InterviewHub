@@ -38,7 +38,7 @@ class SubscribeDto {
 @UseFilters(WsExceptionsFilter)
 @UseGuards(WsJwtGuard)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/leaderboard' })
+@WebSocketGateway({ namespace: '/leaderboard' })
 export class LeaderboardGateway {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(LeaderboardGateway.name);

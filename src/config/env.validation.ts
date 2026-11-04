@@ -23,5 +23,9 @@ export const envValidationSchema = Joi.object({
   }),
 
   PUBLIC_BASE_URL: Joi.string().default('http://localhost:3000'),
+  // Comma-separated browser origins allowed to call the API and open sockets.
+  CORS_ORIGINS: Joi.string()
+    .pattern(/^[^*]+$/, 'explicit origins (no "*")')
+    .default('http://localhost:5173'),
   MAX_AVATAR_SIZE_BYTES: Joi.number().default(2097152),
 });
