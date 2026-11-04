@@ -86,6 +86,20 @@ export class RoomsService {
     return room.ownerId.toString() === user.userId;
   }
 
+  /**
+   * Who may read and post in a room: its owner, any admin, or a participant
+   * (someone who joined with the room code over HTTP).
+   */
+  isMember(
+    room: RoomDocument,
+    user: { userId: string; role: string },
+  ): boolean {
+    return (
+      this.isOwnedBy(room, user) ||
+      room.participants.some((p) => p.userId.toString() === user.userId)
+    );
+  }
+
   async findByCode(code: string): Promise<RoomDocument> {
     const room = await this.roomModel
       .findOne({ code: code.toUpperCase() })

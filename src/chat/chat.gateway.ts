@@ -62,7 +62,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: RoomEventDto,
     @WsCurrentUser() user: AuthUser,
   ) {
-    const room = await this.roomsService.findById(body.roomId);
+    const room = await this.findRoomForMember(body.roomId, user);
     await client.join(this.roomChannel(room.id));
 
     // Send chat history to the joining client only.
@@ -72,17 +72,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       history.map((m) => this.serialize(m)),
     );
 
-    // Broadcast a system join message to everyone in the room.
-    const sys = await this.chatService.create({
-      roomId: room.id,
-      senderId: null,
-      senderName: 'system',
-      content: `${user.username} joined the room`,
-      type: 'system',
-    });
-    this.server
-      .to(this.roomChannel(room.id))
-      .emit('chat:system', this.serialize(sys));
+    // Ended rooms stay readable but accept no new messages, system ones included.
+    if (room.state !== 'ended') {
+      const sys = await this.chatService.create({
+        roomId: room.id,
+        senderId: null,
+        senderName: 'system',
+        content: `${user.username} joined the room`,
+        type: 'system',
+      });
+      this.server
+        .to(this.roomChannel(room.id))
+        .emit('chat:system', this.serialize(sys));
+    }
 
     return { ok: true, roomId: room.id, pinnedQuestion: room.pinnedQuestion };
   }
@@ -94,7 +96,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WsCurrentUser() user: AuthUser,
   ) {
     const channel = this.roomChannel(body.roomId);
+    // Only a socket that passed room:join can announce leaving.
+    if (!client.rooms.has(channel)) return { ok: true };
     await client.leave(channel);
+
+    const room = await this.roomsService.findByIdRaw(body.roomId);
+    if (!room || room.state === 'ended') return { ok: true };
     const sys = await this.chatService.create({
       roomId: body.roomId,
       senderId: null,
@@ -111,6 +118,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: SendMessageDto,
     @WsCurrentUser() user: AuthUser,
   ) {
+    const room = await this.findRoomForMember(body.roomId, user);
+    if (room.state === 'ended') throw new WsException('Room has ended');
+
     const msg = await this.chatService.create({
       roomId: body.roomId,
       senderId: user.userId,
@@ -124,21 +134,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { ok: true, id: msg.id };
   }
 
+  // Typing events are high-frequency, so instead of a DB lookup they are only
+  // relayed for sockets that already passed the membership check in room:join.
   @SubscribeMessage('chat:typing')
-  onTyping(@MessageBody() body: RoomEventDto, @WsCurrentUser() user: AuthUser) {
-    this.server
-      .to(this.roomChannel(body.roomId))
+  onTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: RoomEventDto,
+    @WsCurrentUser() user: AuthUser,
+  ) {
+    const channel = this.roomChannel(body.roomId);
+    if (!client.rooms.has(channel)) return;
+    client
+      .to(channel)
       .emit('chat:typing', { userId: user.userId, username: user.username });
   }
 
   @SubscribeMessage('chat:stop_typing')
   onStopTyping(
+    @ConnectedSocket() client: Socket,
     @MessageBody() body: RoomEventDto,
     @WsCurrentUser() user: AuthUser,
   ) {
-    this.server
-      .to(this.roomChannel(body.roomId))
-      .emit('chat:stop_typing', { userId: user.userId });
+    const channel = this.roomChannel(body.roomId);
+    if (!client.rooms.has(channel)) return;
+    client.to(channel).emit('chat:stop_typing', { userId: user.userId });
   }
 
   @SubscribeMessage('question:pin')
@@ -179,6 +198,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!this.roomsService.isOwnedBy(room, user)) {
       throw new WsException('You do not own this room');
     }
+  }
+
+  /**
+   * Loads the room and requires the caller to be a member. A missing room and
+   * a forbidden one get the same error, so room ids cannot be probed.
+   */
+  private async findRoomForMember(roomId: string, user: AuthUser) {
+    const room = await this.roomsService.findByIdRaw(roomId);
+    if (!room || !this.roomsService.isMember(room, user)) {
+      throw new WsException('You are not a participant in this room');
+    }
+    return room;
   }
 
   private roomChannel(roomId: string): string {
