@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Copy, DoorOpen, Pin, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { JoinCodeTiles } from '@/components/common/JoinCodeTiles'
 import { LiveDot } from '@/components/common/LiveDot'
 import { UserAvatar } from '@/components/common/UserAvatar'
@@ -17,15 +17,15 @@ export function LiveRoomCard({ room, userId }: { room: Room; userId?: string }) 
   const copy = useCopy()
   return (
     <Card className="min-w-0">
-      <CardHeader className="flex flex-row items-start justify-between gap-3">
-        <div className="grid min-w-0 gap-1.5">
-          <CardTitle className="flex items-center gap-2.5 font-heading">
-            <LiveDot />
-            <span className="truncate">{room.title}</span>
-          </CardTitle>
-          <CardDescription>In progress. Opened at {formatTime(room.createdAt)}.</CardDescription>
-        </div>
-        <Badge>Active</Badge>
+      <CardHeader>
+        <CardTitle className="flex min-w-0 items-center gap-2.5 font-heading">
+          <LiveDot />
+          <span className="truncate">{room.title}</span>
+        </CardTitle>
+        <CardDescription>In progress. Opened at {formatTime(room.createdAt)}.</CardDescription>
+        <CardAction>
+          <Badge>Active</Badge>
+        </CardAction>
       </CardHeader>
       <CardContent className="grid min-w-0 gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">

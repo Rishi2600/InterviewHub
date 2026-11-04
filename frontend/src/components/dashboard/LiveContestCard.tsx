@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserAvatar } from '@/components/common/UserAvatar'
@@ -29,14 +29,14 @@ export function LiveContestCard({ contest }: { contest: Contest }) {
 
   return (
     <Card className="min-w-0">
-      <CardHeader className="flex flex-row items-start justify-between gap-3">
-        <div className="grid min-w-0 gap-1.5">
-          <CardTitle className="truncate font-heading">{contest.title}</CardTitle>
-          <CardDescription>
-            Live leaderboard{total > 0 ? `, top ${Math.min(5, total)} of ${total}` : ''}
-          </CardDescription>
-        </div>
-        <Badge>Active</Badge>
+      <CardHeader>
+        <CardTitle className="min-w-0 truncate font-heading">{contest.title}</CardTitle>
+        <CardDescription>
+          Live leaderboard{total > 0 ? `, top ${Math.min(5, total)} of ${total}` : ''}
+        </CardDescription>
+        <CardAction>
+          <Badge>Active</Badge>
+        </CardAction>
       </CardHeader>
       <CardContent>
         {!board.hasLoaded ? (
