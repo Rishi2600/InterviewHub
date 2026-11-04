@@ -13,9 +13,10 @@ chat, and scored contests with a live leaderboard.
 | Real-time    | socket.io-client v4 (`/chat`, `/leaderboard`) |
 | Server state | @tanstack/react-query                         |
 | Forms        | react-hook-form + zod                         |
-| Styling      | Tailwind CSS v4 (tokens in `src/index.css`)   |
-| Toasts       | sonner                                        |
+| UI           | shadcn/ui (new-york) on Radix, Tailwind CSS v4 |
+| Toasts       | sonner (through shadcn's `Toaster`)           |
 | Icons        | lucide-react                                  |
+| Tests        | Vitest + Testing Library (jsdom)              |
 
 ## Running it
 
@@ -27,7 +28,7 @@ npm run dev          # http://localhost:5173
 ```
 
 Other scripts: `npm run build` (typecheck + production build), `npm run preview`,
-`npm run lint`.
+`npm run lint`, `npm test` (Vitest, once) and `npm run test:watch`.
 
 ## Configuration
 
@@ -60,9 +61,24 @@ socket for the lifetime of a screen. Both re-emit their join event on *every*
 `connect`, not just the first — socket.io reconnects transparently, but
 server-side room membership is gone after a drop.
 
-**Design tokens** live in the `@theme` block of `src/index.css`. Surfaces,
-accent, semantic colors, type scale, radii, shadows and motion are all defined
-there; components reference them and never hard-code a value.
+**Design.** Components come from shadcn/ui (`components.json`, files in
+`src/components/ui/`, added with `npx shadcn@latest add <name>`). Local edits
+to those files are marked with a comment at the top; the main one is that
+shadows are removed, because the design uses hairline borders only.
+
+The colour tokens are in `src/index.css`: neutral greys plus one accent,
+turquoise `#14C8B4`, in a light and a dark theme. Use the token classes
+(`bg-card`, `text-muted-foreground`, `bg-primary`, `text-brand` for the
+accent as text, `text-danger` for red text), never raw colours. Fonts: Inter
+for text, Space Grotesk for headings (`font-heading`), JetBrains Mono for
+join codes.
+
+The theme is the `dark` class on `<html>`. A script in `index.html` applies
+the saved choice (or the system's) before first paint; `useTheme()` in
+`src/hooks/use-theme.ts` reads and changes it.
+
+**Page header.** The top bar belongs to `AppShell`, but each page fills it
+with `<PageHeader title={…}>actions</PageHeader>`, which portals into the bar.
 
 ## Notes on the backend contract
 
@@ -85,13 +101,21 @@ Three quirks worth knowing, all handled at the API boundary:
 src/
   lib/          api.ts, endpoints.ts, session.ts, sockets.ts, utils.ts
   context/      AuthContext.tsx
-  hooks/        useAuth.ts, useChatSocket.ts, useLeaderboardSocket.ts
+  hooks/        useAuth, useChatSocket, useLeaderboardSocket, useLiveNow,
+                useCopy, use-theme, use-mobile
   components/
-    ui/         Button, Input, Card, Badge, Dialog, Avatar, Skeleton, States
-    layout/     AppShell, ProtectedRoute, RedirectIfAuthed, FullPageLoader
+    ui/         shadcn/ui components (generated, then lightly edited)
+    common/     UserAvatar, StatusBadge, MetricStrip, JoinCodeInput,
+                JoinCodeTiles, LiveDot, States (empty and error)
+    layout/     AppShell, AppSidebar, PageHeader, CommandMenu, nav,
+                ProtectedRoute, RedirectIfAuthed, FullPageLoader
+    dashboard/  LiveRoomCard, LiveContestCard, RoomsTable, JoinWithCode,
+                ContestsList, CreateDialog
     chat/       MessageList, MessageBubble, Composer, TypingIndicator,
-                PinnedBanner, ParticipantsList
+                PinnedBanner, PinDialog, ParticipantsList, ConnectionStatus
     contest/    Leaderboard, ScorePanel
-  pages/        Login, Register, Dashboard, JoinRoom, Room, Contest, Profile, NotFound
+  pages/        Login, Register, AuthLayout, Dashboard, JoinRoom, Room,
+                Contest, Profile, NotFound
+  test/         test setup and helpers
   types/        shared API types
 ```
