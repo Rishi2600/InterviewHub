@@ -41,8 +41,6 @@ export function Contest() {
     enabled: Boolean(id),
   })
 
-  const board = useLeaderboardSocket(id)
-
   const contest = contestQuery.data
   const entries = useMemo(() => entriesQuery.data ?? [], [entriesQuery.data])
 
@@ -55,6 +53,9 @@ export function Contest() {
   const isOwner = Boolean(contest && user && contest.ownerId === user.id)
   const canHost = isOwner || user?.role === 'admin'
   const hasJoined = entries.some((e) => e.userId === user?.id)
+  // The server only lets hosts and entrants subscribe to the live board.
+  const canWatch = canHost || hasJoined
+  const board = useLeaderboardSocket(canWatch ? id : undefined)
 
   function refreshEntries() {
     void queryClient.invalidateQueries({ queryKey: ['contest-entries', id] })
@@ -121,7 +122,7 @@ export function Contest() {
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-heading text-ink">{contest.title}</h1>
             <ContestStateBadge state={contest.state} />
-            <ConnectionPill status={board.status} />
+            {canWatch && <ConnectionPill status={board.status} />}
           </div>
           <p className="mt-2 text-caption text-ink-muted">
             {isEnded
@@ -191,6 +192,12 @@ export function Contest() {
               entries={[...entries].sort((a, b) => b.finalScore - a.finalScore)}
               currentUserId={user?.id ?? ''}
               isLoading={entriesQuery.isLoading}
+            />
+          ) : !canWatch ? (
+            <EmptyState
+              icon={<Trophy className="size-5" />}
+              title="Join to see the live leaderboard"
+              description="Standings are visible to the host and to participants."
             />
           ) : (
             <Leaderboard
