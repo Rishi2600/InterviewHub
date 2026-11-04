@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react'
-import { Avatar } from '@/components/ui/Avatar'
-import { RoleBadge } from '@/components/ui/Badge'
-import { EmptyState } from '@/components/ui/States'
+import { Avatar } from '@/components/legacy/Avatar'
+import { RoleBadge } from '@/components/legacy/Badge'
+import { EmptyState } from '@/components/legacy/States'
 import { formatDateTime } from '@/lib/utils'
 import type { Participant } from '@/types'
 

@@ -1,5 +1,5 @@
 import { Pin, PinOff } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/legacy/Button'
 
 export function PinnedBanner({
   question,

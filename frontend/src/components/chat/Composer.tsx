@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { SendHorizontal } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/legacy/Button'
 
 const TYPING_IDLE_MS = 1200
 

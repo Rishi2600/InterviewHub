@@ -1,8 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
 import { DoorOpen, LayoutGrid, LogOut, Mountain, User as UserIcon } from 'lucide-react'
-import { Avatar } from '@/components/ui/Avatar'
-import { RoleBadge } from '@/components/ui/Badge'
+import { Avatar } from '@/components/legacy/Avatar'
+import { RoleBadge } from '@/components/legacy/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 

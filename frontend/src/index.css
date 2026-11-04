@@ -1,16 +1,167 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
-/* ---------------------------------------------------------------------------
-   Peaks design tokens.
+/* Dark mode follows the `.dark` class on <html> (set before first paint by
+   the script in index.html, toggled by ThemeToggle). */
+@custom-variant dark (&:is(.dark *));
 
-   Tone: technical, calm, dense, warm. A quiet room with one hot surface.
-   Dark mode is primary. This @theme block is the SINGLE SOURCE OF TRUTH --
-   every color, font, radius and motion value in the product is a token here
-   and generates a utility. Components consume utilities and must never
-   introduce a raw hex value or a default Tailwind gray.
+/* ── Design tokens ───────────────────────────────────────────────────────────
+   shadcn/ui tokens with the CRM project's neutral values and one accent,
+   turquoise #14C8B4. Text on the accent is dark (#042F2A) for contrast; the
+   accent as text on light surfaces uses --brand-text. */
+:root {
+  color-scheme: light;
+  --radius: 0.625rem;
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #14c8b4;
+  --primary-foreground: #042f2a;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #14c8b4;
+  /* Turquoise ramp, strongest first, for charts and progress bars. */
+  --chart-1: #14c8b4;
+  --chart-2: #0fa192;
+  --chart-3: #7de3d6;
+  --chart-4: #0b7f72;
+  --chart-5: #c3f3ec;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #14c8b4;
+  --sidebar-primary-foreground: #042f2a;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #14c8b4;
+  /* Semantic text colours: the accent and red as readable text. */
+  --brand-text: #0b7f72;
+  --danger-text: #dc2626;
+}
 
-   The five rules this system enforces are written up in DESIGN.md.
---------------------------------------------------------------------------- */
+.dark {
+  color-scheme: dark;
+  --background: #080808;
+  --foreground: #fafafa;
+  --card: #161616;
+  --card-foreground: #fafafa;
+  --popover: #161616;
+  --popover-foreground: #fafafa;
+  --primary: #14c8b4;
+  --primary-foreground: #042f2a;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a1a1a1;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #262626;
+  --input: #262626;
+  --ring: #14c8b4;
+  --sidebar: #161616;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #14c8b4;
+  --sidebar-primary-foreground: #042f2a;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #262626;
+  --sidebar-ring: #14c8b4;
+  --brand-text: #14c8b4;
+  --danger-text: #f87171;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-brand: var(--brand-text);
+  --color-danger: var(--danger-text);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading tracking-tight;
+  }
+
+  /* Thin scrollbars, as in the CRM. */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+}
+
+/* ── Legacy tokens ───────────────────────────────────────────────────────────
+   The previous design's tokens and utilities, kept only so pages not yet
+   moved to shadcn/ui still render. Deleted once every page is migrated. */
 @theme {
   /* -- Surfaces ---------------------------------------------------------
      Elevation is a surface step plus a hairline, never a shadow.
@@ -215,103 +366,4 @@
 @utility rule {
   border: 0;
   border-top: 1px solid var(--color-line);
-}
-
-@layer base {
-  *,
-  *::before,
-  *::after {
-    border-color: var(--color-line);
-  }
-
-  html {
-    color-scheme: dark;
-  }
-
-  body {
-    background-color: var(--color-ground);
-    color: var(--color-ink-muted);
-    font-family: var(--font-display);
-    font-stretch: 100%;
-    font-size: var(--text-body);
-    line-height: var(--text-body--line-height);
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Headers run narrow and heavy; body runs normal width. */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-display);
-    font-stretch: 84%;
-    font-weight: 750;
-    color: var(--color-ink);
-    letter-spacing: -0.01em;
-  }
-
-  /* Numbers default to mono + tabular even without the .num utility, so a
-     stray figure never renders in proportional type. */
-  code,
-  kbd,
-  samp,
-  pre {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* One focus ring across the product, and it is sand. */
-  :focus-visible {
-    outline: 2px solid var(--color-sand);
-    outline-offset: 2px;
-    border-radius: var(--radius-control);
-  }
-
-  ::selection {
-    background-color: var(--color-sand-soft);
-    color: var(--color-ink);
-  }
-
-  ::placeholder {
-    color: var(--color-ink-faint);
-  }
-
-  :disabled {
-    color: var(--color-ink-disabled);
-  }
-
-  /* Scrollbars sit inside the surface rather than punching through it. */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background-color: var(--color-line);
-    border-radius: var(--radius-pill);
-    border: 3px solid transparent;
-    background-clip: content-box;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-line-strong);
-  }
-
-  /* Motion reports state. With reduced motion we keep the state legible
-     through color alone and drop the movement. */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
 }

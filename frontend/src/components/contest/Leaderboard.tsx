@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Crown, Trophy } from 'lucide-react'
-import { Avatar } from '@/components/ui/Avatar'
-import { EmptyState } from '@/components/ui/States'
-import { SkeletonRows } from '@/components/ui/Skeleton'
+import { Avatar } from '@/components/legacy/Avatar'
+import { EmptyState } from '@/components/legacy/States'
+import { SkeletonRows } from '@/components/legacy/Skeleton'
 import { cn, shortId } from '@/lib/utils'
 import type { LeaderboardRow } from '@/types'
 

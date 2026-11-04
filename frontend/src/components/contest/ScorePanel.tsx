@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Avatar } from '@/components/ui/Avatar'
-import { EmptyState } from '@/components/ui/States'
+import { Button } from '@/components/legacy/Button'
+import { Avatar } from '@/components/legacy/Avatar'
+import { EmptyState } from '@/components/legacy/States'
 import type { ContestEntry } from '@/types'
 
 const QUICK_DELTAS = [1, 5, 10]

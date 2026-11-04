@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ArrowRight, KeyRound } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/legacy/Button'
 import { joinRoomByCode } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 

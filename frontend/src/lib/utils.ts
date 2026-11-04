@@ -1,7 +1,10 @@
-/** Tiny classname joiner — anything that isn't a non-empty string drops out,
- *  so `cond && 'class'` guards are safe whatever `cond` happens to be. */
-export function cn(...parts: unknown[]): string {
-  return parts.filter((p): p is string => typeof p === 'string' && p !== '').join(' ')
+import { clsx } from 'clsx'
+import type { ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+/** Joins class names and lets later Tailwind classes override earlier ones. */
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs))
 }
 
 /** "14:32" — used on chat messages. */

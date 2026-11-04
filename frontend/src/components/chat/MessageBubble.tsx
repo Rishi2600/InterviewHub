@@ -1,4 +1,4 @@
-import { Avatar } from '@/components/ui/Avatar'
+import { Avatar } from '@/components/legacy/Avatar'
 import { cn, formatTime } from '@/lib/utils'
 import type { Message } from '@/types'
 

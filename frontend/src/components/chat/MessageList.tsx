@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowDown, MessagesSquare } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
-import { Button } from '@/components/ui/Button'
-import { EmptyState } from '@/components/ui/States'
-import { SkeletonRows } from '@/components/ui/Skeleton'
+import { Button } from '@/components/legacy/Button'
+import { EmptyState } from '@/components/legacy/States'
+import { SkeletonRows } from '@/components/legacy/Skeleton'
 import type { Message } from '@/types'
 
 const NEAR_BOTTOM_PX = 80
