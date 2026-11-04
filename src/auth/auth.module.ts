@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { SocketAuthService } from '../common/ws/socket-auth.service';
 
 /**
  * jsonwebtoken types `expiresIn` as a narrow literal union ("1d", "2h", ...),
@@ -31,7 +32,7 @@ type ExpiresIn = NonNullable<JwtModuleOptions['signOptions']>['expiresIn'];
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtModule],
+  providers: [AuthService, JwtStrategy, SocketAuthService],
+  exports: [JwtModule, SocketAuthService],
 })
 export class AuthModule {}

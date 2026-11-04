@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { WsJwtGuard } from './ws-jwt.guard';
+import { SocketAuthService } from '../ws/socket-auth.service';
 
 const PAYLOAD = {
   sub: 'u1',
@@ -25,7 +26,7 @@ function contextFor(client: Socket): ExecutionContext {
 function guardVerifying(verify: () => unknown): WsJwtGuard {
   const jwt = { verify } as unknown as JwtService;
   const config = { get: () => 'test-secret' } as unknown as ConfigService;
-  return new WsJwtGuard(jwt, config);
+  return new WsJwtGuard(new SocketAuthService(jwt, config));
 }
 
 describe('WsJwtGuard', () => {

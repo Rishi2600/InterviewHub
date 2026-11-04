@@ -8,6 +8,7 @@ import {
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -16,8 +17,12 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { IsString } from 'class-validator';
 import { Model, Types } from 'mongoose';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Server, Socket } from 'socket.io';
+import { Throttle } from '@nestjs/throttler';
 import { WsJwtGuard } from '../common/guards/ws-jwt.guard';
+import { SocketAuthService } from '../common/ws/socket-auth.service';
+import { WsThrottleGuard } from '../common/throttle/ws-throttle.guard';
+import { WS_SUBSCRIBE_LIMIT } from '../common/throttle/limits';
 import { WsExceptionsFilter } from '../common/filters/ws-exceptions.filter';
 import { WsCurrentUser } from '../common/decorators/ws-current-user.decorator';
 import { AuthUser } from '../common/decorators/current-user.decorator';
@@ -36,10 +41,10 @@ class SubscribeDto {
  * broadcasts through `broadcast()` on every score change.
  */
 @UseFilters(WsExceptionsFilter)
-@UseGuards(WsJwtGuard)
+@UseGuards(WsJwtGuard, WsThrottleGuard)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 @WebSocketGateway({ namespace: '/leaderboard' })
-export class LeaderboardGateway {
+export class LeaderboardGateway implements OnGatewayInit {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(LeaderboardGateway.name);
 
@@ -48,7 +53,12 @@ export class LeaderboardGateway {
     @InjectModel(Contest.name) private readonly contestModel: Model<Contest>,
     @InjectModel(ContestEntry.name)
     private readonly entryModel: Model<ContestEntry>,
+    private readonly socketAuth: SocketAuthService,
   ) {}
+
+  afterInit(namespace: Namespace): void {
+    namespace.use(this.socketAuth.middleware());
+  }
 
   private channel(contestId: string): string {
     return `contest:${contestId}`;
@@ -70,6 +80,7 @@ export class LeaderboardGateway {
     return Boolean(owned || joined);
   }
 
+  @Throttle(WS_SUBSCRIBE_LIMIT)
   @SubscribeMessage('leaderboard:join')
   async onJoin(
     @ConnectedSocket() client: Socket,
@@ -86,6 +97,7 @@ export class LeaderboardGateway {
     return { ok: true };
   }
 
+  @Throttle(WS_SUBSCRIBE_LIMIT)
   @SubscribeMessage('leaderboard:leave')
   async onLeave(
     @ConnectedSocket() client: Socket,

@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch } from '@nestjs/common';
 import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+import { DroppedEventException } from '../throttle/ws-throttle.guard';
 
 /**
  * Global WebSocket exception filter. Emits a consistent 'error' event to the
@@ -9,6 +10,7 @@ import { Socket } from 'socket.io';
 @Catch()
 export class WsExceptionsFilter extends BaseWsExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
+    if (exception instanceof DroppedEventException) return;
     const client = host.switchToWs().getClient<Socket>();
     const message =
       exception instanceof WsException

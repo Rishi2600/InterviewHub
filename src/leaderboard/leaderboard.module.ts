@@ -11,7 +11,7 @@ import {
 
 @Module({
   imports: [
-    AuthModule, // provides JwtModule for WsJwtGuard
+    AuthModule, // provides SocketAuthService for socket auth
     // Read directly for the subscribe check: injecting ContestsService would
     // be circular, since it already depends on this module's gateway.
     MongooseModule.forFeature([

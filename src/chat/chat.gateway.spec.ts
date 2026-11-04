@@ -55,7 +55,11 @@ function buildGateway(roomOverrides: Record<string, unknown> = {}) {
     create: createMessage,
   };
 
-  const gateway = new ChatGateway(chatService as never, roomsService);
+  const gateway = new ChatGateway(
+    chatService as never,
+    roomsService,
+    {} as never,
+  );
   const emit = jest.fn();
   gateway.server = { to: () => ({ emit }) } as unknown as Server;
 

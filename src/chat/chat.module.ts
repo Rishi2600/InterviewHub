@@ -10,7 +10,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     MongooseModule.forFeature([{ name: Message.name, schema: MessageSchema }]),
     RoomsModule,
-    AuthModule, // provides JwtModule for WsJwtGuard
+    AuthModule, // provides SocketAuthService for socket auth
   ],
   providers: [ChatService, ChatGateway],
   exports: [ChatService],

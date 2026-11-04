@@ -38,6 +38,7 @@ function buildGateway() {
     { getTopN } as never,
     contestModel as never,
     entryModel as never,
+    {} as never,
   );
   const join = jest.fn();
   const emit = jest.fn();

@@ -10,13 +10,26 @@ import {
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Server, Socket } from 'socket.io';
+import { Throttle } from '@nestjs/throttler';
 import { WsJwtGuard } from '../common/guards/ws-jwt.guard';
+import { SocketAuthService } from '../common/ws/socket-auth.service';
+import {
+  DropWhenThrottled,
+  WsThrottleGuard,
+} from '../common/throttle/ws-throttle.guard';
+import {
+  WS_PIN_LIMIT,
+  WS_SEND_LIMIT,
+  WS_SUBSCRIBE_LIMIT,
+  WS_TYPING_LIMIT,
+} from '../common/throttle/limits';
 import { WsExceptionsFilter } from '../common/filters/ws-exceptions.filter';
 import { WsCurrentUser } from '../common/decorators/ws-current-user.decorator';
 import { AuthUser } from '../common/decorators/current-user.decorator';
@@ -27,8 +40,9 @@ import { RoomEventDto } from './dto/room-event.dto';
 import { PinQuestionWsDto } from './dto/pin-question-ws.dto';
 
 /**
- * Real-time chat gateway. Every handler is authenticated via WsJwtGuard, which
- * runs on the handshake and attaches the user to client.data.user.
+ * Real-time chat gateway. Connections are authenticated (and capped per user)
+ * by SocketAuthService; every event is re-checked by WsJwtGuard and rate
+ * limited per user by WsThrottleGuard.
  *
  * Events in:  room:join, room:leave, chat:send, chat:typing, chat:stop_typing,
  *             question:pin, question:unpin
@@ -36,17 +50,24 @@ import { PinQuestionWsDto } from './dto/pin-question-ws.dto';
  *             chat:stop_typing, question:pinned, question:unpinned
  */
 @UseFilters(WsExceptionsFilter)
-@UseGuards(WsJwtGuard)
+@UseGuards(WsJwtGuard, WsThrottleGuard)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 @WebSocketGateway({ namespace: '/chat' })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(ChatGateway.name);
 
   constructor(
     private readonly chatService: ChatService,
     private readonly roomsService: RoomsService,
+    private readonly socketAuth: SocketAuthService,
   ) {}
+
+  afterInit(namespace: Namespace): void {
+    namespace.use(this.socketAuth.middleware());
+  }
 
   handleConnection(client: Socket): void {
     this.logger.log(`WS connected: ${client.id}`);
@@ -56,6 +77,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`WS disconnected: ${client.id}`);
   }
 
+  @Throttle(WS_SUBSCRIBE_LIMIT)
   @SubscribeMessage('room:join')
   async onJoin(
     @ConnectedSocket() client: Socket,
@@ -89,6 +111,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { ok: true, roomId: room.id, pinnedQuestion: room.pinnedQuestion };
   }
 
+  @Throttle(WS_SUBSCRIBE_LIMIT)
   @SubscribeMessage('room:leave')
   async onLeave(
     @ConnectedSocket() client: Socket,
@@ -113,6 +136,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { ok: true };
   }
 
+  @Throttle(WS_SEND_LIMIT)
   @SubscribeMessage('chat:send')
   async onMessage(
     @MessageBody() body: SendMessageDto,
@@ -136,6 +160,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Typing events are high-frequency, so instead of a DB lookup they are only
   // relayed for sockets that already passed the membership check in room:join.
+  @Throttle(WS_TYPING_LIMIT)
+  @DropWhenThrottled()
   @SubscribeMessage('chat:typing')
   onTyping(
     @ConnectedSocket() client: Socket,
@@ -149,6 +175,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       .emit('chat:typing', { userId: user.userId, username: user.username });
   }
 
+  @Throttle(WS_TYPING_LIMIT)
+  @DropWhenThrottled()
   @SubscribeMessage('chat:stop_typing')
   onStopTyping(
     @ConnectedSocket() client: Socket,
@@ -160,6 +188,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.to(channel).emit('chat:stop_typing', { userId: user.userId });
   }
 
+  @Throttle(WS_PIN_LIMIT)
   @SubscribeMessage('question:pin')
   async onPin(
     @MessageBody() body: PinQuestionWsDto,
@@ -176,6 +205,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { ok: true };
   }
 
+  @Throttle(WS_PIN_LIMIT)
   @SubscribeMessage('question:unpin')
   async onUnpin(
     @MessageBody() body: RoomEventDto,
