@@ -41,10 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 401 interceptor clears the session and the listener below picks it up.
   useEffect(() => {
     let cancelled = false
-    if (!getToken()) {
-      setIsBootstrapping(false)
-      return
-    }
+    // No token: isBootstrapping already started as false.
+    if (!getToken()) return
     apiEndpoints
       .me()
       .then((fresh) => {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AtSign, KeyRound } from 'lucide-react'
@@ -39,7 +39,7 @@ export function Register() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -47,7 +47,7 @@ export function Register() {
     defaultValues: { role: 'candidate' },
   })
 
-  const selectedRole = watch('role')
+  const selectedRole = useWatch({ control, name: 'role' })
 
   async function onSubmit(values: FormValues) {
     setFormError(null)

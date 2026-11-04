@@ -34,6 +34,8 @@ export function useChatSocket(roomId: string | undefined) {
 
     const socket = connectChat(token)
     socketRef.current = socket
+    // Status mirrors the socket we just opened (an external system).
+    // oxlint-disable-next-line react/set-state-in-effect
     setStatus('connecting')
 
     const onConnect = () => {
