@@ -10,12 +10,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import { diskStorage } from 'multer';
 import { randomUUID } from 'crypto';
 import { unlink } from 'fs/promises';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { SelfGuard } from '../common/guards/self.guard';
 import { UsersService } from './users.service';
+import { AVATAR_LIMIT } from '../common/throttle/limits';
 import { AVATAR_TYPES, hasImageSignature, readFileHead } from './avatar-file';
 
 @Controller('users')
@@ -39,6 +41,7 @@ export class UsersController {
    * the file's first bytes must match it, so an HTML page cannot be uploaded
    * under an image label.
    */
+  @Throttle(AVATAR_LIMIT)
   @UseGuards(JwtAuthGuard, SelfGuard)
   @Post(':id/avatar')
   @UseInterceptors(

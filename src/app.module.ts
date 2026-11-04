@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 
@@ -15,6 +15,8 @@ import { ChatModule } from './chat/chat.module';
 import { ContestsModule } from './contests/contests.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { AppController } from './app.controller';
+import { THROTTLERS } from './common/throttle/limits';
+import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
 
 @Module({
   imports: [
@@ -28,7 +30,10 @@ import { AppController } from './app.controller';
         uri: config.get<string>('MONGODB_URI'),
       }),
     }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    ThrottlerModule.forRoot({
+      throttlers: THROTTLERS,
+      errorMessage: 'Too many requests, please try again later',
+    }),
     // Serve uploaded files at /uploads/**. The React client in frontend/ is
     // built and served separately, so nothing is served at /.
     ServeStaticModule.forRoot({
@@ -58,6 +63,6 @@ import { AppController } from './app.controller';
     LeaderboardModule,
   ],
   controllers: [AppController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useClass: HttpThrottleGuard }],
 })
 export class AppModule {}

@@ -14,7 +14,11 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const allowedOrigins = parseOrigins(config.get<string>('CORS_ORIGINS'));
-  app.enableCors({ origin: allowedOrigins });
+  app.enableCors({
+    origin: allowedOrigins,
+    // Lets the frontend read how long to wait after a 429.
+    exposedHeaders: ['Retry-After', 'Retry-After-hourly'],
+  });
 
   // Security headers. The API serves JSON, never pages, so the CSP allows
   // nothing. Resources may be loaded cross-origin because the frontend shows
