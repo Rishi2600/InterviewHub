@@ -11,7 +11,8 @@ import { REDIS_PUB_CLIENT, REDIS_SUB_CLIENT } from './redis.constants';
  * in-memory adapter is used (single instance), which is fine for dev/MVP.
  */
 export class RedisIoAdapter extends IoAdapter {
-  private readonly logger = new Logger(RedisIoAdapter.name);
+  // Not named `logger`: IoAdapter declares its own since Nest 12.
+  private readonly redisLogger = new Logger(RedisIoAdapter.name);
   private adapterConstructor: ReturnType<typeof createAdapter> | null = null;
 
   constructor(private readonly app: INestApplicationContext) {
@@ -23,10 +24,12 @@ export class RedisIoAdapter extends IoAdapter {
     const sub = this.app.get<Redis | null>(REDIS_SUB_CLIENT, { strict: false });
     if (pub && sub) {
       this.adapterConstructor = createAdapter(pub, sub);
-      this.logger.log('Socket.io Redis adapter enabled');
+      this.redisLogger.log('Socket.io Redis adapter enabled');
       return true;
     }
-    this.logger.warn('Redis not enabled -> Socket.io using in-memory adapter');
+    this.redisLogger.warn(
+      'Redis not enabled -> Socket.io using in-memory adapter',
+    );
     return false;
   }
 
