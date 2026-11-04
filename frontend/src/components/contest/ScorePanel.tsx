@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
-import { Button } from '@/components/legacy/Button'
-import { Avatar } from '@/components/legacy/Avatar'
-import { EmptyState } from '@/components/legacy/States'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { EmptyState } from '@/components/common/States'
+import { UserAvatar } from '@/components/common/UserAvatar'
 import type { ContestEntry } from '@/types'
 
 const QUICK_DELTAS = [1, 5, 10]
 
 /**
- * Host-only scoring controls, one row per participant. Scoring is fire-and-
- * forget from the UI's perspective: the authoritative new score arrives back
- * over the leaderboard socket.
+ * Host-only scoring, one row per participant. The new score comes back over
+ * the leaderboard socket, so nothing here updates the board itself.
  */
 export function ScorePanel({
   entries,
@@ -26,91 +27,76 @@ export function ScorePanel({
   disabledReason?: string
 }) {
   const [customDelta, setCustomDelta] = useState('')
+  const custom = Number(customDelta)
+  const hasCustom = customDelta.trim() !== '' && Number.isInteger(custom) && custom !== 0
 
   if (entries.length === 0) {
     return (
       <EmptyState
+        className="py-6"
         title="No participants yet"
-        description="People who join the contest will appear here for scoring."
-        className="border-0 py-8"
+        description="People who join the contest appear here for scoring."
       />
     )
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="grid gap-4">
       {disabled && disabledReason && (
-        <p className="border-l-2 border-line-strong bg-surface px-3 py-2 text-micro text-ink-muted">
-          {disabledReason}
-        </p>
+        <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">{disabledReason}</p>
       )}
-
-      <div className="flex items-center gap-2">
-        <label htmlFor="custom-delta" className="label">
-          Custom points
-        </label>
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="custom-delta">Custom points</Label>
+        <Input
           id="custom-delta"
           type="number"
           inputMode="numeric"
           value={customDelta}
           onChange={(e) => setCustomDelta(e.target.value)}
-          placeholder="e.g. 25"
+          placeholder="e.g. 25 or -5"
           disabled={disabled}
-          className="num h-8 w-24 rounded-[var(--radius-control)] border border-line bg-surface px-2 text-caption text-ink transition-colors duration-[var(--duration-fast)] hover:border-line-strong focus:border-line-strong disabled:text-ink-disabled"
         />
       </div>
-
-      <ul>
+      <ul className="grid gap-3">
         {entries.map((entry) => {
-          const isPending = pendingUserId === entry.userId
-          const custom = Number(customDelta)
-          const hasCustom = customDelta.trim() !== '' && Number.isFinite(custom) && custom !== 0
-
+          const busy = disabled || pendingUserId === entry.userId
           return (
-            <li
-              key={entry.userId}
-              className="flex flex-wrap items-center gap-2 border-t border-line px-2 py-2.5 first:border-t-0"
-            >
-              <Avatar name={entry.username} id={entry.userId} size="sm" />
-              <span className="min-w-0 flex-1 truncate text-caption text-ink">
-                {entry.username}
+            <li key={entry.userId} className="grid gap-2">
+              <span className="flex min-w-0 items-center gap-2 text-sm">
+                <UserAvatar name={entry.username} size="sm" />
+                <span className="truncate">{entry.username}</span>
               </span>
-
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap gap-1">
                 <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={disabled || isPending}
+                  size="xs"
+                  variant="outline"
+                  disabled={busy}
                   onClick={() => onScore(entry.userId, -1)}
                   aria-label={`Subtract 1 point from ${entry.username}`}
                 >
-                  <Minus className="size-3.5" aria-hidden />
+                  <Minus aria-hidden />1
                 </Button>
-
                 {QUICK_DELTAS.map((delta) => (
                   <Button
                     key={delta}
-                    size="sm"
-                    variant="secondary"
-                    disabled={disabled || isPending}
+                    size="xs"
+                    variant="outline"
+                    disabled={busy}
                     onClick={() => onScore(entry.userId, delta)}
                     aria-label={`Add ${delta} points to ${entry.username}`}
                   >
-                    <Plus className="size-3 opacity-60" aria-hidden />
-                    <span className="num">{delta}</span>
+                    <Plus aria-hidden />
+                    {delta}
                   </Button>
                 ))}
-
                 {hasCustom && (
                   <Button
-                    size="sm"
-                    disabled={disabled || isPending}
-                    isLoading={isPending}
+                    size="xs"
+                    disabled={busy}
                     onClick={() => onScore(entry.userId, custom)}
                     aria-label={`Add ${custom} points to ${entry.username}`}
                   >
-                    <span className="num">{custom > 0 ? `+${custom}` : custom}</span>
+                    {custom > 0 ? `+${custom}` : custom}
                   </Button>
                 )}
               </div>

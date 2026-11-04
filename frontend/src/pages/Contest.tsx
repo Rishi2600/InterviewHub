@@ -1,15 +1,36 @@
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Flag, LogIn, Play, Trophy, Users, Wifi, WifiOff } from 'lucide-react'
-import { Button } from '@/components/legacy/Button'
-import { ContestStateBadge } from '@/components/legacy/Badge'
-import { Skeleton, SkeletonRows } from '@/components/legacy/Skeleton'
-import { EmptyState, ErrorState } from '@/components/legacy/States'
+import { ChevronRight, Ellipsis, Flag, Link2, LogIn, Play } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Skeleton } from '@/components/ui/skeleton'
+import { StatusBadge } from '@/components/common/StatusBadge'
+import { EmptyState, ErrorState } from '@/components/common/States'
+import { UserAvatar } from '@/components/common/UserAvatar'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { ConnectionStatus } from '@/components/chat/ConnectionStatus'
 import { Leaderboard } from '@/components/contest/Leaderboard'
 import { ScorePanel } from '@/components/contest/ScorePanel'
 import { useAuth } from '@/hooks/useAuth'
+import { useCopy } from '@/hooks/useCopy'
 import { useLeaderboardSocket } from '@/hooks/useLeaderboardSocket'
 import {
   activateContest,
@@ -21,11 +42,19 @@ import {
 } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 
+const SUBTITLE = {
+  draft: 'In draft. Activate it to start scoring.',
+  active: 'Scores update live for everyone watching.',
+  ended: 'Final standings.',
+} as const
+
 export function Contest() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
+  const [endOpen, setEndOpen] = useState(false)
+  const copy = useCopy()
 
   const contestQuery = useQuery({
     queryKey: ['contest', id],
@@ -76,7 +105,7 @@ export function Contest() {
       queryClient.setQueryData(['contest', id], updated)
       // Final scores are written to Mongo on end — refetch to show them.
       refreshEntries()
-      toast.success('Contest ended — final scores saved')
+      toast.success('Contest ended. Final scores saved.')
     },
     onError: (err) => toast.error(errorMessage(err, 'Could not end the contest')),
   })
@@ -85,7 +114,7 @@ export function Contest() {
     mutationFn: () => joinContest(id!),
     onSuccess: () => {
       refreshEntries()
-      toast.success("You're in — good luck")
+      toast.success('You joined the contest')
     },
     onError: (err) => toast.error(errorMessage(err, 'Could not join the contest')),
   })
@@ -100,7 +129,6 @@ export function Contest() {
   })
 
   if (contestQuery.isLoading) return <ContestSkeleton />
-
   if (contestQuery.isError || !contest) {
     return (
       <ErrorState
@@ -113,233 +141,190 @@ export function Contest() {
 
   const isEnded = contest.state === 'ended'
   const isActive = contest.state === 'active'
+  const finalRows = [...entries]
+    .sort((a, b) => b.finalScore - a.finalScore)
+    .map((e, i) => ({ userId: e.userId, rank: e.finalRank || i + 1, score: e.finalScore }))
 
   return (
-    <div className="animate-rise">
-      <header className="flex flex-wrap items-start justify-between gap-6 pb-6">
-        <div className="min-w-0">
-          <p className="label mb-3">Contest</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-heading text-ink">{contest.title}</h1>
-            <ContestStateBadge state={contest.state} />
-            {canWatch && <ConnectionPill status={board.status} />}
-          </div>
-          <p className="mt-2 text-caption text-ink-muted">
-            {isEnded
-              ? 'Final standings below.'
-              : isActive
-                ? 'Scores update live for everyone watching.'
-                : 'In draft — activate it to start scoring.'}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {!hasJoined && !isEnded && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => joinMutation.mutate()}
-              isLoading={joinMutation.isPending}
-              leadingIcon={<LogIn className="size-3" />}
-            >
-              Join contest
+    <>
+      <PageHeader
+        title={
+          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+            <Link to="/" className="hidden hover:text-foreground sm:inline">
+              Dashboard
+            </Link>
+            <ChevronRight className="hidden size-3.5 sm:inline" aria-hidden />
+            <span className="truncate text-foreground">{contest.title}</span>
+          </nav>
+        }
+      >
+        {!hasJoined && !canHost && !isEnded && (
+          <Button size="sm" onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
+            <LogIn aria-hidden />
+            Join contest
+          </Button>
+        )}
+        {canHost && contest.state === 'draft' && (
+          <Button size="sm" onClick={() => activateMutation.mutate()} disabled={activateMutation.isPending}>
+            <Play aria-hidden />
+            Activate
+          </Button>
+        )}
+        {canHost && isActive && (
+          <Button variant="outline" size="sm" className="text-danger" onClick={() => setEndOpen(true)}>
+            <Flag aria-hidden />
+            <span className="hidden sm:inline">End contest</span>
+          </Button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon-sm" aria-label="More actions">
+              <Ellipsis aria-hidden />
             </Button>
-          )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem onSelect={() => copy(window.location.href, 'Contest link copied')}>
+              <Link2 aria-hidden />
+              Copy contest link
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </PageHeader>
 
-          {/* Activate is the single primary action, and only while drafting. */}
-          {canHost && contest.state === 'draft' && (
-            <Button
-              size="sm"
-              onClick={() => activateMutation.mutate()}
-              isLoading={activateMutation.isPending}
-              leadingIcon={<Play className="size-3" />}
-            >
-              Activate
-            </Button>
-          )}
-
-          {canHost && isActive && (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => endMutation.mutate()}
-              isLoading={endMutation.isPending}
-              leadingIcon={<Flag className="size-3" />}
-            >
-              End contest
-            </Button>
-          )}
-        </div>
-      </header>
-
-      <div className="grid gap-8 border-t border-line pt-6 lg:grid-cols-[1fr_19rem]">
-        {/* The board is the hero and the hot surface. */}
-        <section>
-          <div className="mb-4">
-            <p className="label flex items-center gap-2">
-              <Trophy className="size-3" aria-hidden />
-              {isEnded ? 'Final standings' : 'Live leaderboard'}
-            </p>
-            {!isEnded && (
-              <p className="mt-1.5 text-micro text-ink-faint">
-                Top 10, updated the moment a score changes.
-              </p>
-            )}
-          </div>
-
-          {isEnded ? (
-            <FinalStandings
-              entries={[...entries].sort((a, b) => b.finalScore - a.finalScore)}
-              currentUserId={user?.id ?? ''}
-              isLoading={entriesQuery.isLoading}
-            />
-          ) : !canWatch ? (
-            <EmptyState
-              icon={<Trophy className="size-5" />}
-              title="Join to see the live leaderboard"
-              description="Standings are visible to the host and to participants."
-            />
-          ) : (
-            <Leaderboard
-              rows={board.rows}
-              namesByUserId={namesByUserId}
-              currentUserId={user?.id ?? ''}
-              isLoading={!board.hasLoaded && board.status === 'connecting'}
-            />
-          )}
-        </section>
-
-        <div className="flex flex-col gap-8">
-          {canHost && !isEnded && (
-            <section>
-              <p className="label mb-1.5">Award points</p>
-              <p className="mb-4 text-micro text-ink-faint">Only you and admins see this.</p>
-              {entriesQuery.isLoading ? (
-                <SkeletonRows rows={3} />
-              ) : (
-                <ScorePanel
-                  entries={entries}
-                  pendingUserId={pendingUserId}
-                  disabled={!isActive}
-                  disabledReason={
-                    !isActive ? 'Activate the contest before awarding points.' : undefined
-                  }
-                  onScore={(userId, delta) => scoreMutation.mutate({ userId, delta })}
-                />
-              )}
-            </section>
-          )}
-
-          <section>
-            <p className="label mb-4 flex items-center gap-2">
-              <Users className="size-3" aria-hidden />
-              Participants
-              <span className="num text-ink-muted">{entries.length}</span>
-            </p>
-            {entriesQuery.isLoading ? (
-              <SkeletonRows rows={3} />
-            ) : entries.length === 0 ? (
-              <EmptyState
-                title="No participants yet"
-                description="Anyone with the link can join while the contest is open."
-              />
-            ) : (
-              <ul>
-                {entries.map((entry) => (
-                  <li
-                    key={entry.userId}
-                    className="flex items-center justify-between gap-2 border-t border-line px-1 py-2.5 first:border-t-0 hover:bg-surface"
-                  >
-                    <span className="truncate text-caption text-ink">
-                      {entry.username}
-                      {entry.userId === user?.id && (
-                        <span className="ml-1 text-ink-faint">(you)</span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold">{contest.title}</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <StatusBadge state={contest.state} />
+          {canWatch && !isEnded && <ConnectionStatus status={board.status} />}
+          <span>{SUBTITLE[contest.state]}</span>
         </div>
       </div>
-    </div>
-  )
-}
 
-function FinalStandings({
-  entries,
-  currentUserId,
-  isLoading,
-}: {
-  entries: Array<{ userId: string; username: string; finalScore: number; finalRank: number }>
-  currentUserId: string
-  isLoading: boolean
-}) {
-  if (isLoading) return <SkeletonRows rows={5} />
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <Card className="min-w-0">
+          <CardHeader>
+            <CardTitle className="font-heading">{isEnded ? 'Final standings' : 'Live leaderboard'}</CardTitle>
+            <CardDescription>
+              {isEnded ? 'Scores as they stood when the contest ended.' : 'Top 10, updated the moment a score changes.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isEnded ? (
+              <Leaderboard
+                rows={finalRows}
+                namesByUserId={namesByUserId}
+                currentUserId={user?.id ?? ''}
+                isLoading={entriesQuery.isLoading}
+                emptyTitle="No final scores"
+                emptyDescription="This contest ended without any scored participants."
+              />
+            ) : !canWatch ? (
+              <EmptyState
+                title="Join to see the live leaderboard"
+                description="Standings are visible to the host and to participants."
+                action={
+                  !isEnded && (
+                    <Button size="sm" onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
+                      <LogIn aria-hidden />
+                      Join contest
+                    </Button>
+                  )
+                }
+              />
+            ) : (
+              <Leaderboard
+                rows={board.rows}
+                namesByUserId={namesByUserId}
+                currentUserId={user?.id ?? ''}
+                isLoading={!board.hasLoaded && board.status === 'connecting'}
+              />
+            )}
+          </CardContent>
+        </Card>
 
-  if (entries.length === 0) {
-    return (
-      <EmptyState
-        icon={<Trophy className="size-5" />}
-        title="No final scores"
-        description="This contest ended without any scored participants."
-      />
-    )
-  }
+        <div className="grid gap-4">
+          {canHost && !isEnded && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-heading">Award points</CardTitle>
+                <CardDescription>Only you and admins see this.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {entriesQuery.isLoading ? (
+                  <Skeleton className="h-24" />
+                ) : (
+                  <ScorePanel
+                    entries={entries}
+                    pendingUserId={pendingUserId}
+                    disabled={!isActive}
+                    disabledReason={!isActive ? 'Activate the contest before awarding points.' : undefined}
+                    onScore={(userId, delta) => scoreMutation.mutate({ userId, delta })}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-  return (
-    <ol>
-      {entries.map((entry, index) => (
-        <li
-          key={entry.userId}
-          className={`flex items-center gap-3 border-t border-line px-2 py-2.5 first:border-t-0 ${
-            entry.userId === currentUserId ? 'bg-sand-soft' : ''
-          }`}
-        >
-          <span className="num w-5 text-center text-micro text-ink-faint">
-            {entry.finalRank || index + 1}
-          </span>
-          <span className="min-w-0 flex-1 truncate text-caption text-ink">{entry.username}</span>
-          <span className="num text-subheading text-ink">{entry.finalScore}</span>
-        </li>
-      ))}
-    </ol>
-  )
-}
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-heading">Participants</CardTitle>
+              <CardDescription>
+                {entries.length === 1 ? '1 person has joined' : `${entries.length} people have joined`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {entriesQuery.isLoading ? (
+                <Skeleton className="h-24" />
+              ) : entries.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No one yet. Anyone with the link can join while the contest is open.
+                </p>
+              ) : (
+                <ul className="grid gap-3">
+                  {entries.map((entry) => (
+                    <li key={entry.userId} className="flex items-center gap-2.5 text-sm">
+                      <UserAvatar name={entry.username} size="sm" />
+                      <span className="truncate">
+                        {entry.username}
+                        {entry.userId === user?.id && <span className="text-muted-foreground"> (you)</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-function ConnectionPill({ status }: { status: string }) {
-  const connected = status === 'connected'
-  return (
-    <span
-      role="status"
-      className={`inline-flex items-center gap-1.5 text-micro ${
-        connected ? 'text-sage' : 'text-wheat'
-      }`}
-    >
-      {connected ? <Wifi className="size-3" aria-hidden /> : <WifiOff className="size-3" aria-hidden />}
-      {connected ? 'Live' : status === 'connecting' ? 'Connecting…' : 'Offline'}
-    </span>
+      <AlertDialog open={endOpen} onOpenChange={setEndOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End this contest?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Scoring stops and the current standings become the final results.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => endMutation.mutate()}>
+              End contest
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
 function ContestSkeleton() {
   return (
-    <div>
-      <div className="pb-6">
-        <Skeleton className="h-6 w-56" />
-        <Skeleton className="mt-3 h-4 w-72" />
+    <>
+      <Skeleton className="h-8 w-72" />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <Skeleton className="h-96 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
-      <div className="grid gap-8 border-t border-line pt-6 lg:grid-cols-[1fr_19rem]">
-        <div>
-          <Skeleton className="mb-4 h-5 w-40" />
-          <SkeletonRows rows={5} />
-        </div>
-        <div>
-          <Skeleton className="mb-4 h-5 w-32" />
-          <SkeletonRows rows={3} />
-        </div>
-      </div>
-    </div>
+    </>
   )
 }

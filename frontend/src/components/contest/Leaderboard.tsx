@@ -1,111 +1,79 @@
-import { useEffect, useRef } from 'react'
 import { Crown, Trophy } from 'lucide-react'
-import { Avatar } from '@/components/legacy/Avatar'
-import { EmptyState } from '@/components/legacy/States'
-import { SkeletonRows } from '@/components/legacy/Skeleton'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/common/States'
+import { UserAvatar } from '@/components/common/UserAvatar'
 import { cn, shortId } from '@/lib/utils'
-import type { LeaderboardRow } from '@/types'
 
-/**
- * Only first place is marked, and it is the one sand element on the board.
- * Everything below is a plain mono rank -- restrained, not a podium of
- * medals.
- */
-function RankMark({ rank }: { rank: number }) {
-  if (rank === 1) return <Crown aria-hidden className="size-3.5 text-sand" />
-  return <span className="num text-micro text-ink-faint">{rank}</span>
+export interface Standing {
+  userId: string
+  rank: number
+  score: number
 }
 
-function Row({
-  row,
-  name,
-  isCurrentUser,
-}: {
-  row: LeaderboardRow
-  name: string
-  isCurrentUser: boolean
-}) {
-  const scoreRef = useRef<HTMLSpanElement>(null)
-  const prevScore = useRef(row.score)
-
-  // Flash the score when it changes, so a live update is visible even if the
-  // row's position doesn't move.
-  useEffect(() => {
-    if (prevScore.current !== row.score) {
-      const el = scoreRef.current
-      prevScore.current = row.score
-      if (el) {
-        el.classList.remove('animate-flash')
-        void el.offsetWidth // restart the animation
-        el.classList.add('animate-flash')
-      }
-    }
-  }, [row.score])
-
-  return (
-    <li
-      className={cn(
-        'flex items-center gap-3 border-t border-line px-2 py-2.5 first:border-t-0',
-        'transition-colors duration-[var(--duration-base)] ease-[var(--ease-peaks)]',
-        // A tinted row is the only other place sand fill appears.
-        isCurrentUser ? 'bg-sand-soft' : 'hover:bg-surface',
-      )}
-    >
-      <span className="grid w-5 shrink-0 place-items-center">
-        <RankMark rank={row.rank} />
-      </span>
-
-      <Avatar name={name} id={row.userId} size="sm" />
-
-      <span className="min-w-0 flex-1 truncate text-caption text-ink">
-        {name}
-        {isCurrentUser && <span className="label ml-2 text-sand">you</span>}
-      </span>
-
-      <span
-        ref={scoreRef}
-        className="num rounded-[var(--radius-control)] px-2 py-0.5 text-subheading text-ink"
-      >
-        {row.score}
-      </span>
-    </li>
-  )
-}
-
+/** Ranked rows with a bar relative to the leader. Used live and for final results. */
 export function Leaderboard({
   rows,
   namesByUserId,
   currentUserId,
   isLoading,
+  emptyTitle = 'No one on the board yet',
+  emptyDescription = 'Scores appear here as soon as participants earn points.',
 }: {
-  rows: LeaderboardRow[]
-  /** The board only carries user ids — names come from the contest roster. */
+  rows: Standing[]
+  /** The live board only carries user ids; names come from the contest roster. */
   namesByUserId: Record<string, string>
   currentUserId: string
   isLoading: boolean
+  emptyTitle?: string
+  emptyDescription?: string
 }) {
-  if (isLoading) return <SkeletonRows rows={5} />
-
-  if (rows.length === 0) {
+  if (isLoading) {
     return (
-      <EmptyState
-        icon={<Trophy className="size-5" />}
-        title="No one on the board yet"
-        description="Scores appear here the moment participants join and start earning points."
-      />
+      <div className="grid gap-3">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-10" />
+        ))}
+      </div>
     )
   }
+  if (rows.length === 0) {
+    return <EmptyState icon={<Trophy />} title={emptyTitle} description={emptyDescription} />
+  }
 
+  const best = Math.max(1, ...rows.map((r) => r.score))
   return (
-    <ol>
-      {rows.map((row) => (
-        <Row
-          key={row.userId}
-          row={row}
-          name={namesByUserId[row.userId] ?? shortId(row.userId)}
-          isCurrentUser={row.userId === currentUserId}
-        />
-      ))}
+    <ol className="grid gap-1">
+      {rows.map((row) => {
+        const name = namesByUserId[row.userId] ?? shortId(row.userId)
+        const isYou = row.userId === currentUserId
+        return (
+          <li
+            key={row.userId}
+            className={cn(
+              'grid grid-cols-[1.5rem_2rem_minmax(0,1fr)_3rem] items-center gap-3 rounded-md px-2 py-2',
+              isYou ? 'bg-primary/10' : 'hover:bg-muted/50',
+            )}
+          >
+            <span className="grid place-items-center font-mono text-xs text-muted-foreground">
+              {row.rank === 1 ? <Crown className="size-4 text-brand" aria-label="First place" /> : row.rank}
+            </span>
+            <UserAvatar name={name} />
+            <div className="grid min-w-0 gap-1.5">
+              <span className="flex min-w-0 items-center gap-2 text-sm">
+                <span className="truncate">{name}</span>
+                {isYou && <Badge variant="secondary">You</Badge>}
+              </span>
+              <Progress value={(row.score / best) * 100} className="h-1.5" />
+            </div>
+            {/* Keyed on the score so a change replays the entrance animation. */}
+            <span key={row.score} className="text-right font-heading text-lg font-semibold animate-in fade-in zoom-in-95">
+              {row.score}
+            </span>
+          </li>
+        )
+      })}
     </ol>
   )
 }
