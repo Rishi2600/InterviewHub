@@ -12,7 +12,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { RoomOwnerGuard } from '../common/guards/room-owner.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
-import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  AuthUser,
+} from '../common/decorators/current-user.decorator';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateStateDto } from './dto/update-state.dto';

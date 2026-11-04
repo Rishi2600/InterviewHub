@@ -78,13 +78,18 @@ export class RoomsService {
    * RoomOwnerGuard (HTTP) and ChatGateway (WebSocket) so both transports agree
    * on who may mutate a room.
    */
-  isOwnedBy(room: RoomDocument, user: { userId: string; role: string }): boolean {
+  isOwnedBy(
+    room: RoomDocument,
+    user: { userId: string; role: string },
+  ): boolean {
     if (user.role === 'admin') return true;
     return room.ownerId.toString() === user.userId;
   }
 
   async findByCode(code: string): Promise<RoomDocument> {
-    const room = await this.roomModel.findOne({ code: code.toUpperCase() }).exec();
+    const room = await this.roomModel
+      .findOne({ code: code.toUpperCase() })
+      .exec();
     if (!room) throw new NotFoundException('Room not found');
     return room;
   }
@@ -107,7 +112,7 @@ export class RoomsService {
         username: user.username,
         role: user.role,
         joinedAt: new Date(),
-      } as any);
+      });
       await room.save();
     }
     return room;

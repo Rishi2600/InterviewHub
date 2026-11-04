@@ -23,6 +23,8 @@ export function useLeaderboardSocket(contestId: string | undefined) {
 
     const socket = connectLeaderboard(token)
     socketRef.current = socket
+    // Status mirrors the socket we just opened (an external system).
+    // oxlint-disable-next-line react/set-state-in-effect
     setStatus('connecting')
     setHasLoaded(false)
 

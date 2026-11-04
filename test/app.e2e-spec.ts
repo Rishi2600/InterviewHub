@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplicationContext } from '@nestjs/common';
 import { AppController } from '../src/app.controller';
 
 describe('AppController (health)', () => {

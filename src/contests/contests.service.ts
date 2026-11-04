@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, QueryFilter, Types } from 'mongoose';
-import { Contest, ContestDocument, ContestState } from './schemas/contest.schema';
+import {
+  Contest,
+  ContestDocument,
+  ContestState,
+} from './schemas/contest.schema';
 import {
   ContestEntry,
   ContestEntryDocument,
@@ -68,13 +72,18 @@ export class ContestsService {
   }
 
   async findById(id: string): Promise<ContestDocument> {
-    if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Contest not found');
+    if (!Types.ObjectId.isValid(id))
+      throw new NotFoundException('Contest not found');
     const contest = await this.contestModel.findById(id).exec();
     if (!contest) throw new NotFoundException('Contest not found');
     return contest;
   }
 
-  private assertOwner(contest: ContestDocument, userId: string, role: string): void {
+  private assertOwner(
+    contest: ContestDocument,
+    userId: string,
+    role: string,
+  ): void {
     if (role === 'admin') return;
     if (contest.ownerId.toString() !== userId) {
       throw new ForbiddenException('You do not own this contest');
@@ -147,7 +156,11 @@ export class ContestsService {
       throw new BadRequestException('Contest is not active');
     }
 
-    const score = await this.leaderboardService.addScore(id, targetUserId, delta);
+    const score = await this.leaderboardService.addScore(
+      id,
+      targetUserId,
+      delta,
+    );
     await this.leaderboardGateway.broadcast(id);
     return { userId: targetUserId, score };
   }
@@ -156,7 +169,11 @@ export class ContestsService {
    * Ends the contest and flushes the (Redis or in-memory) leaderboard into
    * Mongo in a single bulkWrite, then clears the live leaderboard.
    */
-  async end(id: string, userId: string, role: string): Promise<ContestDocument> {
+  async end(
+    id: string,
+    userId: string,
+    role: string,
+  ): Promise<ContestDocument> {
     const contest = await this.setState(id, userId, role, 'ended');
 
     const finalBoard = await this.leaderboardService.getAll(id);

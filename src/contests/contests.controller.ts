@@ -11,7 +11,10 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
-import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  AuthUser,
+} from '../common/decorators/current-user.decorator';
 import { ContestsService } from './contests.service';
 import { CreateContestDto } from './dto/create-contest.dto';
 import { ListContestsDto } from './dto/list-contests.dto';
@@ -63,7 +66,13 @@ export class ContestsController {
     @CurrentUser() user: AuthUser,
     @Body() dto: ScoreDto,
   ) {
-    return this.contestsService.score(id, user.userId, user.role, dto.userId, dto.delta);
+    return this.contestsService.score(
+      id,
+      user.userId,
+      user.role,
+      dto.userId,
+      dto.delta,
+    );
   }
 
   @Post(':id/end')

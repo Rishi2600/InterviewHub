@@ -13,8 +13,13 @@ export interface AuthUser {
  * Usage: myRoute(@CurrentUser() user: AuthUser)
  */
 export const CurrentUser = createParamDecorator(
-  (data: keyof AuthUser | undefined, ctx: ExecutionContext): AuthUser | any => {
-    const request = ctx.switchToHttp().getRequest<Request & { user: AuthUser }>();
+  (
+    data: keyof AuthUser | undefined,
+    ctx: ExecutionContext,
+  ): AuthUser | AuthUser[keyof AuthUser] | undefined => {
+    const request = ctx
+      .switchToHttp()
+      .getRequest<Request & { user: AuthUser }>();
     const user = request.user;
     return data ? user?.[data] : user;
   },

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Message, MessageDocument, MessageType } from './schemas/message.schema';
+import {
+  Message,
+  MessageDocument,
+  MessageType,
+} from './schemas/message.schema';
 
 @Injectable()
 export class ChatService {
