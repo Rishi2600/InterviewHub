@@ -32,7 +32,11 @@ api.interceptors.response.use(
   (error) => {
     const body = error.response?.data
     const raw = body?.message ?? error.message ?? 'Request failed'
-    const message = Array.isArray(raw) ? raw.join(', ') : String(raw)
+    let message = Array.isArray(raw) ? raw.join(', ') : String(raw)
+
+    if (error.response?.status === 429) {
+      message = `Too many attempts, try again in ${formatWait(retryAfter(error.response.headers))}`
+    }
 
     // Token missing/expired/invalid — drop the session. AuthContext listens
     // for the resulting event and bounces the user to /login.
@@ -45,6 +49,18 @@ api.interceptors.response.use(
     return Promise.reject(normalized)
   },
 )
+
+/** Longest wait the server asked for, in seconds (per-minute and hourly limits). */
+function retryAfter(headers: Record<string, unknown>): number {
+  const waits = [headers['retry-after'], headers['retry-after-hourly']].map(Number)
+  return Math.max(1, ...waits.filter((n) => Number.isFinite(n)))
+}
+
+function formatWait(seconds: number): string {
+  if (seconds < 60) return `${seconds} s`
+  const minutes = Math.ceil(seconds / 60)
+  return minutes < 60 ? `${minutes} min` : `${Math.ceil(minutes / 60)} h`
+}
 
 /**
  * Typed wrappers. `api.get()` is declared by axios as returning
