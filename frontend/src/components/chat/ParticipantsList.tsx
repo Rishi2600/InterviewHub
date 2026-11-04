@@ -1,9 +1,9 @@
 import { Users } from 'lucide-react'
-import { Avatar } from '@/components/legacy/Avatar'
-import { RoleBadge } from '@/components/legacy/Badge'
-import { EmptyState } from '@/components/legacy/States'
-import { formatDateTime } from '@/lib/utils'
+import { UserAvatar } from '@/components/common/UserAvatar'
+import { EmptyState } from '@/components/common/States'
 import type { Participant } from '@/types'
+
+const ROLE = { candidate: 'Candidate', interviewer: 'Interviewer', admin: 'Admin' } as const
 
 export function ParticipantsList({
   participants,
@@ -17,31 +17,29 @@ export function ParticipantsList({
   if (participants.length === 0) {
     return (
       <EmptyState
-        icon={<Users className="size-5" />}
+        className="py-6"
+        icon={<Users />}
         title="No one has joined yet"
-        description="Share the room code to invite people."
+        description="Share the join code to invite people."
       />
     )
   }
 
   return (
-    <ul>
+    <ul className="grid gap-3">
       {participants.map((p) => (
-        <li
-          key={p.userId}
-          className="flex items-center gap-2.5 border-t border-line px-1 py-2.5 transition-colors duration-[var(--duration-fast)] first:border-t-0 hover:bg-surface"
-        >
-          <Avatar name={p.username} id={p.userId} size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-caption text-ink">
+        <li key={p.userId} className="flex items-center gap-2.5">
+          <UserAvatar name={p.username} />
+          <div className="grid min-w-0 leading-tight">
+            <span className="truncate text-sm font-medium">
               {p.username}
-              {p.userId === currentUserId && <span className="ml-1 text-ink-faint">(you)</span>}
-            </p>
-            <p className="num text-micro text-ink-faint">
-              joined {formatDateTime(p.joinedAt)}
-            </p>
+              {p.userId === currentUserId && <span className="font-normal text-muted-foreground"> (you)</span>}
+            </span>
+            <span className="truncate text-xs text-muted-foreground">
+              {ROLE[p.role]}
+              {p.userId === ownerId && ', room owner'}
+            </span>
           </div>
-          {p.userId === ownerId ? <RoleBadge role="interviewer" /> : <RoleBadge role={p.role} />}
         </li>
       ))}
     </ul>

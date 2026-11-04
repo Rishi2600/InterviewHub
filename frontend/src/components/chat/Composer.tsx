@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SendHorizontal } from 'lucide-react'
-import { Button } from '@/components/legacy/Button'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 
 const TYPING_IDLE_MS = 1200
 
@@ -70,10 +71,7 @@ export function Composer({
   }
 
   return (
-    <div className="border-t border-line p-3">
-      {disabled && disabledReason && (
-        <p className="mb-2 text-micro text-ink-faint">{disabledReason}</p>
-      )}
+    <div className="border-t p-3">
       <form
         className="flex items-end gap-2"
         onSubmit={(e) => {
@@ -84,13 +82,13 @@ export function Composer({
         <label htmlFor="composer" className="sr-only">
           Message
         </label>
-        <textarea
+        <Textarea
           id="composer"
           ref={textareaRef}
           rows={1}
           value={value}
           disabled={disabled}
-          placeholder={disabled ? 'Chat unavailable' : 'Write a message…'}
+          placeholder={disabled ? 'Chat unavailable' : 'Message the room'}
           onChange={(e) => {
             setValue(e.target.value)
             if (e.target.value.trim()) signalTyping()
@@ -103,19 +101,16 @@ export function Composer({
               submit()
             }
           }}
-          className="max-h-[140px] min-h-9 flex-1 resize-none rounded-[var(--radius-control)] border border-line bg-ground px-3 py-2 text-caption text-ink transition-colors duration-[var(--duration-fast)] hover:border-line-strong focus:border-line-strong disabled:cursor-not-allowed disabled:text-ink-disabled"
+          className="max-h-36 min-h-10 resize-none"
         />
-        {/* Sending is the primary action inside the chat panel. */}
-        <Button
-          type="submit"
-          disabled={disabled || !value.trim()}
-          aria-label="Send message"
-          className="shrink-0"
-        >
-          <SendHorizontal className="size-3.5" aria-hidden />
+        <Button type="submit" disabled={disabled || !value.trim()} aria-label="Send message" className="h-10">
+          <SendHorizontal aria-hidden />
           <span className="hidden sm:inline">Send</span>
         </Button>
       </form>
+      <p className="mt-2 px-1 text-xs text-muted-foreground">
+        {disabled && disabledReason ? disabledReason : 'Enter to send, Shift+Enter for a new line'}
+      </p>
     </div>
   )
 }

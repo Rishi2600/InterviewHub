@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowDown, MessagesSquare } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
-import { Button } from '@/components/legacy/Button'
-import { EmptyState } from '@/components/legacy/States'
-import { SkeletonRows } from '@/components/legacy/Skeleton'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/common/States'
 import type { Message } from '@/types'
 
 const NEAR_BOTTOM_PX = 80
@@ -63,8 +63,10 @@ export function MessageList({
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-hidden p-4">
-        <SkeletonRows rows={5} />
+      <div className="grid flex-1 content-start gap-4 overflow-hidden p-5">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className={i % 2 ? 'ml-auto h-10 w-1/2' : 'h-10 w-2/3'} />
+        ))}
       </div>
     )
   }
@@ -74,7 +76,7 @@ export function MessageList({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto px-4 py-3"
+        className="h-full overflow-y-auto px-5 py-5"
         role="log"
         aria-live="polite"
         aria-relevant="additions"
@@ -82,12 +84,12 @@ export function MessageList({
       >
         {messages.length === 0 ? (
           <EmptyState
-            icon={<MessagesSquare className="size-5" />}
+            icon={<MessagesSquare />}
             title="No messages yet"
-            description="Say hello — messages appear here in real time for everyone in the room."
+            description="Say hello. Messages appear here for everyone in the room as they are sent."
           />
         ) : (
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col gap-4">
             {messages.map((message, i) => {
               const prev = messages[i - 1]
               // Group consecutive messages from the same author.
@@ -112,20 +114,9 @@ export function MessageList({
 
       {!isPinnedToBottom && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => scrollToBottom()}
-            leadingIcon={<ArrowDown className="size-3" />}
-            className="pointer-events-auto animate-rise bg-raised"
-          >
-            {unreadCount > 0 ? (
-              <>
-                <span className="num">{unreadCount}</span> new
-              </>
-            ) : (
-              'Jump to latest'
-            )}
+          <Button size="sm" variant="outline" onClick={() => scrollToBottom()} className="pointer-events-auto">
+            <ArrowDown aria-hidden />
+            {unreadCount > 0 ? `${unreadCount} new` : 'Jump to latest'}
           </Button>
         </div>
       )}
