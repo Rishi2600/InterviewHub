@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
@@ -9,9 +10,13 @@ import { RedisIoAdapter } from './redis/redis-io.adapter';
 import { parseOrigins } from './config/cors';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  // req.ip, and so every per-IP rate limit, trusts only this many proxy hops.
+  // Trusting more than really exist would let clients forge their IP.
+  app.set('trust proxy', config.get<number>('TRUST_PROXY') ?? 0);
 
   const allowedOrigins = parseOrigins(config.get<string>('CORS_ORIGINS'));
   app.enableCors({

@@ -9,6 +9,9 @@ export const envValidationSchema = Joi.object({
     .valid('development', 'production', 'test')
     .default('development'),
   PORT: Joi.number().default(3000),
+  // Proxies in front of the app (1 behind a single load balancer). Decides
+  // which X-Forwarded-For entry is the client IP; 0 ignores the header.
+  TRUST_PROXY: Joi.number().integer().min(0).default(0),
 
   MONGODB_URI: Joi.string().required(),
 
