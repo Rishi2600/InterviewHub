@@ -1,4 +1,10 @@
-import { Logger, UseFilters, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Logger,
+  UseFilters,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -74,7 +80,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       content: `${user.username} joined the room`,
       type: 'system',
     });
-    this.server.to(this.roomChannel(room.id)).emit('chat:system', this.serialize(sys));
+    this.server
+      .to(this.roomChannel(room.id))
+      .emit('chat:system', this.serialize(sys));
 
     return { ok: true, roomId: room.id, pinnedQuestion: room.pinnedQuestion };
   }
@@ -124,7 +132,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('chat:stop_typing')
-  onStopTyping(@MessageBody() body: RoomEventDto, @WsCurrentUser() user: AuthUser) {
+  onStopTyping(
+    @MessageBody() body: RoomEventDto,
+    @WsCurrentUser() user: AuthUser,
+  ) {
     this.server
       .to(this.roomChannel(body.roomId))
       .emit('chat:stop_typing', { userId: user.userId });
@@ -136,7 +147,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WsCurrentUser() user: AuthUser,
   ) {
     await this.assertRoomOwner(body.roomId, user);
-    const room = await this.roomsService.pinQuestion(body.roomId, body.question ?? '');
+    const room = await this.roomsService.pinQuestion(
+      body.roomId,
+      body.question ?? '',
+    );
     this.server
       .to(this.roomChannel(body.roomId))
       .emit('question:pinned', { question: room.pinnedQuestion });
@@ -150,9 +164,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     await this.assertRoomOwner(body.roomId, user);
     await this.roomsService.unpinQuestion(body.roomId);
-    this.server
-      .to(this.roomChannel(body.roomId))
-      .emit('question:unpinned', {});
+    this.server.to(this.roomChannel(body.roomId)).emit('question:unpinned', {});
     return { ok: true };
   }
 

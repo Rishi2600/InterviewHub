@@ -49,7 +49,10 @@ export class UsersController {
       }),
       fileFilter: (_req, file, cb) => {
         if (!IMAGE_MIME.test(file.mimetype)) {
-          return cb(new BadRequestException('Only image files are allowed'), false);
+          return cb(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
         }
         cb(null, true);
       },

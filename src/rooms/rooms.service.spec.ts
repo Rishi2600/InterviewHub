@@ -74,9 +74,9 @@ describe('RoomsService state machine', () => {
   it('throws NotFound for a malformed room id rather than casting', async () => {
     const model = { findById: () => ({ exec: () => Promise.resolve(null) }) };
     const service = new RoomsService(model as never);
-    await expect(service.setState('not-an-object-id', 'active')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.setState('not-an-object-id', 'active'),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -87,7 +87,10 @@ describe('RoomsService.isOwnedBy', () => {
 
   it('accepts the owner', () => {
     expect(
-      service.isOwnedBy(room, { userId: ownerId.toString(), role: 'interviewer' }),
+      service.isOwnedBy(room, {
+        userId: ownerId.toString(),
+        role: 'interviewer',
+      }),
     ).toBe(true);
   });
 

@@ -8,7 +8,9 @@ import { AuthUser } from './current-user.decorator';
  */
 export const WsCurrentUser = createParamDecorator(
   (data: keyof AuthUser | undefined, ctx: ExecutionContext): AuthUser | any => {
-    const client = ctx.switchToWs().getClient<Socket & { data: { user: AuthUser } }>();
+    const client = ctx
+      .switchToWs()
+      .getClient<Socket & { data: { user: AuthUser } }>();
     const user = client.data?.user;
     return data ? user?.[data] : user;
   },

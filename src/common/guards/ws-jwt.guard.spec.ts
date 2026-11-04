@@ -39,13 +39,21 @@ describe('WsJwtGuard', () => {
     const guard = guardVerifying(() => {
       throw new Error('invalid signature');
     });
-    const client = socketWith({ auth: { token: 'bad' }, headers: {}, query: {} });
+    const client = socketWith({
+      auth: { token: 'bad' },
+      headers: {},
+      query: {},
+    });
     expect(() => guard.canActivate(contextFor(client))).toThrow(WsException);
   });
 
   it('accepts auth.token and attaches the user to client.data', () => {
     const guard = guardVerifying(() => PAYLOAD);
-    const client = socketWith({ auth: { token: 'good' }, headers: {}, query: {} });
+    const client = socketWith({
+      auth: { token: 'good' },
+      headers: {},
+      query: {},
+    });
 
     expect(guard.canActivate(contextFor(client))).toBe(true);
     expect(client.data.user).toEqual({
@@ -70,7 +78,11 @@ describe('WsJwtGuard', () => {
     );
     guard.canActivate(
       contextFor(
-        socketWith({ auth: {}, headers: { authorization: 'Bearer def' }, query: {} }),
+        socketWith({
+          auth: {},
+          headers: { authorization: 'Bearer def' },
+          query: {},
+        }),
       ),
     );
 

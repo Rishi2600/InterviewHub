@@ -22,7 +22,9 @@ export class LeaderboardService {
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis | null) {
     this.logger.log(
-      this.redis ? 'Leaderboard backend: Redis' : 'Leaderboard backend: in-memory',
+      this.redis
+        ? 'Leaderboard backend: Redis'
+        : 'Leaderboard backend: in-memory',
     );
   }
 
@@ -31,9 +33,17 @@ export class LeaderboardService {
   }
 
   /** Atomically add `delta` to a user's score and return the new total. */
-  async addScore(contestId: string, userId: string, delta: number): Promise<number> {
+  async addScore(
+    contestId: string,
+    userId: string,
+    delta: number,
+  ): Promise<number> {
     if (this.redis) {
-      const total = await this.redis.zincrby(this.key(contestId), delta, userId);
+      const total = await this.redis.zincrby(
+        this.key(contestId),
+        delta,
+        userId,
+      );
       return Number(total);
     }
     const board = this.memory.get(contestId) ?? new Map<string, number>();
