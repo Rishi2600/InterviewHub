@@ -1,11 +1,13 @@
 import {
   IsEmail,
-  IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
 import { Role } from '../../common/enums/role.enum';
+
+export const SIGNUP_ROLES = [Role.Candidate, Role.Interviewer];
 
 export class RegisterDto {
   @IsString()
@@ -19,7 +21,8 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
+  // Admin is never self-assigned at sign-up.
   @IsOptional()
-  @IsEnum(Role)
+  @IsIn(SIGNUP_ROLES)
   role?: Role;
 }
