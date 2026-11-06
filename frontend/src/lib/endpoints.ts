@@ -1,9 +1,15 @@
 import { http } from './api'
 import type {
   AuthPayload,
+  BoardRow,
+  BrowsePage,
+  BrowsePhase,
   Contest,
-  ContestEntry,
-  ContestState,
+  ContestDetails,
+  ContestResults,
+  ContestStatus,
+  EditorQuestion,
+  EditorView,
   HealthResponse,
   MeResponse,
   Page,
@@ -12,6 +18,7 @@ import type {
   Room,
   RoomState,
   User,
+  Workspace,
 } from '@/types'
 
 /**
@@ -108,38 +115,98 @@ export function unpinQuestion(id: string) {
 
 /* ---------------------------------------------------------- contests ---- */
 
+/** Contests the current user hosts or has joined, one page at a time. */
+export function listContests(params: { status?: ContestStatus; cursor?: string; limit?: number } = {}) {
+  return http.get<Page<Contest>>('/contests', { params })
+}
+
+/** The public browse list: works signed out too. */
+export function browseContests(params: { phase: BrowsePhase; q?: string; cursor?: string; limit?: number }) {
+  return http.get<BrowsePage>('/contests/browse', { params })
+}
+
+export function getContestDetails(id: string) {
+  return http.get<ContestDetails>(`/contests/${id}`)
+}
+
+// Host side
+
 export function createContest(title: string) {
   return http.post<Contest>('/contests', { title })
 }
 
-/** Contests the current user owns or has joined, one page at a time. */
-export function listContests(params: ListParams<ContestState> = {}) {
-  return http.get<Page<Contest>>('/contests', { params })
+export function getContestEditor(id: string) {
+  return http.get<EditorView>(`/contests/${id}/editor`)
 }
 
-export function getContest(id: string) {
-  return http.get<Contest>(`/contests/${id}`)
+export interface ContestDetailsInput {
+  title?: string
+  description?: string
+  startAt?: string | null
+  durationMinutes?: number
+  capacity?: number | null
 }
 
-export function getContestResults(id: string) {
-  return http.get<ContestEntry[]>(`/contests/${id}/results`)
+export function updateContest(id: string, body: ContestDetailsInput) {
+  return http.patch<Contest>(`/contests/${id}`, body)
 }
 
-export function activateContest(id: string) {
-  return http.post<Contest>(`/contests/${id}/activate`)
+export function saveContestQuestions(id: string, questions: EditorQuestion[]) {
+  // The server assigns ids; send only what the editor owns.
+  const body = questions.map(({ kind, prompt, options, correctOptionIds, points, explanation }) => ({
+    kind,
+    prompt,
+    options,
+    correctOptionIds,
+    points,
+    explanation,
+  }))
+  return http.put<EditorQuestion[]>(`/contests/${id}/questions`, { questions: body })
 }
+
+export function publishContest(id: string) {
+  return http.post<Contest>(`/contests/${id}/publish`)
+}
+
+export function cancelContest(id: string) {
+  return http.post<Contest>(`/contests/${id}/cancel`)
+}
+
+export function deleteContest(id: string) {
+  return http.delete<void>(`/contests/${id}`)
+}
+
+// Entrant side
 
 export function joinContest(id: string) {
-  return http.post<ContestEntry>(`/contests/${id}/join`)
+  return http.post<unknown>(`/contests/${id}/join`)
 }
 
-export function scoreContestant(id: string, userId: string, delta: number) {
-  return http.post<{ userId: string; score: number }>(`/contests/${id}/score`, {
-    userId,
-    delta,
+export function leaveContest(id: string) {
+  return http.post<void>(`/contests/${id}/leave`)
+}
+
+/** Opens the workspace; the first call marks the entrant as started. */
+export function startContest(id: string) {
+  return http.post<Workspace>(`/contests/${id}/start`)
+}
+
+export function saveAnswer(id: string, questionId: string, optionIds: string[]) {
+  return http.put<{ questionId: string; optionIds: string[] }>(`/contests/${id}/answers/${questionId}`, { optionIds })
+}
+
+export function submitContest(id: string) {
+  return http.post<{ submittedAt: string }>(`/contests/${id}/submit`)
+}
+
+// Results
+
+export function getContestResults(id: string) {
+  return http.get<ContestResults>(`/contests/${id}/results`)
+}
+
+export function getLeaderboard(id: string, cursor?: string) {
+  return http.get<{ items: BoardRow[]; nextCursor: string | null; total: number }>(`/contests/${id}/leaderboard`, {
+    params: { cursor, limit: 50 },
   })
-}
-
-export function endContest(id: string) {
-  return http.post<Contest>(`/contests/${id}/end`)
 }

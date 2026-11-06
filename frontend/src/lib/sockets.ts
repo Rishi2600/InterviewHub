@@ -26,8 +26,8 @@ export function connectChat(): Socket {
   return connect('/chat')
 }
 
-export function connectLeaderboard(): Socket {
-  return connect('/leaderboard')
+export function connectContests(): Socket {
+  return connect('/contests')
 }
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error'

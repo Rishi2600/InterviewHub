@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { DoorOpen, Plus, Trophy } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { DoorOpen, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { MetricStrip } from '@/components/common/MetricStrip'
@@ -13,7 +13,8 @@ import { LiveContestCard } from '@/components/dashboard/LiveContestCard'
 import { LiveRoomCard, NoLiveRoomCard } from '@/components/dashboard/LiveRoomCard'
 import { RoomsTable } from '@/components/dashboard/RoomsTable'
 import { useAuth, useCanHost } from '@/hooks/useAuth'
-import { createContest, createRoom, getContestResults, listContests, listRooms } from '@/lib/endpoints'
+import { createRoom, listContests, listRooms } from '@/lib/endpoints'
+import { NewContestButton } from '@/components/contest/NewContestButton'
 import { errorMessage } from '@/lib/api'
 import { useLiveNow } from '@/hooks/useLiveNow'
 import { usePagedList } from '@/hooks/usePagedList'
@@ -29,7 +30,7 @@ export function Dashboard() {
   const canHost = useCanHost()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [creating, setCreating] = useState<'room' | 'contest' | null>(null)
+  const [creating, setCreating] = useState<'room' | null>(null)
   // Read once per visit; the greeting does not need to tick over live.
   const [now] = useState(() => new Date())
 
@@ -39,11 +40,6 @@ export function Dashboard() {
 
   const liveRoom = live.rooms[0]
   const liveContest = live.contests[0]
-  const entrants = useQuery({
-    queryKey: ['contest-entries', liveContest?._id],
-    queryFn: () => getContestResults(liveContest!._id),
-    enabled: Boolean(liveContest),
-  }).data
 
   const roomMutation = useMutation({
     mutationFn: createRoom,
@@ -54,17 +50,6 @@ export function Dashboard() {
       navigate(`/rooms/${room._id}`)
     },
     onError: (err) => toast.error(errorMessage(err, 'Could not create the room')),
-  })
-
-  const contestMutation = useMutation({
-    mutationFn: createContest,
-    onSuccess: (contest) => {
-      void queryClient.invalidateQueries({ queryKey: ['contests'] })
-      setCreating(null)
-      toast.success('Contest created')
-      navigate(`/contests/${contest._id}`)
-    },
-    onError: (err) => toast.error(errorMessage(err, 'Could not create the contest')),
   })
 
   // Totals for the whole list, not just the pages loaded so far.
@@ -78,10 +63,7 @@ export function Dashboard() {
       <PageHeader title={<span>Dashboard</span>}>
         {canHost ? (
           <>
-            <Button variant="outline" size="sm" onClick={() => setCreating('contest')}>
-              <Trophy aria-hidden />
-              <span className="hidden sm:inline">New contest</span>
-            </Button>
+            <NewContestButton variant="outline" />
             <Button size="sm" onClick={() => setCreating('room')}>
               <Plus aria-hidden />
               <span className="hidden sm:inline">New room</span>
@@ -118,8 +100,8 @@ export function Dashboard() {
           { label: 'Contests', value: total(contests.counts), note: `${drafts} still in draft` },
           {
             label: 'Entrants',
-            value: entrants?.length ?? 0,
-            note: liveContest ? 'In the active contest' : 'No contest running',
+            value: liveContest?.entrantCount ?? 0,
+            note: liveContest ? `In ${liveContest.title}` : 'No contest running',
           },
         ]}
       />
@@ -155,17 +137,6 @@ export function Dashboard() {
         submitLabel="Create room"
         pending={roomMutation.isPending}
         onSubmit={(title) => roomMutation.mutate(title)}
-      />
-      <CreateDialog
-        open={creating === 'contest'}
-        onOpenChange={(open) => setCreating(open ? 'contest' : null)}
-        title="Create a contest"
-        description="It starts as a draft. Activate it when you're ready to score."
-        label="Contest title"
-        placeholder="Algorithms sprint, round 1"
-        submitLabel="Create contest"
-        pending={contestMutation.isPending}
-        onSubmit={(title) => contestMutation.mutate(title)}
       />
     </>
   )

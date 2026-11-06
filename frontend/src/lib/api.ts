@@ -137,6 +137,17 @@ export const http = {
   patch<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return api.patch(url, body, config) as unknown as Promise<T>
   },
+  put<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return api.put(url, body, config) as unknown as Promise<T>
+  },
+  delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return api.delete(url, config) as unknown as Promise<T>
+  },
+}
+
+/** The HTTP status of a failed call, when there was a response. */
+export function errorStatus(err: unknown): number | undefined {
+  return (err as { status?: number } | null)?.status
 }
 
 /** Best-effort message extraction for anything thrown at a UI boundary. */

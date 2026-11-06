@@ -75,37 +75,185 @@ export interface Message {
   createdAt: string
 }
 
-export type ContestState = 'draft' | 'active' | 'ended'
+/* ---------------------------------------------------------- contests ---- */
 
+export type ContestStatus = 'draft' | 'published' | 'cancelled'
+
+/** Where a contest is, worked out by the server from the clock. `pending`:
+ *  it has ended but results are not out yet. */
+export type ContestPhase = 'draft' | 'cancelled' | 'upcoming' | 'live' | 'pending' | 'ended'
+
+/** A contest as stored: what lists of your own contests and the editor get. */
 export interface Contest {
   _id: string
   title: string
-  ownerId: string
-  state: ContestState
-  endedAt: string | null
+  description: string
+  hostId: string
+  hostName: string
+  status: ContestStatus
+  startAt: string | null
+  endAt: string | null
+  durationMinutes: number | null
+  capacity: number | null
+  questionCount: number
+  totalPoints: number
+  entrantCount: number
+  startedCount: number
+  submittedCount: number
+  publishedAt: string | null
+  cancelledAt: string | null
+  finalizedAt: string | null
+  rated: boolean | null
   createdAt: string
 }
 
-export interface ContestEntry {
+/** A browse card. Signed-in viewers also get `viewer`. */
+export interface ContestCard {
   _id: string
-  contestId: string
+  title: string
+  hostName: string
+  phase: ContestPhase
+  startAt: string | null
+  endAt: string | null
+  durationMinutes: number | null
+  questionCount: number
+  capacity: number | null
+  entrantCount: number
+  startedCount: number
+  submittedCount: number
+  rated: boolean | null
+  viewer?: { hosting: boolean; joined: boolean; rank: number | null }
+}
+
+export interface BrowsePage {
+  items: ContestCard[]
+  nextCursor: string | null
+  total: number
+}
+
+export type BrowsePhase = 'live' | 'upcoming' | 'past'
+
+export interface BoardRow {
+  _id: string
   userId: string
   username: string
-  finalScore: number
-  finalRank: number
-}
-
-/** Live leaderboard row. Note the backend sends no username here — only the
- *  user id — so the UI resolves display names from the contest entry roster. */
-export interface LeaderboardRow {
-  userId: string
-  score: number
   rank: number
+  score: number
+  timeUsedMs: number
+  autoSubmitted: boolean
 }
 
-export interface LeaderboardUpdate {
+/** The details page. Never carries questions or answers. */
+export interface ContestDetails extends Omit<ContestCard, 'viewer'> {
+  description: string
+  totalPoints: number
+  status: ContestStatus
+  cancelledAt: string | null
+  viewer: {
+    hosting: boolean
+    // The host or an admin: offered edit and cancel.
+    canManage: boolean
+    entry: {
+      joinedAt: string
+      startedAt: string | null
+      submittedAt: string | null
+      answered: number
+      score: number | null
+      rank: number | null
+      percentile: number | null
+      timeUsedMs: number | null
+    } | null
+  }
+  top: Pick<BoardRow, 'username' | 'rank' | 'score' | 'timeUsedMs'>[]
+}
+
+export type QuestionKind = 'single' | 'multiple'
+
+export interface QuestionOption {
+  id: string
+  text: string
+}
+
+/** A question as the host edits it, answer key included. */
+export interface EditorQuestion {
+  _id?: string
+  kind: QuestionKind
+  prompt: string
+  options: QuestionOption[]
+  correctOptionIds: string[]
+  points: number
+  explanation: string
+}
+
+export interface PublishCheck {
+  label: string
+  ok: boolean
+  detail?: string
+}
+
+export interface EditorView {
+  contest: Contest
+  questions: EditorQuestion[]
+  checks: PublishCheck[]
+  // Null for admins, who have no limit.
+  usage: { used: number; limit: number; resetsAt: string } | null
+}
+
+/** What the workspace gets: questions in this entrant's own order, without
+ *  the answer key. */
+export interface Workspace {
+  contest: {
+    _id: string
+    title: string
+    startAt: string
+    endAt: string
+    questionCount: number
+    totalPoints: number
+  }
+  serverNow: string
+  entry: { joinedAt: string; startedAt: string | null; submittedAt: string | null }
+  questions: { _id: string; kind: QuestionKind; prompt: string; points: number; options: QuestionOption[] }[]
+  answers: Record<string, string[]>
+}
+
+export interface ResultQuestion {
+  _id: string
+  number: number
+  kind: QuestionKind
+  prompt: string
+  points: number
+  options: QuestionOption[]
+  correctOptionIds: string[]
+  explanation: string
+  // Null when the viewer did not enter or skipped it.
+  picked: string[] | null
+  earned: number
+  // Host and admins only.
+  answeredCount?: number
+  correctCount?: number
+}
+
+export interface ContestResults {
+  contest: {
+    _id: string
+    title: string
+    hostName: string
+    endAt: string
+    questionCount: number
+    totalPoints: number
+    starters: number
+    rated: boolean | null
+  }
+  top: BoardRow[]
+  me: { rank: number; score: number; timeUsedMs: number; percentile: number; autoSubmitted: boolean } | null
+  questions: ResultQuestion[]
+}
+
+export interface ContestCounts {
   contestId: string
-  top: LeaderboardRow[]
+  entrantCount: number
+  startedCount: number
+  submittedCount: number
 }
 
 export interface HealthResponse {

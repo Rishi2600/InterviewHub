@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/use-theme'
 const HIGHLIGHTS = [
   { icon: MessagesSquare, title: 'Interview rooms', text: 'Live chat with a join code you share with the candidate.' },
   { icon: Pin, title: 'Pinned questions', text: 'Put the problem at the top of the chat for everyone at once.' },
-  { icon: Trophy, title: 'Scored contests', text: 'Award points and watch the leaderboard update live.' },
+  { icon: Trophy, title: 'Public contests', text: 'Timed quizzes anyone can join, ranked the moment they end.' },
 ]
 
 /** Two columns, as in shadcn's login blocks: the form on the left, a short

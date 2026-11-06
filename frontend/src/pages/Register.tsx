@@ -43,7 +43,7 @@ type FormValues = z.infer<typeof schema>
  *  themselves an admin. */
 const ROLES = [
   { value: 'candidate', label: 'Candidate', blurb: 'Join rooms and enter contests' },
-  { value: 'interviewer', label: 'Interviewer', blurb: 'Create rooms and score contests' },
+  { value: 'interviewer', label: 'Interviewer', blurb: 'Create rooms and host contests' },
 ] as const
 
 export function Register() {
