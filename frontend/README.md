@@ -80,6 +80,20 @@ the saved choice (or the system's) before first paint; `useTheme()` in
 **Page header.** The top bar belongs to `AppShell`, but each page fills it
 with `<PageHeader title={…}>actions</PageHeader>`, which portals into the bar.
 
+## Sessions
+
+The access token lives only in memory (`src/lib/session.ts`), never in
+`localStorage`. The backend keeps the session in an httpOnly refresh cookie
+scoped to `/auth`, so:
+
+- On load, `AuthContext` calls `/auth/refresh` to restore the session.
+- Before each request, `src/lib/api.ts` refreshes a token that expires within
+  30 seconds. A 401 triggers one refresh and a retry, then signs the user out.
+- Refreshes are shared within a tab, and serialized across tabs with a browser
+  lock, because each refresh replaces the cookie.
+- Sockets get a fresh token on every connect and reconnect, and are keyed on the
+  user rather than the token, so a refresh does not rebuild them.
+
 ## Notes on the backend contract
 
 Three quirks worth knowing, all handled at the API boundary:
