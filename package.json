@@ -18,7 +18,8 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json --runInBand",
-    "test:e2e:db": "docker compose --profile test up -d --wait mongo-test"
+    "test:e2e:redis": "REDIS_URL_TEST=redis://127.0.0.1:6380 npm run test:e2e",
+    "test:e2e:db": "docker compose --profile test up -d --wait mongo-test redis-test"
   },
   "dependencies": {
     "@nestjs/common": "^12.3.2",
@@ -39,7 +40,7 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "helmet": "^8.3.0",
-    "ioredis": "^5.10.1",
+    "ioredis": "^6.0.0",
     "joi": "^18.3.1",
     "mongoose": "^9.4.1",
     "multer": "^2.5.0",

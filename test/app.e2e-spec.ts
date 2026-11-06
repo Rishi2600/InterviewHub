@@ -10,11 +10,12 @@ describe('health (e2e)', () => {
     expect(data(res)).toEqual({ status: 'ok' });
   });
 
-  it('is ready with Mongo up and Redis not in use', async () => {
+  it('is ready with Mongo up, and Redis up when in use', async () => {
     const res = await t.api().get('/health/ready').expect(200);
+    const redis = process.env.REDIS_ENABLED === 'true' ? 'up' : 'disabled';
     expect(data(res)).toEqual({
       status: 'ok',
-      checks: { mongo: 'up', redis: 'disabled' },
+      checks: { mongo: 'up', redis },
     });
   });
 

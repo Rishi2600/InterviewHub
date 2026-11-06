@@ -26,7 +26,10 @@ export interface TestApp {
  * empty database. Rate limits are off so tests can sign in freely; they have
  * their own unit tests. The every-minute finalize job is off too.
  */
-export async function startApp(): Promise<TestApp> {
+export async function startApp(
+  // A second server sharing the first one's database keeps its data.
+  opts: { keepData?: boolean } = {},
+): Promise<TestApp> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(HttpThrottleGuard)
     .useValue({ canActivate: () => true })
@@ -42,8 +45,10 @@ export async function startApp(): Promise<TestApp> {
   await app.listen(0, '127.0.0.1');
 
   const db = app.get<Connection>(getConnectionToken());
-  await db.dropDatabase();
-  await Promise.all(Object.values(db.models).map((m) => m.syncIndexes()));
+  if (!opts.keepData) {
+    await db.dropDatabase();
+    await Promise.all(Object.values(db.models).map((m) => m.syncIndexes()));
+  }
 
   const { port } = app.getHttpServer().address() as AddressInfo;
   const url = `http://127.0.0.1:${port}`;

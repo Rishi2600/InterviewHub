@@ -41,5 +41,21 @@ services:
       timeout: 5s
       retries: 15
 
+  # Throwaway Redis for `npm run test:e2e:redis`, which runs the end-to-end
+  # tests with Redis on. Local image, never pulled; nothing is persisted.
+  redis-test:
+    image: redis:7-alpine
+    pull_policy: never
+    container_name: interviewhub-redis-test
+    profiles: ["test"]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
 volumes:
   mongo-data:

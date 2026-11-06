@@ -17,6 +17,10 @@ process.env.MONGODB_URI = uri;
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'end-to-end-test-secret';
 process.env.JWT_EXPIRES_IN = '15m';
-process.env.REDIS_ENABLED = 'false';
+// Redis is off unless REDIS_URL_TEST names a test Redis (npm run
+// test:e2e:redis), so both modes run the same tests.
+const redisUrl = process.env.REDIS_URL_TEST;
+process.env.REDIS_ENABLED = redisUrl ? 'true' : 'false';
+if (redisUrl) process.env.REDIS_URL = redisUrl;
 process.env.LOG_LEVEL = 'silent';
 process.env.CORS_ORIGINS = 'http://localhost:5173';
