@@ -1,19 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from '../src/app.controller';
+import { HealthController } from '../src/health/health.controller';
+import { HealthService } from '../src/health/health.service';
 
-describe('AppController (health)', () => {
-  let controller: AppController;
+describe('HealthController (liveness)', () => {
+  let controller: HealthController;
 
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
+      controllers: [HealthController],
+      providers: [{ provide: HealthService, useValue: {} }],
     }).compile();
-    controller = moduleRef.get(AppController);
+    controller = moduleRef.get(HealthController);
   });
 
-  it('returns ok status', () => {
-    const res = controller.health();
-    expect(res.status).toBe('ok');
-    expect(res.service).toBe('interview-hub');
+  it('reports the process as live', () => {
+    expect(controller.live()).toEqual({ status: 'ok' });
   });
 });

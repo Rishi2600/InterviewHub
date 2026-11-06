@@ -14,7 +14,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { ChatModule } from './chat/chat.module';
 import { ContestsModule } from './contests/contests.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
-import { AppController } from './app.controller';
+import { HealthModule } from './health/health.module';
 import { THROTTLERS } from './common/throttle/limits';
 import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
 
@@ -55,6 +55,7 @@ import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
       },
     }),
     RedisModule,
+    HealthModule,
     AuthModule,
     UsersModule,
     RoomsModule,
@@ -62,7 +63,6 @@ import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
     ContestsModule,
     LeaderboardModule,
   ],
-  controllers: [AppController],
   providers: [{ provide: APP_GUARD, useClass: HttpThrottleGuard }],
 })
 export class AppModule {}

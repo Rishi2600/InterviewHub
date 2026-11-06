@@ -109,9 +109,8 @@ export interface LeaderboardUpdate {
 }
 
 export interface HealthResponse {
-  status: string
-  service: string
-  timestamp: string
+  status: 'ok'
+  checks: { mongo: 'up' | 'down' | 'disabled'; redis: 'up' | 'down' | 'disabled' }
 }
 
 /** Payload of the WebSocket `error` event emitted by WsExceptionsFilter. */
