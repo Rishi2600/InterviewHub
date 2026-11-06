@@ -23,5 +23,23 @@ services:
       timeout: 5s
       retries: 10
 
+  # Throwaway database for the end-to-end tests, started only with
+  # `npm run test:e2e:db`. Same image as above, never pulled; data lives in
+  # memory and is gone when the container stops.
+  mongo-test:
+    image: mongo:7.0
+    pull_policy: never
+    container_name: interviewhub-mongo-test
+    profiles: ["test"]
+    ports:
+      - "127.0.0.1:27018:27017"
+    tmpfs:
+      - /data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
 volumes:
   mongo-data:

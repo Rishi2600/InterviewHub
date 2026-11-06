@@ -73,6 +73,10 @@ import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
     ContestsModule,
     LeaderboardModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: HttpThrottleGuard }],
+  providers: [
+    // Registered by class as well, so end-to-end tests can swap it out.
+    HttpThrottleGuard,
+    { provide: APP_GUARD, useExisting: HttpThrottleGuard },
+  ],
 })
 export class AppModule {}

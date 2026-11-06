@@ -10,7 +10,7 @@ export const envValidationSchema = Joi.object({
     .default('development'),
   PORT: Joi.number().default(3000),
   LOG_LEVEL: Joi.string()
-    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace')
+    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent')
     .default('info'),
   // Proxies in front of the app (1 behind a single load balancer). Decides
   // which X-Forwarded-For entry is the client IP; 0 ignores the header.
