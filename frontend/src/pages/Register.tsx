@@ -23,10 +23,15 @@ import { useAuth } from '@/hooks/useAuth'
 import { errorMessage } from '@/lib/api'
 import { PASSWORD_HINT, isValidPassword } from '@/lib/password'
 import { AuthLayout } from './AuthLayout'
+import { LIMITS } from '@/lib/limits'
 
 // Mirrors the backend RegisterDto: username min 2, the password policy, optional role.
 const schema = z.object({
-  username: z.string().min(2, 'Username must be at least 2 characters'),
+  username: z
+    .string()
+    .trim()
+    .min(LIMITS.username.min, `Username must be at least ${LIMITS.username.min} characters`)
+    .max(LIMITS.username.max, `Username must be at most ${LIMITS.username.max} characters`),
   email: z.email('Enter a valid email address'),
   password: z.string().refine(isValidPassword, `Password must be ${PASSWORD_HINT.toLowerCase()}`),
   role: z.enum(['candidate', 'interviewer']),

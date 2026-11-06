@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { SendHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { LIMITS } from '@/lib/limits'
 
 const TYPING_IDLE_MS = 1200
 
@@ -89,6 +90,7 @@ export function Composer({
           value={value}
           disabled={disabled}
           placeholder={disabled ? 'Chat unavailable' : 'Message the room'}
+          maxLength={LIMITS.text}
           onChange={(e) => {
             setValue(e.target.value)
             if (e.target.value.trim()) signalTyping()

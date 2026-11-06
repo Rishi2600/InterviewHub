@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { LIMITS } from '@/lib/limits'
 
 /** Pins (or replaces) the question shown at the top of the chat. */
 export function PinDialog({
@@ -49,6 +50,7 @@ export function PinDialog({
               value={draft}
               autoFocus
               placeholder="Reverse a linked list in place."
+              maxLength={LIMITS.text}
               onChange={(e) => setDraft(e.target.value)}
             />
           </div>

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LIMITS } from '@/lib/limits'
 
 /** Asks for a title, then creates a room or a contest. */
 export function CreateDialog({
@@ -40,7 +41,7 @@ export function CreateDialog({
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    if (trimmed && !pending) onSubmit(trimmed)
+    if (trimmed.length >= LIMITS.title.min && !pending) onSubmit(trimmed)
   }
 
   return (
@@ -64,6 +65,7 @@ export function CreateDialog({
               value={value}
               autoFocus
               placeholder={placeholder}
+              maxLength={LIMITS.title.max}
               onChange={(e) => setValue(e.target.value)}
             />
           </div>
@@ -71,7 +73,7 @@ export function CreateDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!trimmed || pending}>
+            <Button type="submit" disabled={trimmed.length < LIMITS.title.min || pending}>
               {pending && <Loader2 className="animate-spin" aria-hidden />}
               {submitLabel}
             </Button>
