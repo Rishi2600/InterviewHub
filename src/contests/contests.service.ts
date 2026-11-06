@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import {
 import { ListContestsDto } from './dto/list-contests.dto';
 import {
   DEFAULT_PAGE_SIZE,
+  PageQueryDto,
   NEWEST_FIRST,
   Page,
   afterKeyCursor,
@@ -23,6 +25,11 @@ import {
 } from '../common/pagination/pagination';
 import { BrowseContestsDto, BrowsePhase } from './dto/browse-contests.dto';
 import { CardViewer, ContestCard, toCard, toDetails } from './contest-views';
+import { ContestQuestion } from './schemas/contest-question.schema';
+import { isCorrect } from './finalize/scoring';
+
+// Rows of the board the results page shows before "Show all".
+const RESULTS_TOP = 10;
 import {
   ContestEntry,
   ContestEntryDocument,
@@ -69,6 +76,8 @@ export class ContestsService {
     private readonly contestModel: Model<ContestDocument>,
     @InjectModel(ContestEntry.name)
     private readonly entryModel: Model<ContestEntryDocument>,
+    @InjectModel(ContestQuestion.name)
+    private readonly questionModel: Model<ContestQuestion>,
   ) {}
 
   /**
@@ -228,16 +237,119 @@ export class ContestsService {
     return contest;
   }
 
-  /** Final standings, best first, once the contest is finalized. */
-  async results(id: string, user: Caller): Promise<ContestEntryDocument[]> {
+  /** A finalized contest the user may see; results are hidden until then. */
+  private async finalized(id: string, user: Caller): Promise<ContestDocument> {
     const contest = await this.findVisible(id, user);
     if (!contest.finalizedAt) {
-      throw new BadRequestException('Results are not ready yet');
+      throw new ConflictException('Results are not ready yet');
     }
-    return this.entryModel
-      .find({ contestId: contest._id, rank: { $ne: null } })
-      .select('-answers')
-      .sort({ rank: 1, username: 1 })
-      .exec();
+    return contest;
   }
+
+  private board(contestId: Types.ObjectId) {
+    return this.entryModel
+      .find({ contestId, rank: { $ne: null } })
+      .select('userId username rank score timeUsedMs autoSubmitted')
+      .sort({ rank: 1, username: 1, _id: 1 });
+  }
+
+  /**
+   * The results page: the top of the board, the viewer's own result, and
+   * every question in the host's order with its answer key, explanation and
+   * the viewer's picks. Hosts and admins also get how many got each right.
+   */
+  async results(id: string, user: Caller) {
+    const contest = await this.finalized(id, user);
+    const canManage = this.isHost(contest, user);
+    const [top, mine, questions] = await Promise.all([
+      this.board(contest._id).limit(RESULTS_TOP).lean().exec(),
+      this.entryModel
+        .findOne({
+          contestId: contest._id,
+          userId: new Types.ObjectId(user.userId),
+        })
+        .lean()
+        .exec(),
+      this.questionModel
+        .find({ contestId: contest._id })
+        .sort({ order: 1 })
+        .lean()
+        .exec(),
+    ]);
+    const picks = new Map(
+      (mine?.answers ?? []).map((a) => [a.questionId.toString(), a.optionIds]),
+    );
+    return {
+      contest: {
+        _id: contest._id,
+        title: contest.title,
+        hostName: contest.hostName,
+        endAt: contest.endAt,
+        questionCount: contest.questionCount,
+        totalPoints: contest.totalPoints,
+        starters: contest.startedCount,
+        rated: contest.rated,
+      },
+      top,
+      me:
+        mine && mine.rank !== null
+          ? {
+              rank: mine.rank,
+              score: mine.score,
+              timeUsedMs: mine.timeUsedMs,
+              percentile: mine.percentile,
+              autoSubmitted: mine.autoSubmitted,
+            }
+          : null,
+      questions: questions.map((q, i) => {
+        const picked = picks.get(q._id.toString()) ?? null;
+        return {
+          _id: q._id,
+          number: i + 1,
+          kind: q.kind,
+          prompt: q.prompt,
+          points: q.points,
+          options: q.options,
+          correctOptionIds: q.correctOptionIds,
+          explanation: q.explanation,
+          // Null when the viewer did not enter or skipped the question.
+          picked,
+          earned:
+            picked && isCorrect(picked, q.correctOptionIds) ? q.points : 0,
+          ...(canManage && {
+            answeredCount: q.answeredCount,
+            correctCount: q.correctCount,
+          }),
+        };
+      }),
+    };
+  }
+
+  /** The full board, a page at a time. Final, so plain offsets are safe. */
+  async leaderboard(id: string, user: Caller, query: PageQueryDto) {
+    const contest = await this.finalized(id, user);
+    const limit = query.limit ?? DEFAULT_PAGE_SIZE;
+    const offset = query.cursor ? decodeOffset(query.cursor) : 0;
+    const rows = await this.board(contest._id)
+      .skip(offset)
+      .limit(limit + 1)
+      .lean()
+      .exec();
+    return {
+      items: rows.slice(0, limit),
+      nextCursor:
+        rows.length > limit
+          ? Buffer.from(String(offset + limit)).toString('base64url')
+          : null,
+      total: contest.startedCount,
+    };
+  }
+}
+
+function decodeOffset(cursor: string): number {
+  const n = Number(Buffer.from(cursor, 'base64url').toString('utf8'));
+  if (!Number.isInteger(n) || n < 0) {
+    throw new BadRequestException('Invalid cursor');
+  }
+  return n;
 }

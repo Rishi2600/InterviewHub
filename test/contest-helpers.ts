@@ -55,10 +55,10 @@ export async function publishContest(
 }
 
 /**
- * Moves a contest in time instead of moving the clock: it now starts
- * `startIn` minutes from now (negative for the past) and runs `length`.
- * Entries joined "before" keep their real join time, which is fine for
- * ordering since it is still before the end.
+ * Moves the clock, by moving the contest instead: it now starts `startIn`
+ * minutes from now (negative for the past) and runs `length`. Its entries'
+ * times move by the same amount, so an entry that joined before the start,
+ * or submitted a minute in, still did.
  */
 export async function moveContest(
   t: TestApp,
@@ -66,9 +66,12 @@ export async function moveContest(
   startIn: number,
   length = 30,
 ): Promise<void> {
+  const _id = new Types.ObjectId(id);
+  const before = await t.db.collection('contests').findOne({ _id });
   const startAt = new Date(Date.now() + startIn * MIN);
+  const shift = startAt.getTime() - (before?.startAt as Date).getTime();
   await t.db.collection('contests').updateOne(
-    { _id: new Types.ObjectId(id) },
+    { _id },
     {
       $set: {
         startAt,
@@ -77,6 +80,16 @@ export async function moveContest(
       },
     },
   );
+  // $add leaves null (never started or submitted) as null.
+  await t.db.collection('contest_entries').updateMany({ contestId: _id }, [
+    {
+      $set: {
+        joinedAt: { $add: ['$joinedAt', shift] },
+        startedAt: { $add: ['$startedAt', shift] },
+        submittedAt: { $add: ['$submittedAt', shift] },
+      },
+    },
+  ]);
 }
 
 export const contestDoc = (t: TestApp, id: string) =>

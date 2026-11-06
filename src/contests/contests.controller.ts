@@ -28,6 +28,7 @@ import { ANSWER_LIMIT } from '../common/throttle/limits';
 import { CreateContestDto } from './dto/create-contest.dto';
 import { ListContestsDto } from './dto/list-contests.dto';
 import { BrowseContestsDto } from './dto/browse-contests.dto';
+import { PageQueryDto } from '../common/pagination/pagination';
 import { UpdateContestDto } from './dto/update-contest.dto';
 import { SaveQuestionsDto } from './dto/save-questions.dto';
 
@@ -69,9 +70,20 @@ export class ContestsController {
     return this.contestsService.details(id, user);
   }
 
+  // Once finalized, for any signed-in user.
   @Get(':id/results')
   results(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.contestsService.results(id, user);
+  }
+
+  // The whole final board, a page at a time ("Show all").
+  @Get(':id/leaderboard')
+  leaderboard(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Query() query: PageQueryDto,
+  ) {
+    return this.contestsService.leaderboard(id, user, query);
   }
 
   // --- Entrant side ---
