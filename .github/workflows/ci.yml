@@ -16,6 +16,17 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    # Throwaway database for the end-to-end tests, on the port they expect.
+    services:
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27018:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping: 1}).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

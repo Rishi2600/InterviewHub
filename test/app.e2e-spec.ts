@@ -1,19 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { HealthController } from '../src/health/health.controller';
-import { HealthService } from '../src/health/health.service';
+import { data, startApp, TestApp } from './helpers';
 
-describe('HealthController (liveness)', () => {
-  let controller: HealthController;
+describe('health (e2e)', () => {
+  let t: TestApp;
+  beforeAll(async () => (t = await startApp()));
+  afterAll(() => t.app.close());
 
-  beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [HealthController],
-      providers: [{ provide: HealthService, useValue: {} }],
-    }).compile();
-    controller = moduleRef.get(HealthController);
+  it('is live', async () => {
+    const res = await t.api().get('/health/live').expect(200);
+    expect(data(res)).toEqual({ status: 'ok' });
   });
 
-  it('reports the process as live', () => {
-    expect(controller.live()).toEqual({ status: 'ok' });
+  it('is ready with Mongo up and Redis not in use', async () => {
+    const res = await t.api().get('/health/ready').expect(200);
+    expect(data(res)).toEqual({
+      status: 'ok',
+      checks: { mongo: 'up', redis: 'disabled' },
+    });
+  });
+
+  it('returns a request id on every response', async () => {
+    const res = await t
+      .api()
+      .get('/health/live')
+      .set('X-Request-Id', 'trace-42')
+      .expect(200);
+    expect(res.headers['x-request-id']).toBe('trace-42');
   });
 });
