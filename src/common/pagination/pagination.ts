@@ -44,39 +44,51 @@ interface Bookmarkable {
   createdAt: Date;
 }
 
-/** The bookmark: the last item's createdAt and id, base64url-encoded so
- *  clients treat it as opaque. */
-export function encodeCursor(item: Bookmarkable): string {
+/** A bookmark: a date and an id, base64url-encoded so clients treat it as
+ *  opaque. */
+export function encodeKeyCursor(at: Date, id: Types.ObjectId): string {
   return Buffer.from(
-    JSON.stringify([item.createdAt.toISOString(), item._id.toString()]),
+    JSON.stringify([at.toISOString(), id.toString()]),
   ).toString('base64url');
 }
 
-/** Items strictly after the bookmark in newest-first order. createdAt can
- *  repeat, so the id breaks ties. */
-export function afterCursor(cursor: string): QueryFilter<Bookmarkable> {
+/**
+ * Items strictly after the bookmark in a list sorted by `field` then `_id`,
+ * both ascending (1) or both descending (-1). Dates can repeat, so the id
+ * breaks ties.
+ */
+export function afterKeyCursor(
+  field: string,
+  cursor: string,
+  direction: 1 | -1,
+): Record<string, unknown> {
   try {
     const parsed: unknown = JSON.parse(
       Buffer.from(cursor, 'base64url').toString('utf8'),
     );
     if (!Array.isArray(parsed) || parsed.length !== 2) throw new Error();
     const [iso, id] = parsed as [unknown, unknown];
-    const createdAt = new Date(String(iso));
-    if (
-      Number.isNaN(createdAt.getTime()) ||
-      !Types.ObjectId.isValid(String(id))
-    )
+    const at = new Date(String(iso));
+    if (Number.isNaN(at.getTime()) || !Types.ObjectId.isValid(String(id)))
       throw new Error();
     const _id = new Types.ObjectId(String(id));
+    const past = direction === 1 ? '$gt' : '$lt';
     return {
-      $or: [
-        { createdAt: { $lt: createdAt } },
-        { createdAt, _id: { $lt: _id } },
-      ],
+      $or: [{ [field]: { [past]: at } }, { [field]: at, _id: { [past]: _id } }],
     };
   } catch {
     throw new BadRequestException('Invalid cursor');
   }
+}
+
+/** The bookmark for a newest-first list: the last item's createdAt and id. */
+export function encodeCursor(item: Bookmarkable): string {
+  return encodeKeyCursor(item.createdAt, item._id);
+}
+
+/** Items strictly after the bookmark in newest-first order. */
+export function afterCursor(cursor: string): QueryFilter<Bookmarkable> {
+  return afterKeyCursor('createdAt', cursor, -1);
 }
 
 /** The field a list filters and counts by: rooms use `state`, contests `status`. */
