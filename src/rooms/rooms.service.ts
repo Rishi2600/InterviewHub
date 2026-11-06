@@ -6,14 +6,26 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { randomInt } from 'crypto';
 import { Model, Types } from 'mongoose';
-import { Room, RoomDocument, RoomState } from './schemas/room.schema';
+import {
+  ROOM_STATES,
+  Room,
+  RoomDocument,
+  RoomState,
+} from './schemas/room.schema';
+import { ListRoomsDto } from './dto/list-rooms.dto';
+import {
+  NEWEST_FIRST,
+  Page,
+  countByStatePipeline,
+  pageQuery,
+  toPage,
+} from '../common/pagination/pagination';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
 const CODE_LENGTH = 5;
 // Codes are only ever made from CODE_ALPHABET, so anything else cannot exist.
 const ROOM_CODE_PATTERN = new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`);
 // Caps the list endpoint so a long-lived account cannot pull an unbounded set.
-const LIST_LIMIT = 50;
 
 @Injectable()
 export class RoomsService {
@@ -51,17 +63,23 @@ export class RoomsService {
   }
 
   /**
-   * Rooms the user owns or has joined, most recently updated first. Scoped to
-   * the caller: there is deliberately no "all rooms" listing.
+   * Rooms the user owns or has joined, newest first, one page at a time.
+   * Scoped to the caller: there is deliberately no "all rooms" listing.
    */
-  listForUser(user: { userId: string }): Promise<RoomDocument[]> {
-    if (!Types.ObjectId.isValid(user.userId)) return Promise.resolve([]);
+  async listForUser(
+    user: { userId: string },
+    query: ListRoomsDto = {},
+  ): Promise<Page<RoomDocument>> {
     const uid = new Types.ObjectId(user.userId);
-    return this.roomModel
-      .find({ $or: [{ ownerId: uid }, { 'participants.userId': uid }] })
-      .sort({ updatedAt: -1 })
-      .limit(LIST_LIMIT)
-      .exec();
+    const scope = { $or: [{ ownerId: uid }, { 'participants.userId': uid }] };
+    const { conditions, limit, fetch } = pageQuery(scope, query);
+    const [rows, grouped] = await Promise.all([
+      this.roomModel.find(conditions).sort(NEWEST_FIRST).limit(fetch).exec(),
+      this.roomModel
+        .aggregate<{ _id: string; n: number }>(countByStatePipeline(scope))
+        .exec(),
+    ]);
+    return toPage(rows, limit, grouped, ROOM_STATES);
   }
 
   /** Used by guards; returns the raw doc (or null) without throwing. */

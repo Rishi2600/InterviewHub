@@ -2,7 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 export type RoomDocument = HydratedDocument<Room>;
-export type RoomState = 'waiting' | 'active' | 'ended';
+export const ROOM_STATES = ['waiting', 'active', 'ended'] as const;
+export type RoomState = (typeof ROOM_STATES)[number];
 
 @Schema({ _id: false })
 export class Participant {
@@ -38,7 +39,7 @@ export class Room {
 
   @Prop({
     type: String,
-    enum: ['waiting', 'active', 'ended'],
+    enum: ROOM_STATES,
     default: 'waiting',
   })
   state: RoomState;
@@ -52,6 +53,11 @@ export class Room {
   // Users already announced with "joined the room". Internal, never returned.
   @Prop({ type: [SchemaTypes.ObjectId], default: [], select: false })
   announcedUserIds: Types.ObjectId[];
+
+  createdAt: Date;
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
+// "Rooms I joined" lookups, and newest-first paging of both halves of the list.
+RoomSchema.index({ ownerId: 1, createdAt: -1 });
+RoomSchema.index({ 'participants.userId': 1, createdAt: -1 });

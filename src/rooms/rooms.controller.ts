@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -20,6 +21,7 @@ import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
 import { PinQuestionDto } from './dto/pin-question.dto';
+import { ListRoomsDto } from './dto/list-rooms.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('rooms')
@@ -34,10 +36,10 @@ export class RoomsController {
     return this.roomsService.create(user.userId, dto.title);
   }
 
-  // Rooms the caller owns or has joined. Scoped to the caller, capped.
+  // Rooms the caller owns or has joined, one page at a time.
   @Get()
-  list(@CurrentUser() user: AuthUser) {
-    return this.roomsService.listForUser(user);
+  list(@CurrentUser() user: AuthUser, @Query() query: ListRoomsDto) {
+    return this.roomsService.listForUser(user, query);
   }
 
   // Owner, participants and admins only.

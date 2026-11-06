@@ -32,10 +32,10 @@ export class ContestsController {
     return this.contestsService.create(user.userId, dto.title);
   }
 
-  // Contests the caller owns or has joined. Scoped to the caller, capped.
+  // Contests the caller owns or has joined, one page at a time.
   @Get()
   list(@CurrentUser() user: AuthUser, @Query() query: ListContestsDto) {
-    return this.contestsService.listForUser(user, query.state);
+    return this.contestsService.listForUser(user, query);
   }
 
   // Published contests for any signed-in user; drafts for the host and admins.
