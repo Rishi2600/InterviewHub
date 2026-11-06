@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -28,7 +27,6 @@ import {
   ContestEntry,
   ContestEntryDocument,
 } from './schemas/contest-entry.schema';
-import { isDuplicateKey } from '../common/mongo-errors';
 
 interface Caller {
   userId: string;
@@ -228,68 +226,6 @@ export class ContestsService {
       throw new NotFoundException('Contest not found');
     }
     return contest;
-  }
-
-  /**
-   * Joins a published contest before its end. Capacity is checked and the
-   * entrant count raised in one atomic update, so a full contest can never
-   * take one more. Joining twice returns the existing entry.
-   */
-  async join(
-    id: string,
-    user: Caller & { username: string },
-    now = new Date(),
-  ): Promise<ContestEntryDocument> {
-    const contest = await this.findVisible(id, user);
-    if (contest.hostId.toString() === user.userId) {
-      throw new ForbiddenException('You cannot enter your own contest');
-    }
-    const userId = new Types.ObjectId(user.userId);
-    const existing = await this.entryModel
-      .findOne({ contestId: contest._id, userId })
-      .exec();
-    if (existing) return existing;
-
-    const taken = await this.contestModel
-      .findOneAndUpdate(
-        {
-          _id: contest._id,
-          status: 'published',
-          endAt: { $gt: now },
-          $or: [
-            { capacity: null },
-            { $expr: { $lt: ['$entrantCount', '$capacity'] } },
-          ],
-        },
-        { $inc: { entrantCount: 1 } },
-      )
-      .exec();
-    if (!taken) throw new BadRequestException(this.whyClosed(contest, now));
-
-    try {
-      return await this.entryModel.create({
-        contestId: contest._id,
-        userId,
-        username: user.username,
-        joinedAt: now,
-      });
-    } catch (err) {
-      // A second join raced this one: give the place back, keep theirs.
-      if (!isDuplicateKey(err)) throw err;
-      await this.contestModel
-        .updateOne({ _id: contest._id }, { $inc: { entrantCount: -1 } })
-        .exec();
-      return this.entryModel
-        .findOne({ contestId: contest._id, userId })
-        .orFail()
-        .exec();
-    }
-  }
-
-  private whyClosed(contest: ContestDocument, now: Date): string {
-    if (contest.status === 'cancelled') return 'Contest was cancelled';
-    if (contest.endAt && contest.endAt <= now) return 'Contest has ended';
-    return 'Contest is full';
   }
 
   /** Final standings, best first, once the contest is finalized. */

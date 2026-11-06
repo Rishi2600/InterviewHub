@@ -13,6 +13,7 @@ import { HostUsage, HostUsageSchema } from './schemas/host-usage.schema';
 import { ActivityModule } from '../activity/activity.module';
 import { ContestsService } from './contests.service';
 import { ContestHostingService } from './contest-hosting.service';
+import { ContestEntrantService } from './contest-entrant.service';
 import { ContestsController } from './contests.controller';
 
 @Module({
@@ -26,7 +27,7 @@ import { ContestsController } from './contests.controller';
     ActivityModule,
   ],
   controllers: [ContestsController],
-  providers: [ContestsService, ContestHostingService],
+  providers: [ContestsService, ContestHostingService, ContestEntrantService],
   exports: [ContestsService],
 })
 export class ContestsModule {}

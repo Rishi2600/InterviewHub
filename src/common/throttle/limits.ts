@@ -31,6 +31,8 @@ export const LOGIN_LIMIT = {
 export const REFRESH_LIMIT = { default: { limit: 30, ttl: MINUTE } };
 export const REGISTER_LIMIT = { hourly: { limit: 5, ttl: HOUR } };
 export const AVATAR_LIMIT = { hourly: { limit: 10, ttl: HOUR } };
+// Autosave sends one request per pick, and a classroom can share one IP.
+export const ANSWER_LIMIT = { default: { limit: 600, ttl: MINUTE } };
 
 // WebSocket events, counted per user.
 export const WS_SEND_LIMIT = { default: { limit: 5, ttl: 5 * SECOND } };

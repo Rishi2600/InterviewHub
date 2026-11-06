@@ -21,6 +21,10 @@ import {
 } from '../common/decorators/current-user.decorator';
 import { ContestsService } from './contests.service';
 import { ContestHostingService } from './contest-hosting.service';
+import { ContestEntrantService } from './contest-entrant.service';
+import { SaveAnswerDto } from './dto/save-answer.dto';
+import { Throttle } from '@nestjs/throttler';
+import { ANSWER_LIMIT } from '../common/throttle/limits';
 import { CreateContestDto } from './dto/create-contest.dto';
 import { ListContestsDto } from './dto/list-contests.dto';
 import { BrowseContestsDto } from './dto/browse-contests.dto';
@@ -33,6 +37,7 @@ export class ContestsController {
   constructor(
     private readonly contestsService: ContestsService,
     private readonly hosting: ContestHostingService,
+    private readonly entrant: ContestEntrantService,
   ) {}
 
   @UseGuards(RolesGuard)
@@ -69,9 +74,43 @@ export class ContestsController {
     return this.contestsService.results(id, user);
   }
 
+  // --- Entrant side ---
+
   @Post(':id/join')
   join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.contestsService.join(id, user);
+    return this.entrant.join(id, user);
+  }
+
+  // Before the start only.
+  @Post(':id/leave')
+  @HttpCode(204)
+  leave(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.entrant.leave(id, user);
+  }
+
+  // Opens the workspace: marks the entrant started the first time, and
+  // returns the questions in their own order, without the answer key.
+  @Post(':id/start')
+  @HttpCode(200)
+  start(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.entrant.start(id, user);
+  }
+
+  @Throttle(ANSWER_LIMIT)
+  @Put(':id/answers/:questionId')
+  saveAnswer(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: SaveAnswerDto,
+  ) {
+    return this.entrant.saveAnswer(id, questionId, dto.optionIds, user);
+  }
+
+  @Post(':id/submit')
+  @HttpCode(200)
+  submit(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.entrant.submit(id, user);
   }
 
   // --- Host side: only the host or an admin; anyone else gets 404. ---

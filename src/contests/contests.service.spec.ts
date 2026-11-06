@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { ContestsService } from './contests.service';
 import { ContestStatus } from './schemas/contest.schema';
@@ -44,18 +44,5 @@ describe('ContestsService.findVisible', () => {
     await expect(service.findVisible('not-an-id', other)).rejects.toThrow(
       NotFoundException,
     );
-  });
-});
-
-describe('ContestsService.join', () => {
-  it('stops the host entering their own contest', async () => {
-    const service = serviceWithContest('published');
-    await expect(
-      service.join(CONTEST_ID, {
-        userId: HOST_ID,
-        username: 'host',
-        role: 'interviewer',
-      }),
-    ).rejects.toThrow(ForbiddenException);
   });
 });
