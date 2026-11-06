@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -12,7 +13,11 @@ import { parseOrigins } from './config/cors';
 import { LIMITS } from './common/validation/limits';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Logs from startup are held until the pino logger is ready.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(PinoLogger));
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -25,8 +30,8 @@ async function bootstrap() {
     origin: allowedOrigins,
     // The refresh cookie travels with /auth requests from the frontend.
     credentials: true,
-    // Lets the frontend read how long to wait after a 429.
-    exposedHeaders: ['Retry-After', 'Retry-After-hourly'],
+    // Lets the frontend read how long to wait after a 429, and the request id.
+    exposedHeaders: ['Retry-After', 'Retry-After-hourly', 'X-Request-Id'],
   });
 
   // Security headers. The API serves JSON, never pages, so the CSP allows

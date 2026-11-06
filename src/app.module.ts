@@ -15,6 +15,8 @@ import { ChatModule } from './chat/chat.module';
 import { ContestsModule } from './contests/contests.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { HealthModule } from './health/health.module';
+import { LoggerModule } from 'nestjs-pino';
+import { loggingConfig } from './common/logging/logging.config';
 import { THROTTLERS } from './common/throttle/limits';
 import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
 
@@ -23,6 +25,14 @@ import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: envValidationSchema,
+    }),
+    LoggerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        loggingConfig(
+          config.get<string>('LOG_LEVEL') ?? 'info',
+          config.get<string>('NODE_ENV') === 'development',
+        ),
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
