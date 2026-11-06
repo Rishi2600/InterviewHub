@@ -21,13 +21,14 @@ import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useAuth } from '@/hooks/useAuth'
 import { errorMessage } from '@/lib/api'
+import { PASSWORD_HINT, isValidPassword } from '@/lib/password'
 import { AuthLayout } from './AuthLayout'
 
-// Mirrors the backend RegisterDto: username min 2, password min 6, optional role.
+// Mirrors the backend RegisterDto: username min 2, the password policy, optional role.
 const schema = z.object({
   username: z.string().min(2, 'Username must be at least 2 characters'),
   email: z.email('Enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().refine(isValidPassword, `Password must be ${PASSWORD_HINT.toLowerCase()}`),
   role: z.enum(['candidate', 'interviewer']),
 })
 
@@ -99,7 +100,7 @@ export function Register() {
               aria-invalid={Boolean(errors.password) || undefined}
               {...register('password')}
             />
-            <FieldDescription>At least 6 characters.</FieldDescription>
+            <FieldDescription>{PASSWORD_HINT}</FieldDescription>
             <FieldError errors={[errors.password]} />
           </Field>
           <FieldSet>

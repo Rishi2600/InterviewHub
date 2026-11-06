@@ -2,7 +2,11 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { RegisterDto } from './register.dto';
 
-const base = { username: 'sam', email: 'sam@example.com', password: 'secret1' };
+const base = {
+  username: 'sam',
+  email: 'sam@example.com',
+  password: 'Quiet-river9',
+};
 
 async function errorsFor(role?: string) {
   const dto = plainToInstance(RegisterDto, { ...base, role });

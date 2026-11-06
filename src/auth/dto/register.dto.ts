@@ -6,6 +6,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Role } from '../../common/enums/role.enum';
+import { IsValidPassword } from '../password-policy';
 
 export const SIGNUP_ROLES = [Role.Candidate, Role.Interviewer];
 
@@ -17,8 +18,7 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @IsString()
-  @MinLength(6)
+  @IsValidPassword()
   password: string;
 
   // Admin is never self-assigned at sign-up.
