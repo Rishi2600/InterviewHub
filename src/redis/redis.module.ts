@@ -20,11 +20,19 @@ import {
  */
 const logger = new Logger('RedisModule');
 
-function createClient(url: string, label: string): Redis {
+/**
+ * Every client keeps reconnecting, at most 2 s apart: giving up would leave
+ * the app without Redis until it is restarted. The general client fails a
+ * command after 2 retries, so callers and the health check see the outage
+ * instead of hanging. The pub/sub clients queue commands until Redis is
+ * back, because the Socket.io adapter does not catch a failed subscribe and
+ * the unhandled rejection would crash the process.
+ */
+function createClient(url: string, label: 'client' | 'pub' | 'sub'): Redis {
   const client = new Redis(url, {
     lazyConnect: false,
-    maxRetriesPerRequest: 2,
-    retryStrategy: (times) => (times > 5 ? null : Math.min(times * 200, 2000)),
+    maxRetriesPerRequest: label === 'client' ? 2 : null,
+    retryStrategy: (times) => Math.min(times * 200, 2000),
   });
   client.on('connect', () => logger.log(`Redis connected (${label})`));
   client.on('error', (err) =>
