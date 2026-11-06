@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
+  Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +23,8 @@ import { ContestsService } from './contests.service';
 import { ContestHostingService } from './contest-hosting.service';
 import { CreateContestDto } from './dto/create-contest.dto';
 import { ListContestsDto } from './dto/list-contests.dto';
+import { UpdateContestDto } from './dto/update-contest.dto';
+import { SaveQuestionsDto } from './dto/save-questions.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('contests')
@@ -55,5 +61,49 @@ export class ContestsController {
   @Post(':id/join')
   join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.contestsService.join(id, user);
+  }
+
+  // --- Host side: only the host or an admin; anyone else gets 404. ---
+
+  // Everything the editor shows: details, questions with answers, the
+  // publish checks and the free-contest count.
+  @Get(':id/editor')
+  editor(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.hosting.editor(id, user);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateContestDto,
+  ) {
+    return this.hosting.updateDetails(id, user, dto);
+  }
+
+  // Takes up to LIMITS.questionsBodyBytes; see app.setup.ts.
+  @Put(':id/questions')
+  saveQuestions(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: SaveQuestionsDto,
+  ) {
+    return this.hosting.saveQuestions(id, user, dto.questions);
+  }
+
+  @Post(':id/publish')
+  publish(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.hosting.publish(id, user);
+  }
+
+  @Post(':id/cancel')
+  cancel(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.hosting.cancel(id, user);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.hosting.deleteDraft(id, user);
   }
 }

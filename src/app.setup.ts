@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import { json } from 'express';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { RedisIoAdapter } from './redis/redis-io.adapter';
@@ -46,6 +47,12 @@ export function configureApp(app: NestExpressApplication): void {
   );
 
   app.use(cookieParser());
+  // The question editor saves the whole list at once, so that one route takes
+  // a larger body. It parses first; the general parser then skips the request.
+  app.use(
+    '/contests/:id/questions',
+    json({ limit: LIMITS.questionsBodyBytes }),
+  );
   app.useBodyParser('json', { limit: LIMITS.bodyBytes });
 
   // Global validation: reject unknown fields, transform payloads to DTO types.

@@ -36,6 +36,11 @@ export class Contest {
   @Prop({ type: Date, default: null })
   endAt: Date | null;
 
+  // Kept on its own so a draft can have a length before a start.
+  // endAt is always startAt + durationMinutes once both are set.
+  @Prop({ type: Number, default: null })
+  durationMinutes: number | null;
+
   // Null means anyone can join.
   @Prop({ type: Number, default: null })
   capacity: number | null;
