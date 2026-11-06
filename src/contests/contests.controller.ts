@@ -16,23 +16,26 @@ import {
   AuthUser,
 } from '../common/decorators/current-user.decorator';
 import { ContestsService } from './contests.service';
+import { ContestHostingService } from './contest-hosting.service';
 import { CreateContestDto } from './dto/create-contest.dto';
 import { ListContestsDto } from './dto/list-contests.dto';
-import { ScoreDto } from './dto/score.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('contests')
 export class ContestsController {
-  constructor(private readonly contestsService: ContestsService) {}
+  constructor(
+    private readonly contestsService: ContestsService,
+    private readonly hosting: ContestHostingService,
+  ) {}
 
   @UseGuards(RolesGuard)
   @Roles(Role.Interviewer, Role.Admin)
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateContestDto) {
-    return this.contestsService.create(user.userId, dto.title);
+    return this.hosting.createDraft(user, dto.title);
   }
 
-  // Contests the caller owns or has joined, one page at a time.
+  // Contests the caller hosts or has joined, one page at a time.
   @Get()
   list(@CurrentUser() user: AuthUser, @Query() query: ListContestsDto) {
     return this.contestsService.listForUser(user, query);
@@ -49,35 +52,8 @@ export class ContestsController {
     return this.contestsService.results(id, user);
   }
 
-  @Post(':id/activate')
-  activate(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.contestsService.setState(id, user.userId, user.role, 'active');
-  }
-
   @Post(':id/join')
   join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.contestsService.join(id, user);
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.Interviewer, Role.Admin)
-  @Post(':id/score')
-  score(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthUser,
-    @Body() dto: ScoreDto,
-  ) {
-    return this.contestsService.score(
-      id,
-      user.userId,
-      user.role,
-      dto.userId,
-      dto.delta,
-    );
-  }
-
-  @Post(':id/end')
-  end(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.contestsService.end(id, user.userId, user.role);
   }
 }

@@ -7,7 +7,6 @@ export const LIMITS = {
   loginPassword: 128,
   title: { min: 2, max: 80 },
   text: 2000,
-  scoreDelta: 1000,
   contest: {
     questions: { min: 1, max: 50 },
     options: { min: 2, max: 6 },

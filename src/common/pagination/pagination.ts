@@ -79,6 +79,9 @@ export function afterCursor(cursor: string): QueryFilter<Bookmarkable> {
   }
 }
 
+/** The field a list filters and counts by: rooms use `state`, contests `status`. */
+type StateField = 'state' | 'status';
+
 /** Newest first, with the id breaking ties, matching the bookmark. */
 export const NEWEST_FIRST = { createdAt: -1, _id: -1 } as const;
 
@@ -86,10 +89,12 @@ export const NEWEST_FIRST = { createdAt: -1, _id: -1 } as const;
  *  than the page, to know whether another page follows. */
 export function pageQuery(
   scope: Record<string, unknown>,
-  query: PageQueryDto & { state?: string },
+  query: PageQueryDto & { state?: string; status?: string },
+  field: StateField = 'state',
 ) {
   const limit = query.limit ?? DEFAULT_PAGE_SIZE;
-  const filter = query.state ? { ...scope, state: query.state } : scope;
+  const value = query[field];
+  const filter = value ? { ...scope, [field]: value } : scope;
   const conditions = query.cursor
     ? { $and: [filter, afterCursor(query.cursor)] }
     : filter;
@@ -97,8 +102,11 @@ export function pageQuery(
 }
 
 /** Counts per state over the caller's whole list, whatever the page. */
-export function countByStatePipeline(scope: Record<string, unknown>) {
-  return [{ $match: scope }, { $group: { _id: '$state', n: { $sum: 1 } } }];
+export function countByStatePipeline(
+  scope: Record<string, unknown>,
+  field: StateField = 'state',
+) {
+  return [{ $match: scope }, { $group: { _id: '$' + field, n: { $sum: 1 } } }];
 }
 
 /** Builds the page from the fetched rows and the grouped counts. */

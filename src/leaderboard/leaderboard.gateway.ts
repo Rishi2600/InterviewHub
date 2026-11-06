@@ -75,7 +75,7 @@ export class LeaderboardGateway implements OnGatewayInit {
     }
     const userId = new Types.ObjectId(user.userId);
     const [owned, joined] = await Promise.all([
-      this.contestModel.exists({ _id: id, ownerId: userId }),
+      this.contestModel.exists({ _id: id, hostId: userId }),
       this.entryModel.exists({ contestId: id, userId }),
     ]);
     return Boolean(owned || joined);

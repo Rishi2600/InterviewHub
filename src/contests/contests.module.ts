@@ -12,8 +12,8 @@ import {
 import { HostUsage, HostUsageSchema } from './schemas/host-usage.schema';
 import { ActivityModule } from '../activity/activity.module';
 import { ContestsService } from './contests.service';
+import { ContestHostingService } from './contest-hosting.service';
 import { ContestsController } from './contests.controller';
-import { LeaderboardModule } from '../leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -24,10 +24,9 @@ import { LeaderboardModule } from '../leaderboard/leaderboard.module';
       { name: HostUsage.name, schema: HostUsageSchema },
     ]),
     ActivityModule,
-    LeaderboardModule,
   ],
   controllers: [ContestsController],
-  providers: [ContestsService],
+  providers: [ContestsService, ContestHostingService],
   exports: [ContestsService],
 })
 export class ContestsModule {}

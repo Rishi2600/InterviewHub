@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { bearer, data, signUp, startApp, TestApp, TestUser } from './helpers';
 
 describe('read authorization (e2e)', () => {
@@ -55,11 +56,18 @@ describe('read authorization (e2e)', () => {
     await t.api().post(`/contests/${id}/join`).set(bearer(other)).expect(404);
     await t.api().get(`/contests/${id}`).set(bearer(host)).expect(200);
 
-    await t
-      .api()
-      .post(`/contests/${id}/activate`)
-      .set(bearer(host))
-      .expect(201);
+    // Published directly in the database; the publish flow has its own tests.
+    const start = Date.now() + 60 * 60_000;
+    await t.db.collection('contests').updateOne(
+      { _id: new Types.ObjectId(id) },
+      {
+        $set: {
+          status: 'published',
+          startAt: new Date(start),
+          endAt: new Date(start + 30 * 60_000),
+        },
+      },
+    );
     await t.api().get(`/contests/${id}`).set(bearer(other)).expect(200);
     await t.api().post(`/contests/${id}/join`).set(bearer(other)).expect(201);
   });

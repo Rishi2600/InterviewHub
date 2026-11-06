@@ -7,9 +7,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
-  CONTEST_STATES,
+  CONTEST_STATUSES,
   ContestDocument,
-  ContestState,
   Contest,
 } from './schemas/contest.schema';
 import { ListContestsDto } from './dto/list-contests.dto';
@@ -24,8 +23,12 @@ import {
   ContestEntry,
   ContestEntryDocument,
 } from './schemas/contest-entry.schema';
-import { LeaderboardService } from '../leaderboard/leaderboard.service';
-import { LeaderboardGateway } from '../leaderboard/leaderboard.gateway';
+import { isDuplicateKey } from '../common/mongo-errors';
+
+interface Caller {
+  userId: string;
+  role: string;
+}
 
 @Injectable()
 export class ContestsService {
@@ -34,22 +37,11 @@ export class ContestsService {
     private readonly contestModel: Model<ContestDocument>,
     @InjectModel(ContestEntry.name)
     private readonly entryModel: Model<ContestEntryDocument>,
-    private readonly leaderboardService: LeaderboardService,
-    private readonly leaderboardGateway: LeaderboardGateway,
   ) {}
 
-  create(ownerId: string, title: string): Promise<ContestDocument> {
-    return this.contestModel.create({
-      title,
-      ownerId: new Types.ObjectId(ownerId),
-      state: 'draft',
-    });
-  }
-
   /**
-   * Contests the user owns or has joined, newest first, one page at a time.
-   * Scoped to the caller: there is deliberately no "all contests" listing
-   * yet. Joined contests are resolved through the user's entries.
+   * Contests the user hosts or has joined, newest first, one page at a time.
+   * The public list for the browse page is separate.
    */
   async listForUser(
     user: { userId: string },
@@ -63,15 +55,18 @@ export class ContestsService {
       .exec();
     const joinedIds = entries.map((e) => e.contestId);
 
-    const scope = { $or: [{ ownerId: uid }, { _id: { $in: joinedIds } }] };
-    const { conditions, limit, fetch } = pageQuery(scope, query);
+    const scope = { $or: [{ hostId: uid }, { _id: { $in: joinedIds } }] };
+    const { conditions, limit, fetch } = pageQuery(scope, query, 'status');
     const [rows, grouped] = await Promise.all([
       this.contestModel.find(conditions).sort(NEWEST_FIRST).limit(fetch).exec(),
       this.contestModel
-        .aggregate<{ _id: string; n: number }>(countByStatePipeline(scope))
+        .aggregate<{
+          _id: string;
+          n: number;
+        }>(countByStatePipeline(scope, 'status'))
         .exec(),
     ]);
-    return toPage(rows, limit, grouped, CONTEST_STATES);
+    return toPage(rows, limit, grouped, CONTEST_STATUSES);
   }
 
   async findById(id: string): Promise<ContestDocument> {
@@ -82,149 +77,92 @@ export class ContestsService {
     return contest;
   }
 
+  isHost(contest: ContestDocument, user: Caller): boolean {
+    return user.role === 'admin' || contest.hostId.toString() === user.userId;
+  }
+
   /** A contest the user may see. Drafts are visible to their host and admins
    *  only; anyone else gets the same 404 as a missing contest. */
-  async findVisible(
-    id: string,
-    user: { userId: string; role: string },
-  ): Promise<ContestDocument> {
+  async findVisible(id: string, user: Caller): Promise<ContestDocument> {
     const contest = await this.findById(id);
-    const isHost =
-      user.role === 'admin' || contest.ownerId.toString() === user.userId;
-    if (contest.state === 'draft' && !isHost) {
+    if (contest.status === 'draft' && !this.isHost(contest, user)) {
       throw new NotFoundException('Contest not found');
     }
     return contest;
   }
 
-  private assertOwner(
-    contest: ContestDocument,
-    userId: string,
-    role: string,
-  ): void {
-    if (role === 'admin') return;
-    if (contest.ownerId.toString() !== userId) {
-      throw new ForbiddenException('You do not own this contest');
-    }
-  }
-
-  async setState(
-    id: string,
-    userId: string,
-    role: string,
-    state: ContestState,
-  ): Promise<ContestDocument> {
-    const contest = await this.findById(id);
-    this.assertOwner(contest, userId, role);
-
-    const allowed: Record<ContestState, ContestState[]> = {
-      draft: ['active'],
-      active: ['ended'],
-      ended: [],
-    };
-    if (contest.state !== state && !allowed[contest.state].includes(state)) {
-      throw new BadRequestException(
-        `Invalid contest transition: ${contest.state} -> ${state}`,
-      );
-    }
-    contest.state = state;
-    if (state === 'ended') contest.endedAt = new Date();
-    return contest.save();
-  }
-
+  /**
+   * Joins a published contest before its end. Capacity is checked and the
+   * entrant count raised in one atomic update, so a full contest can never
+   * take one more. Joining twice returns the existing entry.
+   */
   async join(
     id: string,
-    user: { userId: string; username: string; role: string },
+    user: Caller & { username: string },
+    now = new Date(),
   ): Promise<ContestEntryDocument> {
     const contest = await this.findVisible(id, user);
-    if (contest.state === 'ended') {
-      throw new BadRequestException('Contest has ended');
+    if (contest.hostId.toString() === user.userId) {
+      throw new ForbiddenException('You cannot enter your own contest');
     }
+    const userId = new Types.ObjectId(user.userId);
     const existing = await this.entryModel
-      .findOne({
-        contestId: contest._id,
-        userId: new Types.ObjectId(user.userId),
-      })
+      .findOne({ contestId: contest._id, userId })
       .exec();
     if (existing) return existing;
 
-    // Seed the leaderboard at zero so joiners appear immediately.
-    await this.leaderboardService.addScore(id, user.userId, 0);
-    await this.leaderboardGateway.broadcast(id);
+    const taken = await this.contestModel
+      .findOneAndUpdate(
+        {
+          _id: contest._id,
+          status: 'published',
+          endAt: { $gt: now },
+          $or: [
+            { capacity: null },
+            { $expr: { $lt: ['$entrantCount', '$capacity'] } },
+          ],
+        },
+        { $inc: { entrantCount: 1 } },
+      )
+      .exec();
+    if (!taken) throw new BadRequestException(this.whyClosed(contest, now));
 
-    return this.entryModel.create({
-      contestId: contest._id,
-      userId: new Types.ObjectId(user.userId),
-      username: user.username,
-      finalScore: 0,
-      finalRank: 0,
-    });
-  }
-
-  async score(
-    id: string,
-    ownerId: string,
-    role: string,
-    targetUserId: string,
-    delta: number,
-  ): Promise<{ userId: string; score: number }> {
-    const contest = await this.findById(id);
-    this.assertOwner(contest, ownerId, role);
-    if (contest.state !== 'active') {
-      throw new BadRequestException('Contest is not active');
+    try {
+      return await this.entryModel.create({
+        contestId: contest._id,
+        userId,
+        username: user.username,
+        joinedAt: now,
+      });
+    } catch (err) {
+      // A second join raced this one: give the place back, keep theirs.
+      if (!isDuplicateKey(err)) throw err;
+      await this.contestModel
+        .updateOne({ _id: contest._id }, { $inc: { entrantCount: -1 } })
+        .exec();
+      return this.entryModel
+        .findOne({ contestId: contest._id, userId })
+        .orFail()
+        .exec();
     }
-
-    const score = await this.leaderboardService.addScore(
-      id,
-      targetUserId,
-      delta,
-    );
-    await this.leaderboardGateway.broadcast(id);
-    return { userId: targetUserId, score };
   }
 
-  /**
-   * Ends the contest and flushes the (Redis or in-memory) leaderboard into
-   * Mongo in a single bulkWrite, then clears the live leaderboard.
-   */
-  async end(
-    id: string,
-    userId: string,
-    role: string,
-  ): Promise<ContestDocument> {
-    const contest = await this.setState(id, userId, role, 'ended');
-
-    const finalBoard = await this.leaderboardService.getAll(id);
-    if (finalBoard.length > 0) {
-      await this.entryModel.bulkWrite(
-        finalBoard.map((entry) => ({
-          updateOne: {
-            filter: {
-              contestId: contest._id,
-              userId: new Types.ObjectId(entry.userId),
-            },
-            update: {
-              $set: { finalScore: entry.score, finalRank: entry.rank },
-            },
-            upsert: false,
-          },
-        })),
-      );
-    }
-
-    await this.leaderboardService.clear(id);
-    await this.leaderboardGateway.broadcast(id);
-    return contest;
+  private whyClosed(contest: ContestDocument, now: Date): string {
+    if (contest.status === 'cancelled') return 'Contest was cancelled';
+    if (contest.endAt && contest.endAt <= now) return 'Contest has ended';
+    return 'Contest is full';
   }
 
-  async results(
-    id: string,
-    user: { userId: string; role: string },
-  ): Promise<ContestEntryDocument[]> {
+  /** Final standings, best first, once the contest is finalized. */
+  async results(id: string, user: Caller): Promise<ContestEntryDocument[]> {
     const contest = await this.findVisible(id, user);
+    if (!contest.finalizedAt) {
+      throw new BadRequestException('Results are not ready yet');
+    }
     return this.entryModel
-      .find({ contestId: contest._id })
-      .sort({ finalScore: -1 })
+      .find({ contestId: contest._id, rank: { $ne: null } })
+      .select('-answers')
+      .sort({ rank: 1, username: 1 })
       .exec();
   }
 }

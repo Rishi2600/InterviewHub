@@ -12,7 +12,7 @@ import { MessageSchema } from '../chat/schemas/message.schema';
 const idPaths: [string, Schema, string][] = [
   ['ContestEntry', ContestEntrySchema, 'contestId'],
   ['ContestEntry', ContestEntrySchema, 'userId'],
-  ['Contest', ContestSchema, 'ownerId'],
+  ['Contest', ContestSchema, 'hostId'],
   ['ContestQuestion', ContestQuestionSchema, 'contestId'],
   ['HostUsage', HostUsageSchema, 'hostId'],
   ['ActivityEvent', ActivityEventSchema, 'userId'],

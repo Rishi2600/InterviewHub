@@ -23,7 +23,7 @@ function buildGateway() {
     Object.entries(q).every(
       ([k, v]) => v instanceof Types.ObjectId && v.toString() === doc[k],
     );
-  const contest = { _id: CONTEST_ID, ownerId: OWNER_ID };
+  const contest = { _id: CONTEST_ID, hostId: OWNER_ID };
   const entry = { contestId: CONTEST_ID, userId: ENTRANT_ID };
   const contestModel = {
     exists: (q: Record<string, unknown>) =>

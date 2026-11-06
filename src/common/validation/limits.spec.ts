@@ -3,7 +3,6 @@ import { RegisterDto } from '../../auth/dto/register.dto';
 import { LoginDto } from '../../auth/dto/login.dto';
 import { CreateRoomDto } from '../../rooms/dto/create-room.dto';
 import { SendMessageDto } from '../../chat/dto/send-message.dto';
-import { ScoreDto } from '../../contests/dto/score.dto';
 import { WS_VALIDATION } from './limits';
 
 // The same options main.ts and the gateways use.
@@ -55,15 +54,6 @@ describe('input limits', () => {
     ).rejects.toThrow();
     await expect(
       check(SendMessageDto, { roomId: ROOM_ID, content: 'hi' }),
-    ).resolves.toBeTruthy();
-  });
-
-  it('bounds a manual score change', async () => {
-    await expect(
-      check(ScoreDto, { userId: ROOM_ID, delta: 1001 }),
-    ).rejects.toThrow();
-    await expect(
-      check(ScoreDto, { userId: ROOM_ID, delta: -1000 }),
     ).resolves.toBeTruthy();
   });
 });
