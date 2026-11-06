@@ -18,6 +18,7 @@ describe('ContestEntrantService.join', () => {
       {} as never,
       {} as never,
       contests as never,
+      {} as never,
     );
     await expect(
       service.join(new Types.ObjectId().toString(), {

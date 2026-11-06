@@ -17,6 +17,8 @@ import { ContestEntrantService } from './contest-entrant.service';
 import { ContestsController } from './contests.controller';
 import { FinalizeService } from './finalize/finalize.service';
 import { FinalizeJob } from './finalize/finalize.job';
+import { ContestsGateway } from './contests.gateway';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { FinalizeJob } from './finalize/finalize.job';
       { name: HostUsage.name, schema: HostUsageSchema },
     ]),
     ActivityModule,
+    AuthModule, // SocketAuthService for the gateway
   ],
   controllers: [ContestsController],
   providers: [
@@ -35,6 +38,7 @@ import { FinalizeJob } from './finalize/finalize.job';
     ContestEntrantService,
     FinalizeService,
     FinalizeJob,
+    ContestsGateway,
   ],
   exports: [ContestsService],
 })

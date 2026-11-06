@@ -69,7 +69,7 @@ describe('SocketAuthService', () => {
 
     expect(connect(svc, fakeSocket('good'))).toBe('Too many open connections');
     // Another namespace has its own count.
-    expect(connect(svc, fakeSocket('good', '/leaderboard'))).toBeNull();
+    expect(connect(svc, fakeSocket('good', '/contests'))).toBeNull();
 
     open[0].emit('disconnect');
     expect(connect(svc, fakeSocket('good'))).toBeNull();

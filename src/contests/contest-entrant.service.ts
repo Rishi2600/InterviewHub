@@ -18,6 +18,7 @@ import { phaseOf } from './contest-views';
 import { seededShuffle } from './shuffle';
 import { isDuplicateKey } from '../common/mongo-errors';
 import { AuthUser } from '../common/decorators/current-user.decorator';
+import { ContestsGateway } from './contests.gateway';
 
 type Caller = Pick<AuthUser, 'userId' | 'username' | 'role'>;
 
@@ -60,6 +61,7 @@ export class ContestEntrantService {
     @InjectModel(ContestQuestion.name)
     private readonly questionModel: Model<ContestQuestion>,
     private readonly contests: ContestsService,
+    private readonly gateway: ContestsGateway,
   ) {}
 
   /**
@@ -99,12 +101,14 @@ export class ContestEntrantService {
     if (!taken) throw new BadRequestException(whyClosed(contest, now));
 
     try {
-      return await this.entryModel.create({
+      const entry = await this.entryModel.create({
         contestId: contest._id,
         userId,
         username: user.username,
         joinedAt: now,
       });
+      this.gateway.countsChanged(contest._id.toString());
+      return entry;
     } catch (err) {
       // A second join raced this one: give the place back, keep theirs.
       if (!isDuplicateKey(err)) throw err;
@@ -306,6 +310,7 @@ export class ContestEntrantService {
     await this.contestModel
       .updateOne({ _id: contestId }, { $inc: { [field]: by } })
       .exec();
+    this.gateway.countsChanged(contestId.toString());
   }
 }
 

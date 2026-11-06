@@ -7,6 +7,7 @@ import { ContestQuestion } from '../schemas/contest-question.schema';
 import { ActivityEvent } from '../../activity/schemas/activity-event.schema';
 import { LIMITS } from '../../common/validation/limits';
 import { rank, scoreAnswers, Scored, timeUsedMs } from './scoring';
+import { ContestsGateway } from '../contests.gateway';
 
 // How long a claim lasts. Far longer than a finalize takes; if the server
 // holding it dies, another one takes over once it runs out.
@@ -39,6 +40,7 @@ export class FinalizeService {
     private readonly questionModel: Model<ContestQuestion>,
     @InjectModel(ActivityEvent.name)
     private readonly eventModel: Model<ActivityEvent>,
+    private readonly gateway: ContestsGateway,
   ) {}
 
   /** Claims and finalizes due contests, one at a time, until none are left. */
@@ -50,8 +52,18 @@ export class FinalizeService {
       if (!contest) break;
       const id = contest._id.toString();
       try {
-        if (await this.finalizeOne(contest, now)) run.finalized.push(id);
-        else run.failed.push(id);
+        if (await this.finalizeOne(contest, now)) {
+          run.finalized.push(id);
+          // Results are saved; a failed broadcast only means watchers reload.
+          this.gateway
+            .finalized(id)
+            .catch((err: unknown) =>
+              this.logger.warn(
+                { err, contestId: id },
+                'Results broadcast failed',
+              ),
+            );
+        } else run.failed.push(id);
       } catch (err) {
         // The lease runs out and a later run tries again.
         run.failed.push(id);

@@ -14,7 +14,7 @@ import {
  * Redis at all.
  *
  * Three clients are created when enabled:
- *  - REDIS_CLIENT     general commands (leaderboard sorted sets)
+ *  - REDIS_CLIENT     general commands (the readiness check)
  *  - REDIS_PUB_CLIENT Socket.io adapter publisher
  *  - REDIS_SUB_CLIENT Socket.io adapter subscriber
  */

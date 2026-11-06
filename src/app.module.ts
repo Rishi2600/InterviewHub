@@ -14,7 +14,6 @@ import { UsersModule } from './users/users.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { ChatModule } from './chat/chat.module';
 import { ContestsModule } from './contests/contests.module';
-import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from 'nestjs-pino';
 import { loggingConfig } from './common/logging/logging.config';
@@ -74,7 +73,6 @@ import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
     RoomsModule,
     ChatModule,
     ContestsModule,
-    LeaderboardModule,
   ],
   providers: [
     // Registered by class as well, so end-to-end tests can swap it out.
