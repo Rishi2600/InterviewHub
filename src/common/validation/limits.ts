@@ -8,7 +8,21 @@ export const LIMITS = {
   title: { min: 2, max: 80 },
   text: 2000,
   scoreDelta: 1000,
+  contest: {
+    questions: { min: 1, max: 50 },
+    options: { min: 2, max: 6 },
+    optionText: 300,
+    optionId: 20,
+    points: { min: 1, max: 100 },
+    durationMinutes: { min: 10, max: 24 * 60 },
+    capacity: 100_000,
+    freePerMonth: 2,
+    publishLeadMinutes: 15,
+  },
   bodyBytes: '100kb',
+  // The question editor saves the whole list at once: 50 questions at their
+  // text limits come to about 300 KB of JSON.
+  questionsBodyBytes: '512kb',
   socketMessageBytes: 16 * 1024,
 } as const;
 
