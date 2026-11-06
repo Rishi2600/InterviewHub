@@ -15,6 +15,8 @@ import { ContestsService } from './contests.service';
 import { ContestHostingService } from './contest-hosting.service';
 import { ContestEntrantService } from './contest-entrant.service';
 import { ContestsController } from './contests.controller';
+import { FinalizeService } from './finalize/finalize.service';
+import { FinalizeJob } from './finalize/finalize.job';
 
 @Module({
   imports: [
@@ -27,7 +29,13 @@ import { ContestsController } from './contests.controller';
     ActivityModule,
   ],
   controllers: [ContestsController],
-  providers: [ContestsService, ContestHostingService, ContestEntrantService],
+  providers: [
+    ContestsService,
+    ContestHostingService,
+    ContestEntrantService,
+    FinalizeService,
+    FinalizeJob,
+  ],
   exports: [ContestsService],
 })
 export class ContestsModule {}

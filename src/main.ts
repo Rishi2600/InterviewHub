@@ -13,6 +13,9 @@ async function bootstrap() {
   });
   app.useLogger(app.get(PinoLogger));
   configureApp(app);
+  // On SIGTERM, let running work finish (such as a contest finalize) before
+  // the process exits.
+  app.enableShutdownHooks();
 
   const port = app.get(ConfigService).get<number>('PORT') ?? 3000;
   await app.listen(port);

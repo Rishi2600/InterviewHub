@@ -9,6 +9,7 @@ import request, { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { HttpThrottleGuard } from '../src/common/throttle/http-throttle.guard';
+import { FinalizeJob } from '../src/contests/finalize/finalize.job';
 
 export const ORIGIN = 'http://localhost:5173';
 export const PASSWORD = 'Quiet-river9';
@@ -23,12 +24,16 @@ export interface TestApp {
 /**
  * The real app, set up exactly as main.ts does, on a random port, with an
  * empty database. Rate limits are off so tests can sign in freely; they have
- * their own unit tests.
+ * their own unit tests. The every-minute finalize job is off too.
  */
 export async function startApp(): Promise<TestApp> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(HttpThrottleGuard)
     .useValue({ canActivate: () => true })
+    // No background finalize racing the tests: they call FinalizeService
+    // themselves, with their own clock.
+    .overrideProvider(FinalizeJob)
+    .useValue({})
     .compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>({
     logger: ['error'],

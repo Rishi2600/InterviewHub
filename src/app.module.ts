@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 
@@ -40,6 +41,8 @@ import { HttpThrottleGuard } from './common/throttle/http-throttle.guard';
         uri: config.get<string>('MONGODB_URI'),
       }),
     }),
+    // Timed jobs, such as finalizing ended contests every minute.
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: THROTTLERS,
       errorMessage: 'Too many requests, please try again later',

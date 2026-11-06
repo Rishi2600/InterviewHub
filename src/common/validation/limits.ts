@@ -17,6 +17,8 @@ export const LIMITS = {
     capacity: 100_000,
     freePerMonth: 2,
     publishLeadMinutes: 15,
+    // A contest counts toward scores when at least this many started it.
+    ratedMinStarters: 10,
   },
   bodyBytes: '100kb',
   // The question editor saves the whole list at once: 50 questions at their

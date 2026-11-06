@@ -47,6 +47,13 @@ export class ContestQuestion {
 
   @Prop({ default: '' })
   explanation: string;
+
+  // Filled in at finalize, for the host's per-question breakdown.
+  @Prop({ default: 0 })
+  answeredCount: number;
+
+  @Prop({ default: 0 })
+  correctCount: number;
 }
 
 export const ContestQuestionSchema =

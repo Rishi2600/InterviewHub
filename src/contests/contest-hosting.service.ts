@@ -214,6 +214,8 @@ export class ContestHostingService {
         ),
         points: q.points ?? 1,
         explanation: q.explanation ?? '',
+        answeredCount: 0,
+        correctCount: 0,
       };
     });
     if (contest.status === 'published') {
