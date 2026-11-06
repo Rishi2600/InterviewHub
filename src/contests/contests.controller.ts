@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalAuth } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
@@ -23,6 +23,7 @@ import { ContestsService } from './contests.service';
 import { ContestHostingService } from './contest-hosting.service';
 import { CreateContestDto } from './dto/create-contest.dto';
 import { ListContestsDto } from './dto/list-contests.dto';
+import { BrowseContestsDto } from './dto/browse-contests.dto';
 import { UpdateContestDto } from './dto/update-contest.dto';
 import { SaveQuestionsDto } from './dto/save-questions.dto';
 
@@ -47,10 +48,20 @@ export class ContestsController {
     return this.contestsService.listForUser(user, query);
   }
 
-  // Published contests for any signed-in user; drafts for the host and admins.
+  // The public browse list: no sign-in needed. Declared before ':id'.
+  @OptionalAuth()
+  @Get('browse')
+  browse(
+    @Query() query: BrowseContestsDto,
+    @CurrentUser() user: AuthUser | null,
+  ) {
+    return this.contestsService.browse(query, user);
+  }
+
+  // The details page for any signed-in user; drafts for the host and admins.
   @Get(':id')
   get(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.contestsService.findVisible(id, user);
+    return this.contestsService.details(id, user);
   }
 
   @Get(':id/results')

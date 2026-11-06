@@ -237,7 +237,12 @@ export class ContestHostingService {
     await this.contestModel
       .updateOne(
         { _id: contest._id },
-        { $set: { questionCount: questions.length } },
+        {
+          $set: {
+            questionCount: questions.length,
+            totalPoints: questions.reduce((sum, q) => sum + q.points, 0),
+          },
+        },
       )
       .exec();
     return this.questionsOf(contest._id);

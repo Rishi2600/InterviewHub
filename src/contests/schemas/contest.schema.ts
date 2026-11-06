@@ -48,6 +48,10 @@ export class Contest {
   @Prop({ default: 0 })
   questionCount: number;
 
+  // Sum of the questions' points, kept in step with the question list.
+  @Prop({ default: 0 })
+  totalPoints: number;
+
   @Prop({ default: 0 })
   entrantCount: number;
 
@@ -79,8 +83,9 @@ export class Contest {
 }
 
 export const ContestSchema = SchemaFactory.createForClass(Contest);
+// Browse: upcoming by start; live and past by end.
 ContestSchema.index({ status: 1, startAt: 1 });
+ContestSchema.index({ status: 1, endAt: 1 });
 ContestSchema.index({ hostId: 1, createdAt: -1 });
-ContestSchema.index({ title: 'text' });
 // The finalize job's query: published, ended, not yet finalized.
 ContestSchema.index({ status: 1, finalizedAt: 1, endAt: 1 });
