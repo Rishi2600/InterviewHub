@@ -17,7 +17,6 @@ export const TEST_USER: User = {
 export function authValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
   return {
     user: null,
-    token: null,
     isAuthenticated: false,
     isBootstrapping: false,
     login: vi.fn(),
@@ -29,7 +28,7 @@ export function authValue(overrides: Partial<AuthContextValue> = {}): AuthContex
 }
 
 export function signedIn(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
-  return authValue({ user: TEST_USER, token: 'token', isAuthenticated: true, ...overrides })
+  return authValue({ user: TEST_USER, isAuthenticated: true, ...overrides })
 }
 
 export function WithAuth({ value, children }: { value: AuthContextValue; children: ReactNode }) {

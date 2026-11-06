@@ -32,6 +32,11 @@ export function register(body: {
   return http.post<AuthPayload>('/auth/register', body)
 }
 
+/** Ends this device's session on the server and clears the refresh cookie. */
+export function logout() {
+  return http.post<Record<string, never>>('/auth/logout')
+}
+
 /** `/auth/me` returns `userId`, not `id` — normalize so the app sees one shape. */
 export async function me(): Promise<User> {
   const raw = await http.get<MeResponse>('/auth/me')

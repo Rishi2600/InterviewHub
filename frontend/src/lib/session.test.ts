@@ -1,24 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  SESSION_CLEARED_EVENT,
-  clearSession,
-  getToken,
-  getUser,
-  saveSession,
-} from './session'
-import { TEST_USER } from '@/test/auth'
+import { SESSION_CLEARED_EVENT, clearSession, getToken, setToken, tokenExpiry } from './session'
+import { fakeJwt } from '@/test/jwt'
 
-describe('session storage', () => {
-  it('saves and reads the token and user', () => {
-    saveSession('abc', TEST_USER)
+describe('session', () => {
+  it('keeps the access token in memory, not in localStorage', () => {
+    setToken('abc')
     expect(getToken()).toBe('abc')
-    expect(getUser()).toEqual(TEST_USER)
-  })
-
-  it('treats a corrupted user entry as no session', () => {
-    localStorage.setItem('interviewhub.user', '{not json')
-    expect(getUser()).toBeNull()
-    expect(localStorage.getItem('interviewhub.user')).toBeNull()
+    expect(JSON.stringify(localStorage)).not.toContain('abc')
+    clearSession()
   })
 
   it('announces a cleared session only when there was one', () => {
@@ -28,11 +17,17 @@ describe('session storage', () => {
     clearSession()
     expect(listener).not.toHaveBeenCalled()
 
-    saveSession('abc', TEST_USER)
+    setToken('abc')
     clearSession()
     expect(listener).toHaveBeenCalledTimes(1)
     expect(getToken()).toBeNull()
 
     window.removeEventListener(SESSION_CLEARED_EVENT, listener)
+  })
+
+  it('reads the expiry from a token, and 0 from garbage', () => {
+    const exp = tokenExpiry(fakeJwt(60))
+    expect(exp).toBeGreaterThan(Date.now() / 1000)
+    expect(tokenExpiry('not-a-jwt')).toBe(0)
   })
 })

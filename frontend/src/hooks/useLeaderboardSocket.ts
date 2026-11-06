@@ -12,16 +12,17 @@ import type { LeaderboardRow, LeaderboardUpdate, SocketError } from '@/types'
  * sends the current board immediately on join, which doubles as our initial load.
  */
 export function useLeaderboardSocket(contestId: string | undefined) {
-  const { token } = useAuth()
+  // Keyed on the user, not the token, so refreshes do not rebuild the socket.
+  const currentUserId = useAuth().user?.id
   const [status, setStatus] = useState<ConnectionStatus>('connecting')
   const [rows, setRows] = useState<LeaderboardRow[]>([])
   const [hasLoaded, setHasLoaded] = useState(false)
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
-    if (!token || !contestId) return
+    if (!currentUserId || !contestId) return
 
-    const socket = connectLeaderboard(token)
+    const socket = connectLeaderboard()
     socketRef.current = socket
     // Status mirrors the socket we just opened (an external system).
     // oxlint-disable-next-line react/set-state-in-effect
@@ -62,7 +63,7 @@ export function useLeaderboardSocket(contestId: string | undefined) {
       socket.disconnect()
       socketRef.current = null
     }
-  }, [token, contestId])
+  }, [currentUserId, contestId])
 
   return { status, rows, hasLoaded }
 }

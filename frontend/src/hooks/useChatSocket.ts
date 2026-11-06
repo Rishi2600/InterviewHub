@@ -19,7 +19,8 @@ interface TypingUser {
  * `room:join` on every `connect` — not just the first.
  */
 export function useChatSocket(roomId: string | undefined) {
-  const { token } = useAuth()
+  // Keyed on the user, not the token, so refreshes do not rebuild the socket.
+  const currentUserId = useAuth().user?.id
   const [status, setStatus] = useState<ConnectionStatus>('connecting')
   const [messages, setMessages] = useState<Message[]>([])
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
@@ -30,9 +31,9 @@ export function useChatSocket(roomId: string | undefined) {
   const typingTimers = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
-    if (!token || !roomId) return
+    if (!currentUserId || !roomId) return
 
-    const socket = connectChat(token)
+    const socket = connectChat()
     socketRef.current = socket
     // Status mirrors the socket we just opened (an external system).
     // oxlint-disable-next-line react/set-state-in-effect
@@ -116,7 +117,7 @@ export function useChatSocket(roomId: string | undefined) {
       socket.disconnect()
       socketRef.current = null
     }
-  }, [token, roomId])
+  }, [currentUserId, roomId])
 
   const sendMessage = useCallback(
     (content: string) => {

@@ -1,14 +1,16 @@
 import axios from 'axios'
-import type { AxiosRequestConfig } from 'axios'
-import { clearSession, getToken } from './session'
+import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
+import { announceRefresh, clearSession, getToken, setToken, tokenExpiry } from './session'
+import type { AuthPayload } from '@/types'
 
 /**
- * The one axios instance. Two interceptors do all the boring work:
+ * The one axios instance. Its interceptors do the boring work:
  *
- *  1. request  — attaches the JWT.
- *  2. response — unwraps the `{ success, data, timestamp }` envelope and
- *                normalizes errors into a plain `Error` with a readable
- *                message (the backend sends `message` as string OR string[]).
+ *  1. request  — attaches an access token, refreshing it first if it is about
+ *                to expire.
+ *  2. response — unwraps the `{ success, data, timestamp }` envelope, retries
+ *                once after a refresh on 401, and normalizes errors into a
+ *                plain `Error` with a readable message.
  *
  * After the response interceptor, calls resolve to the *payload itself*, not
  * an AxiosResponse. The typed `http` helpers below encode that so callers get
@@ -17,10 +19,59 @@ import { clearSession, getToken } from './session'
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+  // Lets the browser store and send the refresh cookie (scoped to /auth).
+  withCredentials: true,
 })
 
-api.interceptors.request.use((config) => {
+// A bare client for /auth/refresh, so a failed refresh never loops through
+// the interceptors above. Exported for tests only.
+export const authClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+})
+
+let refreshing: Promise<AuthPayload | null> | null = null
+
+/**
+ * Exchanges the refresh cookie for a new access token. Calls made while one
+ * is running share it, and the browser lock keeps two tabs from rotating the
+ * same cookie at once. Resolves to null when there is no valid session.
+ */
+export function refreshSession(): Promise<AuthPayload | null> {
+  refreshing ??= runExclusive(async () => {
+    try {
+      const res = await authClient.post<{ data: AuthPayload }>('/auth/refresh')
+      const payload = res.data.data
+      setToken(payload.accessToken)
+      announceRefresh(payload.user)
+      return payload
+    } catch {
+      clearSession()
+      return null
+    }
+  }).finally(() => {
+    refreshing = null
+  })
+  return refreshing
+}
+
+function runExclusive<T>(task: () => Promise<T>): Promise<T> {
+  return navigator.locks ? navigator.locks.request('interviewhub-refresh', task) : task()
+}
+
+/** The current access token, refreshed first if it expires within 30 s.
+ *  Null when signed out; it never starts a session on its own. */
+export async function getFreshToken(): Promise<string | null> {
   const token = getToken()
+  if (!token) return null
+  if (tokenExpiry(token) * 1000 > Date.now() + 30_000) return token
+  return (await refreshSession())?.accessToken ?? null
+}
+
+const isAuthRoute = (url = '') => url.startsWith('/auth/')
+
+api.interceptors.request.use(async (config) => {
+  const token = isAuthRoute(config.url) ? getToken() : await getFreshToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -29,7 +80,16 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (res) => (res.data?.data !== undefined ? res.data.data : res.data),
-  (error) => {
+  async (error) => {
+    const original = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined
+
+    // The access token was rejected: refresh once and replay the request.
+    if (error.response?.status === 401 && original && !original._retried && !isAuthRoute(original.url) && getToken()) {
+      original._retried = true
+      const refreshed = await refreshSession()
+      if (refreshed) return api(original)
+    }
+
     const body = error.response?.data
     const raw = body?.message ?? error.message ?? 'Request failed'
     let message = Array.isArray(raw) ? raw.join(', ') : String(raw)
@@ -38,9 +98,9 @@ api.interceptors.response.use(
       message = `Too many attempts, try again in ${formatWait(retryAfter(error.response.headers))}`
     }
 
-    // Token missing/expired/invalid — drop the session. AuthContext listens
-    // for the resulting event and bounces the user to /login.
-    if (error.response?.status === 401) {
+    // Still unauthorized: drop the session. AuthContext listens for the
+    // resulting event and bounces the user to /login.
+    if (error.response?.status === 401 && !isAuthRoute(original?.url)) {
       clearSession()
     }
 
