@@ -6,6 +6,7 @@ import type {
   ContestState,
   HealthResponse,
   MeResponse,
+  Page,
   PublicUser,
   Role,
   Room,
@@ -74,9 +75,15 @@ export function createRoom(title: string) {
   return http.post<Room>('/rooms', { title })
 }
 
-/** Rooms the current user owns or has joined. Scoped and capped server-side. */
-export function listRooms() {
-  return http.get<Room[]>('/rooms')
+export interface ListParams<S> {
+  state?: S
+  cursor?: string
+  limit?: number
+}
+
+/** Rooms the current user owns or has joined, one page at a time. */
+export function listRooms(params: ListParams<RoomState> = {}) {
+  return http.get<Page<Room>>('/rooms', { params })
 }
 
 export function getRoom(id: string) {
@@ -105,11 +112,9 @@ export function createContest(title: string) {
   return http.post<Contest>('/contests', { title })
 }
 
-/** Contests the current user owns or has joined. Scoped and capped server-side. */
-export function listContests(state?: ContestState) {
-  return http.get<Contest[]>('/contests', {
-    params: state ? { state } : undefined,
-  })
+/** Contests the current user owns or has joined, one page at a time. */
+export function listContests(params: ListParams<ContestState> = {}) {
+  return http.get<Page<Contest>>('/contests', { params })
 }
 
 export function getContest(id: string) {

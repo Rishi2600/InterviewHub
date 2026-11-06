@@ -15,6 +15,8 @@ import { RoomsTable } from '@/components/dashboard/RoomsTable'
 import { useAuth, useCanHost } from '@/hooks/useAuth'
 import { createContest, createRoom, getContestResults, listContests, listRooms } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
+import { useLiveNow } from '@/hooks/useLiveNow'
+import { usePagedList } from '@/hooks/usePagedList'
 
 function greeting(hour: number): string {
   if (hour < 12) return 'Good morning'
@@ -31,12 +33,12 @@ export function Dashboard() {
   // Read once per visit; the greeting does not need to tick over live.
   const [now] = useState(() => new Date())
 
-  const rooms = useQuery({ queryKey: ['rooms'], queryFn: listRooms, enabled: Boolean(user) }).data ?? []
-  const contests =
-    useQuery({ queryKey: ['contests'], queryFn: () => listContests(), enabled: Boolean(user) }).data ?? []
+  const rooms = usePagedList('rooms', (cursor) => listRooms({ cursor }), Boolean(user))
+  const contests = usePagedList('contests', (cursor) => listContests({ cursor }), Boolean(user))
+  const live = useLiveNow()
 
-  const liveRoom = rooms.find((r) => r.state === 'active')
-  const liveContest = contests.find((c) => c.state === 'active')
+  const liveRoom = live.rooms[0]
+  const liveContest = live.contests[0]
   const entrants = useQuery({
     queryKey: ['contest-entries', liveContest?._id],
     queryFn: () => getContestResults(liveContest!._id),
@@ -65,9 +67,11 @@ export function Dashboard() {
     onError: (err) => toast.error(errorMessage(err, 'Could not create the contest')),
   })
 
-  const waiting = rooms.filter((r) => r.state === 'waiting').length
-  const drafts = contests.filter((c) => c.state === 'draft').length
-  const liveCount = rooms.filter((r) => r.state === 'active').length
+  // Totals for the whole list, not just the pages loaded so far.
+  const total = (counts: Record<string, number>) => Object.values(counts).reduce((a, b) => a + b, 0)
+  const waiting = rooms.counts.waiting ?? 0
+  const drafts = contests.counts.draft ?? 0
+  const liveCount = rooms.counts.active ?? 0
 
   return (
     <>
@@ -104,14 +108,14 @@ export function Dashboard() {
 
       <MetricStrip
         metrics={[
-          { label: 'Rooms', value: rooms.length, note: `${waiting} waiting for a candidate` },
+          { label: 'Rooms', value: total(rooms.counts), note: `${waiting} waiting for a candidate` },
           {
             label: 'Live now',
             value: liveCount,
             note: liveRoom?.title ?? 'No interview running',
             accent: liveCount > 0,
           },
-          { label: 'Contests', value: contests.length, note: `${drafts} still in draft` },
+          { label: 'Contests', value: total(contests.counts), note: `${drafts} still in draft` },
           {
             label: 'Entrants',
             value: entrants?.length ?? 0,
@@ -129,15 +133,15 @@ export function Dashboard() {
         {liveContest ? (
           <LiveContestCard contest={liveContest} />
         ) : (
-          <ContestsList contests={contests} canHost={canHost} />
+          <ContestsList contests={contests.items} canHost={canHost} more={contests.more} />
         )}
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <RoomsTable rooms={rooms} userId={user?.id} canHost={canHost} />
+        <RoomsTable rooms={rooms.items} userId={user?.id} canHost={canHost} more={rooms.more} />
         <div className="grid gap-4">
           <JoinWithCode />
-          {liveContest && <ContestsList contests={contests} canHost={canHost} />}
+          {liveContest && <ContestsList contests={contests.items} canHost={canHost} more={contests.more} />}
         </div>
       </div>
 

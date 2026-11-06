@@ -30,9 +30,21 @@ import { setRoomState } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 import { timeAgo } from '@/lib/utils'
 import type { Room } from '@/types'
+import { ShowMore } from '@/components/common/ShowMore'
+import type { MoreControl } from '@/hooks/usePagedList'
 
 /** Every room the user owns or joined, with per-row actions. */
-export function RoomsTable({ rooms, userId, canHost }: { rooms: Room[]; userId?: string; canHost: boolean }) {
+export function RoomsTable({
+  rooms,
+  userId,
+  canHost,
+  more,
+}: {
+  rooms: Room[]
+  userId?: string
+  canHost: boolean
+  more?: MoreControl
+}) {
   const navigate = useNavigate()
   const copy = useCopy()
   const queryClient = useQueryClient()
@@ -143,6 +155,8 @@ export function RoomsTable({ rooms, userId, canHost }: { rooms: Room[]; userId?:
           </TableBody>
         </Table>
       )}
+
+      <ShowMore more={more} />
 
       <AlertDialog open={ending !== null} onOpenChange={(open) => !open && setEnding(null)}>
         <AlertDialogContent>

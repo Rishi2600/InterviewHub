@@ -21,6 +21,14 @@ export interface User {
 /** Another user as the API shows them: the email only to themselves and admins. */
 export type PublicUser = Omit<User, 'email'> & { email?: string }
 
+/** One page of a list, newest first. Send `nextCursor` back for the next
+ *  page; null means no more. `counts` are totals per state for the whole list. */
+export interface Page<T> {
+  items: T[]
+  nextCursor: string | null
+  counts: Record<string, number>
+}
+
 export interface AuthPayload {
   accessToken: string
   user: User

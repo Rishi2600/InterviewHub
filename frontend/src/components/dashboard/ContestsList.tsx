@@ -3,10 +3,20 @@ import { Trophy } from 'lucide-react'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import type { Contest } from '@/types'
+import { ShowMore } from '@/components/common/ShowMore'
+import type { MoreControl } from '@/hooks/usePagedList'
 
 const NOTE = { draft: 'Not started', active: 'Scoring now', ended: 'Ended' } as const
 
-export function ContestsList({ contests, canHost }: { contests: Contest[]; canHost: boolean }) {
+export function ContestsList({
+  contests,
+  canHost,
+  more,
+}: {
+  contests: Contest[]
+  canHost: boolean
+  more?: MoreControl
+}) {
   return (
     <Card className="min-w-0 gap-2">
       <CardHeader>
@@ -40,6 +50,7 @@ export function ContestsList({ contests, canHost }: { contests: Contest[]; canHo
           ))}
         </ul>
       )}
+      <ShowMore more={more} className="flex justify-center px-2" />
     </Card>
   )
 }
