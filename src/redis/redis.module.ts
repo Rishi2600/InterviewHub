@@ -1,4 +1,10 @@
-import { Global, Logger, Module, OnModuleDestroy } from '@nestjs/common';
+import {
+  Global,
+  Inject,
+  Logger,
+  Module,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import {
@@ -74,9 +80,24 @@ function createClient(url: string, label: 'client' | 'pub' | 'sub'): Redis {
   ],
   exports: [REDIS_CLIENT, REDIS_PUB_CLIENT, REDIS_SUB_CLIENT],
 })
-export class RedisModule implements OnModuleDestroy {
-  constructor() {}
-  onModuleDestroy(): void {
-    // ioredis clients are cleaned up by the runtime on shutdown; nothing to do.
+export class RedisModule implements OnApplicationShutdown {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly client: Redis | null,
+    @Inject(REDIS_PUB_CLIENT) private readonly pub: Redis | null,
+    @Inject(REDIS_SUB_CLIENT) private readonly sub: Redis | null,
+  ) {}
+
+  /**
+   * Closes the clients so the process can exit. Runs after the HTTP and
+   * socket servers have closed, so the Socket.io adapter has already
+   * unsubscribed.
+   */
+  async onApplicationShutdown(): Promise<void> {
+    await Promise.all(
+      [this.client, this.pub, this.sub].map(async (c) => {
+        if (!c) return;
+        await c.quit().catch(() => c.disconnect());
+      }),
+    );
   }
 }
