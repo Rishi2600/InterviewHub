@@ -36,7 +36,17 @@ function buildGateway(roomOverrides: Record<string, unknown> = {}) {
     pinnedQuestion: null,
     ...roomOverrides,
   };
-  const model = { findById: () => ({ exec: () => Promise.resolve(room) }) };
+  // updateOne answers whether this user is being announced for the first time.
+  const announced = new Set<string>();
+  const model = {
+    findById: () => ({ exec: () => Promise.resolve(room) }),
+    updateOne: (filter: { announcedUserIds: { $ne: Types.ObjectId } }) => {
+      const id = filter.announcedUserIds.$ne.toString();
+      const first = !announced.has(id);
+      announced.add(id);
+      return { exec: () => Promise.resolve({ modifiedCount: first ? 1 : 0 }) };
+    },
+  };
 
   // Real RoomsService so the gateway exercises the actual ownership rule.
   const roomsService = new RoomsService(model as never);
@@ -127,6 +137,22 @@ describe('ChatGateway room membership', () => {
     ).rejects.toThrow('You are not a participant in this room');
   });
 
+  it('announces a member once, not on every rejoin', async () => {
+    const { gateway, createMessage } = buildGateway();
+    await gateway.onJoin(fakeSocket().socket, { roomId: ROOM_ID }, participant);
+    await gateway.onJoin(fakeSocket().socket, { roomId: ROOM_ID }, participant);
+    expect(createMessage).toHaveBeenCalledTimes(1);
+    await gateway.onJoin(fakeSocket().socket, { roomId: ROOM_ID }, owner);
+    expect(createMessage).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns the pinned question in the join ack', async () => {
+    const { gateway } = buildGateway({ pinnedQuestion: 'Reverse a list' });
+    await expect(
+      gateway.onJoin(fakeSocket().socket, { roomId: ROOM_ID }, participant),
+    ).resolves.toMatchObject({ pinnedQuestion: 'Reverse a list' });
+  });
+
   it('lets members read an ended room without writing a join message', async () => {
     const { gateway, createMessage } = buildGateway({ state: 'ended' });
     const { socket, emit } = fakeSocket();
@@ -182,22 +208,15 @@ describe('ChatGateway typing and leaving', () => {
     expect(outsider.relay).not.toHaveBeenCalled();
   });
 
-  it('ignores room:leave from a socket that never joined', async () => {
-    const { gateway, createMessage } = buildGateway();
-    const { socket } = fakeSocket();
-    await expect(
-      gateway.onLeave(socket, { roomId: ROOM_ID }, stranger),
-    ).resolves.toEqual({ ok: true });
-    expect(createMessage).not.toHaveBeenCalled();
-  });
-
-  it('announces a member leaving', async () => {
+  it('leaves the channel without posting anything', async () => {
     const { gateway, createMessage, emit } = buildGateway();
     const { socket, rooms } = fakeSocket([CHANNEL]);
-    await gateway.onLeave(socket, { roomId: ROOM_ID }, participant);
+    await expect(gateway.onLeave(socket, { roomId: ROOM_ID })).resolves.toEqual(
+      { ok: true },
+    );
     expect(rooms.has(CHANNEL)).toBe(false);
-    expect(createMessage).toHaveBeenCalled();
-    expect(emit).toHaveBeenCalledWith('chat:system', expect.anything());
+    expect(createMessage).not.toHaveBeenCalled();
+    expect(emit).not.toHaveBeenCalled();
   });
 });
 

@@ -15,17 +15,19 @@ export interface ApiResponse<T> {
 
 /**
  * Wraps every successful HTTP response in a consistent envelope:
- * { success: true, data, timestamp }.
+ * { success: true, data, timestamp }. Socket acks are left as returned:
+ * clients read them directly.
  */
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<
   T,
-  ApiResponse<T>
+  ApiResponse<T> | T
 > {
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler<T>,
-  ): Observable<ApiResponse<T>> {
+  ): Observable<ApiResponse<T> | T> {
+    if (context.getType() !== 'http') return next.handle();
     return next.handle().pipe(
       map((data) => ({
         success: true,

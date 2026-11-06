@@ -95,8 +95,12 @@ export class ChatGateway
       history.map((m) => this.serialize(m)),
     );
 
-    // Ended rooms stay readable but accept no new messages, system ones included.
-    if (room.state !== 'ended') {
+    // Announced once per user. Ended rooms stay readable but accept no new
+    // messages, system ones included.
+    if (
+      room.state !== 'ended' &&
+      (await this.roomsService.markAnnounced(room.id, user.userId))
+    ) {
       const sys = await this.chatService.create({
         roomId: room.id,
         senderId: null,
@@ -113,27 +117,14 @@ export class ChatGateway
   }
 
   @Throttle(WS_SUBSCRIBE_LIMIT)
+  // Leaving a page is not leaving the room, so nothing is posted: "joined"
+  // appears once per user, and a "left" on every visit would not match it.
   @SubscribeMessage('room:leave')
   async onLeave(
     @ConnectedSocket() client: Socket,
     @MessageBody() body: RoomEventDto,
-    @WsCurrentUser() user: AuthUser,
   ) {
-    const channel = this.roomChannel(body.roomId);
-    // Only a socket that passed room:join can announce leaving.
-    if (!client.rooms.has(channel)) return { ok: true };
-    await client.leave(channel);
-
-    const room = await this.roomsService.findByIdRaw(body.roomId);
-    if (!room || room.state === 'ended') return { ok: true };
-    const sys = await this.chatService.create({
-      roomId: body.roomId,
-      senderId: null,
-      senderName: 'system',
-      content: `${user.username} left the room`,
-      type: 'system',
-    });
-    this.server.to(channel).emit('chat:system', this.serialize(sys));
+    await client.leave(this.roomChannel(body.roomId));
     return { ok: true };
   }
 
