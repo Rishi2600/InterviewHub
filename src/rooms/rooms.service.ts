@@ -76,6 +76,22 @@ export class RoomsService {
     return room;
   }
 
+  /**
+   * Records that a user has been announced in a room. True only the first
+   * time, so the "joined" message is posted once per user, not on every
+   * reconnect or visit. Atomic, so two tabs cannot both post it.
+   */
+  async markAnnounced(roomId: string, userId: string): Promise<boolean> {
+    const uid = new Types.ObjectId(userId);
+    const result = await this.roomModel
+      .updateOne(
+        { _id: roomId, announcedUserIds: { $ne: uid } },
+        { $addToSet: { announcedUserIds: uid } },
+      )
+      .exec();
+    return result.modifiedCount === 1;
+  }
+
   /** A room the user may read. Anyone else gets the same 404 as a missing
    *  room, so ids cannot be probed. */
   async findForMember(

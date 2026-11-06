@@ -14,6 +14,7 @@ import { Throttle } from '@nestjs/throttler';
 import { diskStorage } from 'multer';
 import { randomUUID } from 'crypto';
 import { unlink } from 'fs/promises';
+import { basename, join } from 'path';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { SelfGuard } from '../common/guards/self.guard';
 import {
@@ -23,6 +24,8 @@ import {
 import { UsersService } from './users.service';
 import { AVATAR_LIMIT } from '../common/throttle/limits';
 import { AVATAR_TYPES, hasImageSignature, readFileHead } from './avatar-file';
+
+const AVATAR_DIR = './uploads/avatars';
 
 @Controller('users')
 export class UsersController {
@@ -55,7 +58,7 @@ export class UsersController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/avatars',
+        destination: AVATAR_DIR,
         filename: (_req, file, cb) => {
           cb(null, `${randomUUID()}${AVATAR_TYPES[file.mimetype]}`);
         },
@@ -69,7 +72,6 @@ export class UsersController {
         }
         cb(null, true);
       },
-      limits: { fileSize: 2 * 1024 * 1024 },
     }),
   )
   async uploadAvatar(
@@ -82,9 +84,25 @@ export class UsersController {
       await unlink(file.path);
       throw new BadRequestException('File content is not a valid image');
     }
-    const base = this.config.get<string>('PUBLIC_BASE_URL');
-    const avatarUrl = `${base}/uploads/avatars/${file.filename}`;
-    const user = await this.usersService.setAvatarUrl(id, avatarUrl);
+    const previous = (await this.usersService.findById(id)).avatarUrl;
+    const user = await this.usersService.setAvatarUrl(
+      id,
+      `${this.avatarBaseUrl()}${file.filename}`,
+    );
+    await this.removeStoredAvatar(previous);
     return this.usersService.toSafe(user);
+  }
+
+  private avatarBaseUrl(): string {
+    return `${this.config.get<string>('PUBLIC_BASE_URL')}/uploads/avatars/`;
+  }
+
+  /** Deletes a replaced avatar's file, if it is one of ours. A file that is
+   *  already gone is fine. */
+  private async removeStoredAvatar(url: string | null): Promise<void> {
+    if (!url?.startsWith(this.avatarBaseUrl())) return;
+    // basename keeps a crafted URL from reaching outside the folder.
+    const name = basename(url.slice(this.avatarBaseUrl().length));
+    await unlink(join(AVATAR_DIR, name)).catch(() => undefined);
   }
 }

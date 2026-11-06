@@ -48,6 +48,10 @@ export class Room {
 
   @Prop({ type: String, default: null })
   pinnedQuestion: string | null;
+
+  // Users already announced with "joined the room". Internal, never returned.
+  @Prop({ type: [SchemaTypes.ObjectId], default: [], select: false })
+  announcedUserIds: Types.ObjectId[];
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
