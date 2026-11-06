@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { RedisIoAdapter } from './redis/redis-io.adapter';
 import { parseOrigins } from './config/cors';
 
@@ -21,13 +22,15 @@ async function bootstrap() {
   const allowedOrigins = parseOrigins(config.get<string>('CORS_ORIGINS'));
   app.enableCors({
     origin: allowedOrigins,
+    // The refresh cookie travels with /auth requests from the frontend.
+    credentials: true,
     // Lets the frontend read how long to wait after a 429.
     exposedHeaders: ['Retry-After', 'Retry-After-hourly'],
   });
 
   // Security headers. The API serves JSON, never pages, so the CSP allows
   // nothing. Resources may be loaded cross-origin because the frontend shows
-  // avatars from /uploads on its own origin; responses carry no cookies.
+  // avatars from /uploads on its own origin.
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -38,6 +41,8 @@ async function bootstrap() {
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
+
+  app.use(cookieParser());
 
   // Global validation: strip unknown fields, transform payloads to DTO types.
   app.useGlobalPipes(

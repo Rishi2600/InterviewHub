@@ -27,6 +27,8 @@ export const LOGIN_LIMIT = {
   default: { limit: 5, ttl: MINUTE },
   hourly: { limit: 30, ttl: HOUR },
 };
+// Every open tab refreshes about every 15 minutes, so this is generous.
+export const REFRESH_LIMIT = { default: { limit: 30, ttl: MINUTE } };
 export const REGISTER_LIMIT = { hourly: { limit: 5, ttl: HOUR } };
 export const AVATAR_LIMIT = { hourly: { limit: 10, ttl: HOUR } };
 

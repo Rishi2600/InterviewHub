@@ -16,7 +16,10 @@ export const envValidationSchema = Joi.object({
   MONGODB_URI: Joi.string().required(),
 
   JWT_SECRET: Joi.string().min(16).required(),
-  JWT_EXPIRES_IN: Joi.string().default('1d'),
+  // Access token lifetime. Sessions last longer through the refresh cookie.
+  JWT_EXPIRES_IN: Joi.string().default('15m'),
+  // Send the refresh cookie over HTTPS only. Browsers allow it on localhost.
+  COOKIE_SECURE: Joi.boolean().default(true),
 
   REDIS_ENABLED: Joi.boolean().default(false),
   REDIS_URL: Joi.string().allow('').when('REDIS_ENABLED', {
