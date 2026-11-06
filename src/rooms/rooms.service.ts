@@ -73,6 +73,19 @@ export class RoomsService {
     return room;
   }
 
+  /** A room the user may read. Anyone else gets the same 404 as a missing
+   *  room, so ids cannot be probed. */
+  async findForMember(
+    id: string,
+    user: { userId: string; role: string },
+  ): Promise<RoomDocument> {
+    const room = await this.findByIdRaw(id);
+    if (!room || !this.isMember(room, user)) {
+      throw new NotFoundException('Room not found');
+    }
+    return room;
+  }
+
   /**
    * The single ownership rule for rooms: the creator, or any admin. Shared by
    * RoomOwnerGuard (HTTP) and ChatGateway (WebSocket) so both transports agree

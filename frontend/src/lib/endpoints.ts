@@ -6,6 +6,7 @@ import type {
   ContestState,
   HealthResponse,
   MeResponse,
+  PublicUser,
   Role,
   Room,
   RoomState,
@@ -55,7 +56,7 @@ export function health() {
 /* ------------------------------------------------------------- users ---- */
 
 export function getUserById(id: string) {
-  return http.get<User>(`/users/${id}`)
+  return http.get<PublicUser>(`/users/${id}`)
 }
 
 export function uploadAvatar(id: string, file: File) {

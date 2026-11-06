@@ -18,6 +18,9 @@ export interface User {
   avatarUrl?: string | null
 }
 
+/** Another user as the API shows them: the email only to themselves and admins. */
+export type PublicUser = Omit<User, 'email'> & { email?: string }
+
 export interface AuthPayload {
   accessToken: string
   user: User

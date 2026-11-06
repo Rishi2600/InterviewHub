@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { ContestsService } from './contests.service';
 import { ContestState } from './schemas/contest.schema';
@@ -101,5 +105,36 @@ describe('ContestsService ownership', () => {
     await expect(
       service.setState(CONTEST_ID, OTHER_ID, 'interviewer', 'active'),
     ).rejects.toThrow(ForbiddenException);
+  });
+});
+
+describe('ContestsService.findVisible', () => {
+  const host = { userId: OWNER_ID, role: 'interviewer' };
+  const other = { userId: OTHER_ID, role: 'candidate' };
+  const admin = { userId: OTHER_ID, role: 'admin' };
+
+  it('shows a draft to its host and admins only', async () => {
+    const { service } = serviceWithContest('draft');
+    await expect(service.findVisible(CONTEST_ID, host)).resolves.toBeTruthy();
+    await expect(service.findVisible(CONTEST_ID, admin)).resolves.toBeTruthy();
+    await expect(service.findVisible(CONTEST_ID, other)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('shows active and ended contests to any signed-in user', async () => {
+    for (const state of ['active', 'ended'] as const) {
+      const { service } = serviceWithContest(state);
+      await expect(
+        service.findVisible(CONTEST_ID, other),
+      ).resolves.toBeTruthy();
+    }
+  });
+
+  it('answers 404 for a malformed id', async () => {
+    const { service } = serviceWithContest('active');
+    await expect(service.findVisible('not-an-id', other)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

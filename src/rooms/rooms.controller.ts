@@ -40,9 +40,10 @@ export class RoomsController {
     return this.roomsService.listForUser(user);
   }
 
+  // Owner, participants and admins only.
   @Get(':id')
-  get(@Param('id') id: string) {
-    return this.roomsService.findById(id);
+  get(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.roomsService.findForMember(id, user);
   }
 
   @Post(':code/join')

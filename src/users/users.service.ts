@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Role } from '../common/enums/role.enum';
 import { User, UserDocument } from './schemas/user.schema';
 
@@ -39,6 +39,8 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument> {
+    if (!Types.ObjectId.isValid(id))
+      throw new NotFoundException('User not found');
     const user = await this.userModel.findById(id).exec();
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -50,6 +52,16 @@ export class UsersService {
       .exec();
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  /** What any signed-in user may see about another user: no email. */
+  toPublic(user: UserDocument) {
+    return {
+      id: user._id.toString(),
+      username: user.username,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+    };
   }
 
   /** Strips the password hash before returning a user to a client. */

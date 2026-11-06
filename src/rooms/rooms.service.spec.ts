@@ -112,3 +112,40 @@ describe('RoomsService.isOwnedBy', () => {
     ).toBe(false);
   });
 });
+
+describe('RoomsService.findForMember', () => {
+  const ownerId = new Types.ObjectId();
+  const participantId = new Types.ObjectId();
+  const room = {
+    ownerId,
+    participants: [{ userId: participantId }],
+  } as unknown as RoomDocument;
+  const service = new RoomsService({
+    findById: () => ({ exec: () => Promise.resolve(room) }),
+  } as never);
+  const as = (userId: Types.ObjectId, role = 'candidate') => ({
+    userId: userId.toString(),
+    role,
+  });
+
+  it('returns the room to its owner, a participant and an admin', async () => {
+    await expect(service.findForMember(ROOM_ID, as(ownerId))).resolves.toBe(
+      room,
+    );
+    await expect(
+      service.findForMember(ROOM_ID, as(participantId)),
+    ).resolves.toBe(room);
+    await expect(
+      service.findForMember(ROOM_ID, as(new Types.ObjectId(), 'admin')),
+    ).resolves.toBe(room);
+  });
+
+  it('answers 404 to anyone else, as for a missing room', async () => {
+    await expect(
+      service.findForMember(ROOM_ID, as(new Types.ObjectId())),
+    ).rejects.toThrow(NotFoundException);
+    await expect(
+      service.findForMember('not-an-id', as(ownerId)),
+    ).rejects.toThrow(NotFoundException);
+  });
+});

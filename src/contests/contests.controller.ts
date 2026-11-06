@@ -38,14 +38,15 @@ export class ContestsController {
     return this.contestsService.listForUser(user, query.state);
   }
 
+  // Published contests for any signed-in user; drafts for the host and admins.
   @Get(':id')
-  get(@Param('id') id: string) {
-    return this.contestsService.findById(id);
+  get(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.contestsService.findVisible(id, user);
   }
 
   @Get(':id/results')
-  results(@Param('id') id: string) {
-    return this.contestsService.results(id);
+  results(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.contestsService.results(id, user);
   }
 
   @Post(':id/activate')

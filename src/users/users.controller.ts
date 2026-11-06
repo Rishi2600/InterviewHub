@@ -16,6 +16,10 @@ import { randomUUID } from 'crypto';
 import { unlink } from 'fs/promises';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { SelfGuard } from '../common/guards/self.guard';
+import {
+  AuthUser,
+  CurrentUser,
+} from '../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { AVATAR_LIMIT } from '../common/throttle/limits';
 import { AVATAR_TYPES, hasImageSignature, readFileHead } from './avatar-file';
@@ -27,11 +31,15 @@ export class UsersController {
     private readonly config: ConfigService,
   ) {}
 
+  // Email is shown only to the user themselves and to admins.
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string, @CurrentUser() viewer: AuthUser) {
     const user = await this.usersService.findById(id);
-    return this.usersService.toSafe(user);
+    const isSelfOrAdmin = viewer.userId === id || viewer.role === 'admin';
+    return isSelfOrAdmin
+      ? this.usersService.toSafe(user)
+      : this.usersService.toPublic(user);
   }
 
   /**

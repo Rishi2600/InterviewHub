@@ -79,6 +79,21 @@ export class ContestsService {
     return contest;
   }
 
+  /** A contest the user may see. Drafts are visible to their host and admins
+   *  only; anyone else gets the same 404 as a missing contest. */
+  async findVisible(
+    id: string,
+    user: { userId: string; role: string },
+  ): Promise<ContestDocument> {
+    const contest = await this.findById(id);
+    const isHost =
+      user.role === 'admin' || contest.ownerId.toString() === user.userId;
+    if (contest.state === 'draft' && !isHost) {
+      throw new NotFoundException('Contest not found');
+    }
+    return contest;
+  }
+
   private assertOwner(
     contest: ContestDocument,
     userId: string,
@@ -116,9 +131,9 @@ export class ContestsService {
 
   async join(
     id: string,
-    user: { userId: string; username: string },
+    user: { userId: string; username: string; role: string },
   ): Promise<ContestEntryDocument> {
-    const contest = await this.findById(id);
+    const contest = await this.findVisible(id, user);
     if (contest.state === 'ended') {
       throw new BadRequestException('Contest has ended');
     }
@@ -199,9 +214,13 @@ export class ContestsService {
     return contest;
   }
 
-  results(id: string): Promise<ContestEntryDocument[]> {
+  async results(
+    id: string,
+    user: { userId: string; role: string },
+  ): Promise<ContestEntryDocument[]> {
+    const contest = await this.findVisible(id, user);
     return this.entryModel
-      .find({ contestId: new Types.ObjectId(id) })
+      .find({ contestId: contest._id })
       .sort({ finalScore: -1 })
       .exec();
   }
