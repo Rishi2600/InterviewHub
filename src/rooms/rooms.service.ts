@@ -4,11 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { randomInt } from 'crypto';
 import { Model, Types } from 'mongoose';
 import { Room, RoomDocument, RoomState } from './schemas/room.schema';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
 const CODE_LENGTH = 5;
+// Codes are only ever made from CODE_ALPHABET, so anything else cannot exist.
+const ROOM_CODE_PATTERN = new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`);
 // Caps the list endpoint so a long-lived account cannot pull an unbounded set.
 const LIST_LIMIT = 50;
 
@@ -21,7 +24,7 @@ export class RoomsService {
   private generateCode(): string {
     let code = '';
     for (let i = 0; i < CODE_LENGTH; i++) {
-      code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+      code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
     }
     return code;
   }
@@ -114,9 +117,11 @@ export class RoomsService {
   }
 
   async findByCode(code: string): Promise<RoomDocument> {
-    const room = await this.roomModel
-      .findOne({ code: code.toUpperCase() })
-      .exec();
+    const normalized = code.toUpperCase();
+    if (!ROOM_CODE_PATTERN.test(normalized)) {
+      throw new NotFoundException('Room not found');
+    }
+    const room = await this.roomModel.findOne({ code: normalized }).exec();
     if (!room) throw new NotFoundException('Room not found');
     return room;
   }

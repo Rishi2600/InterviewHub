@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { STATUS_CODES } from 'http';
 
 /**
  * Global HTTP exception filter. Produces a consistent error response shape:
@@ -30,13 +31,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let error = 'InternalServerError';
 
     if (exception instanceof HttpException) {
+      // The standard reason phrase, e.g. "Payload Too Large", unless the
+      // exception names its own.
+      error = STATUS_CODES[status] ?? exception.name;
       const res = exception.getResponse();
       if (typeof res === 'string') {
         message = res;
       } else if (typeof res === 'object' && res !== null) {
         const body = res as { message?: string | string[]; error?: string };
         message = body.message ?? exception.message;
-        error = body.error ?? exception.name;
+        error = body.error ?? error;
       }
     } else if (exception instanceof Error) {
       this.logger.error(exception.message, exception.stack);

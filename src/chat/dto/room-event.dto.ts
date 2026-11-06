@@ -1,6 +1,6 @@
-import { IsString } from 'class-validator';
+import { IsMongoId } from 'class-validator';
 
 export class RoomEventDto {
-  @IsString()
+  @IsMongoId()
   roomId: string;
 }

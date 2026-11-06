@@ -1,11 +1,11 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsMongoId, IsString, Length } from 'class-validator';
+import { LIMITS } from '../../common/validation/limits';
 
 export class SendMessageDto {
-  @IsString()
+  @IsMongoId()
   roomId: string;
 
   @IsString()
-  @MinLength(1)
-  @MaxLength(2000)
+  @Length(1, LIMITS.text)
   content: string;
 }

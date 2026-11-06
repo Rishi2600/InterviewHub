@@ -3,19 +3,23 @@ import {
   IsIn,
   IsOptional,
   IsString,
-  MinLength,
+  Length,
+  MaxLength,
 } from 'class-validator';
 import { Role } from '../../common/enums/role.enum';
+import { LIMITS, Trim } from '../../common/validation/limits';
 import { IsValidPassword } from '../password-policy';
 
 export const SIGNUP_ROLES = [Role.Candidate, Role.Interviewer];
 
 export class RegisterDto {
+  @Trim()
   @IsString()
-  @MinLength(2)
+  @Length(LIMITS.username.min, LIMITS.username.max)
   username: string;
 
   @IsEmail()
+  @MaxLength(LIMITS.email)
   email: string;
 
   @IsValidPassword()

@@ -5,6 +5,7 @@ import { Redis } from 'ioredis';
 import { ServerOptions } from 'socket.io';
 import { REDIS_PUB_CLIENT, REDIS_SUB_CLIENT } from './redis.constants';
 import { isAllowedOrigin } from '../config/cors';
+import { LIMITS } from '../common/validation/limits';
 
 /**
  * Socket.io adapter used for every gateway. It applies the CORS_ORIGINS
@@ -41,6 +42,8 @@ export class RedisIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: ServerOptions): any {
     const server = super.createIOServer(port, {
       ...options,
+      // Drop any single socket message larger than this.
+      maxHttpBufferSize: LIMITS.socketMessageBytes,
       // `cors` only covers HTTP long-polling. Browsers do not apply CORS to
       // WebSocket upgrades, so the Origin header is checked here as well.
       cors: { origin: this.allowedOrigins },

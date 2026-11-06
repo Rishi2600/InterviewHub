@@ -38,6 +38,7 @@ import { RoomsService } from '../rooms/rooms.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { RoomEventDto } from './dto/room-event.dto';
 import { PinQuestionWsDto } from './dto/pin-question-ws.dto';
+import { WS_VALIDATION } from '../common/validation/limits';
 
 /**
  * Real-time chat gateway. Connections are authenticated (and capped per user)
@@ -51,7 +52,7 @@ import { PinQuestionWsDto } from './dto/pin-question-ws.dto';
  */
 @UseFilters(WsExceptionsFilter)
 @UseGuards(WsJwtGuard, WsThrottleGuard)
-@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+@UsePipes(new ValidationPipe(WS_VALIDATION))
 @WebSocketGateway({ namespace: '/chat' })
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect

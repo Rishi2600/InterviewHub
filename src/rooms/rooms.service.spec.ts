@@ -149,3 +149,25 @@ describe('RoomsService.findForMember', () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
+
+describe('RoomsService.findByCode', () => {
+  const findOne = jest.fn(() => ({ exec: () => Promise.resolve(null) }));
+  const service = new RoomsService({ findOne } as never);
+
+  it('answers 404 without querying for a code that cannot exist', async () => {
+    await expect(service.findByCode('{"$ne":1}')).rejects.toThrow(
+      NotFoundException,
+    );
+    await expect(service.findByCode('ABCDEFG')).rejects.toThrow(
+      NotFoundException,
+    );
+    expect(findOne).not.toHaveBeenCalled();
+  });
+
+  it('looks up a well-formed code, ignoring case', async () => {
+    await expect(service.findByCode('ab2cd')).rejects.toThrow(
+      NotFoundException,
+    );
+    expect(findOne).toHaveBeenCalledWith({ code: 'AB2CD' });
+  });
+});

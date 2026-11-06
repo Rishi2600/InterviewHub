@@ -15,7 +15,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { InjectModel } from '@nestjs/mongoose';
-import { IsString } from 'class-validator';
+import { IsMongoId } from 'class-validator';
 import { Model, Types } from 'mongoose';
 import { Namespace, Server, Socket } from 'socket.io';
 import { Throttle } from '@nestjs/throttler';
@@ -23,6 +23,7 @@ import { WsJwtGuard } from '../common/guards/ws-jwt.guard';
 import { SocketAuthService } from '../common/ws/socket-auth.service';
 import { WsThrottleGuard } from '../common/throttle/ws-throttle.guard';
 import { WS_SUBSCRIBE_LIMIT } from '../common/throttle/limits';
+import { WS_VALIDATION } from '../common/validation/limits';
 import { WsExceptionsFilter } from '../common/filters/ws-exceptions.filter';
 import { WsCurrentUser } from '../common/decorators/ws-current-user.decorator';
 import { AuthUser } from '../common/decorators/current-user.decorator';
@@ -31,7 +32,7 @@ import { ContestEntry } from '../contests/schemas/contest-entry.schema';
 import { LeaderboardService } from './leaderboard.service';
 
 class SubscribeDto {
-  @IsString()
+  @IsMongoId()
   contestId: string;
 }
 
@@ -42,7 +43,7 @@ class SubscribeDto {
  */
 @UseFilters(WsExceptionsFilter)
 @UseGuards(WsJwtGuard, WsThrottleGuard)
-@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+@UsePipes(new ValidationPipe(WS_VALIDATION))
 @WebSocketGateway({ namespace: '/leaderboard' })
 export class LeaderboardGateway implements OnGatewayInit {
   @WebSocketServer() server: Server;

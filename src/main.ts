@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { RedisIoAdapter } from './redis/redis-io.adapter';
 import { parseOrigins } from './config/cors';
+import { LIMITS } from './common/validation/limits';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -43,12 +44,13 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
+  app.useBodyParser('json', { limit: LIMITS.bodyBytes });
 
-  // Global validation: strip unknown fields, transform payloads to DTO types.
+  // Global validation: reject unknown fields, transform payloads to DTO types.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: false,
+      forbidNonWhitelisted: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
     }),
