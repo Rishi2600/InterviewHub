@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { UserAvatar } from '@/components/common/UserAvatar'
 import { ErrorState } from '@/components/common/States'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ProfileLink } from '@/components/score/ProfileLink'
 import { Panel, PhaseBadge, PromptText, RATED_AT, RatedBadge, Stat } from '@/components/contest/bits'
 import { useAuth } from '@/hooks/useAuth'
 import { useContestSocket } from '@/hooks/useContestSocket'
@@ -160,10 +161,10 @@ function BoardTableRow({ row, me }: { row: BoardRow; me: boolean }) {
       <td className="py-2.5 pr-2">
         <span className="flex min-w-0 items-center gap-2">
           <UserAvatar name={row.username} size="sm" />
-          <span className={cn('truncate', me ? 'font-semibold' : 'font-medium')}>
+          <ProfileLink userId={row.userId} className={cn('truncate', me ? 'font-semibold' : 'font-medium')}>
             {row.username}
             {me && <span className="font-normal text-muted-foreground"> (you)</span>}
-          </span>
+          </ProfileLink>
         </span>
       </td>
       <td className="py-2.5 pr-3 text-right text-muted-foreground tabular-nums">
