@@ -72,7 +72,7 @@ export function Profile() {
           joinedAt={joinedAt}
           dimmed={mutation.isPending}
           action={
-            <div className="grid justify-items-end gap-1">
+            <div className="grid justify-items-start gap-1 sm:justify-items-end">
               <input
                 ref={fileInputRef}
                 type="file"

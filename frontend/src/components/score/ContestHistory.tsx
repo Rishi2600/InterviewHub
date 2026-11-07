@@ -13,6 +13,11 @@ import type { ContestHistoryItem } from '@/types'
 
 const PAGE = 10
 
+function changeColour(change: number) {
+  const tenths = Math.round(change * 10)
+  return tenths === 0 ? 'text-muted-foreground' : tenths < 0 ? 'text-danger' : 'text-brand'
+}
+
 /** Contests the candidate started, newest first, 10 a page. */
 export function ContestHistory({ userId }: { userId: string }) {
   // Cursors of the pages visited so far; the last one is the current page.
@@ -118,7 +123,7 @@ function Row({ c }: { c: ContestHistoryItem }) {
           <>
             {c.scoreAfter.toFixed(1)}
             {c.change !== null && (
-              <span className={cn('ml-1 text-xs', c.change < 0 ? 'text-danger' : 'text-brand')}>{formatChange(c.change)}</span>
+              <span className={cn('ml-1 text-xs', changeColour(c.change))}>{formatChange(c.change)}</span>
             )}
           </>
         )}
