@@ -23,6 +23,7 @@ const ContestEditor = lazy(() => import('@/pages/ContestEditor').then((m) => ({ 
 const ContestWorkspace = lazy(() => import('@/pages/ContestWorkspace').then((m) => ({ default: m.ContestWorkspace })))
 const ContestResults = lazy(() => import('@/pages/ContestResults').then((m) => ({ default: m.ContestResults })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
+const UserProfile = lazy(() => import('@/pages/UserProfile').then((m) => ({ default: m.UserProfile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 
 const queryClient = new QueryClient({
@@ -68,6 +69,7 @@ export default function App() {
                       <Route path="/contests/:id/edit" element={<ContestEditor />} />
                     </Route>
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/users/:id" element={<UserProfile />} />
 
                     {/* Host-only area. Kept as a nested guard so adding
                         interviewer-only screens later needs no new plumbing. */}

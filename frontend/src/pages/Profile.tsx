@@ -5,15 +5,16 @@ import { toast } from 'sonner'
 import { Loader2, Upload } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { UserAvatar } from '@/components/common/UserAvatar'
+import { ProfileIdentity } from '@/components/score/ProfileIdentity'
+import { Panel } from '@/components/score/Panel'
+import { ScoreSection } from '@/components/score/ScoreSection'
+import { useUserScore } from '@/hooks/useUserScore'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/hooks/useAuth'
 import { uploadAvatar } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
-import { cn } from '@/lib/utils'
 
-const ROLE = { candidate: 'Candidate', interviewer: 'Interviewer', admin: 'Admin' } as const
+import { ROLE } from '@/components/score/ProfileIdentity'
 
 // Matches the backend's multer limits and mime filter.
 const MAX_BYTES = 2 * 1024 * 1024
@@ -24,6 +25,7 @@ export function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const joinedAt = useUserScore(user?.id).data?.user.joinedAt
 
   const mutation = useMutation({
     mutationFn: (file: File) => uploadAvatar(user!.id, file),
@@ -61,23 +63,16 @@ export function Profile() {
 
   return (
     <>
-      <PageHeader title={<span>Profile</span>} />
-      <div className="mx-auto grid w-full max-w-2xl gap-4">
-        <h1 className="text-2xl font-semibold">Profile</h1>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-heading">Picture</CardTitle>
-            <CardDescription>PNG, JPEG, WebP or GIF, up to 2 MB.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-6">
-            <UserAvatar
-              name={user.username}
-              src={preview ?? user.avatarUrl}
-              size="lg"
-              className={cn(mutation.isPending && 'opacity-60')}
-            />
-            <div className="grid gap-2">
+      <PageHeader title={<span className="font-medium">Profile</span>} />
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)] gap-6">
+        <ProfileIdentity
+          name={user.username}
+          role={user.role}
+          avatarUrl={preview ?? user.avatarUrl}
+          joinedAt={joinedAt}
+          dimmed={mutation.isPending}
+          action={
+            <div className="grid justify-items-end gap-1">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -90,37 +85,34 @@ export function Profile() {
                   e.target.value = ''
                 }}
               />
-              <Button onClick={() => fileInputRef.current?.click()} disabled={mutation.isPending}>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={mutation.isPending}>
                 {mutation.isPending ? <Loader2 className="animate-spin" aria-hidden /> : <Upload aria-hidden />}
-                {user.avatarUrl ? 'Replace picture' : 'Upload picture'}
+                {user.avatarUrl ? 'Change picture' : 'Upload picture'}
               </Button>
-              {validationError && (
+              {validationError ? (
                 <p role="alert" className="text-sm text-destructive">
                   {validationError}
                 </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">PNG, JPEG, WebP or GIF, up to 2 MB.</p>
               )}
             </div>
-          </CardContent>
-        </Card>
+          }
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-heading">Account</CardTitle>
-            <CardDescription>The details you registered with.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <dl className="divide-y text-sm">
-              <Row label="Name">{user.username}</Row>
-              <Row label="Email">{user.email}</Row>
-              <Row label="Role">
-                <Badge variant="secondary">{ROLE[user.role]}</Badge>
-              </Row>
-              <Row label="User ID">
-                <span className="font-mono text-xs">{user.id}</span>
-              </Row>
-            </dl>
-          </CardContent>
-        </Card>
+        <ScoreSection userId={user.id} isSelf />
+
+        <Panel title="Account">
+          <dl className="divide-y px-5 text-sm">
+            <Row label="Email">{user.email}</Row>
+            <Row label="Role">
+              <Badge variant="secondary">{ROLE[user.role]}</Badge>
+            </Row>
+            <Row label="User ID">
+              <span className="font-mono text-xs">{user.id}</span>
+            </Row>
+          </dl>
+        </Panel>
       </div>
     </>
   )
@@ -128,7 +120,7 @@ export function Profile() {
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+    <div className="flex items-center justify-between gap-4 py-3">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="min-w-0 truncate font-medium">{children}</dd>
     </div>
