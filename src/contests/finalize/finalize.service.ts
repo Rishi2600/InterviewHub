@@ -8,6 +8,7 @@ import { ActivityEvent } from '../../activity/schemas/activity-event.schema';
 import { LIMITS } from '../../common/validation/limits';
 import { rank, scoreAnswers, Scored, timeUsedMs } from './scoring';
 import { ContestsGateway } from '../contests.gateway';
+import { ScoreService } from '../../score/score.service';
 
 // How long a claim lasts. Far longer than a finalize takes; if the server
 // holding it dies, another one takes over once it runs out.
@@ -41,6 +42,7 @@ export class FinalizeService {
     @InjectModel(ActivityEvent.name)
     private readonly eventModel: Model<ActivityEvent>,
     private readonly gateway: ContestsGateway,
+    private readonly scores: ScoreService,
   ) {}
 
   /** Claims and finalizes due contests, one at a time, until none are left. */
@@ -233,7 +235,14 @@ export class FinalizeService {
     });
     await this.inBatches(eventOps, (ops) => this.eventModel.bulkWrite(ops));
 
-    // 4. Close the contest, but only while this run still holds the lease.
+    // 4. Recompute each starter's score from their events. Done before the
+    //    contest closes, so a failure here is retried with the contest.
+    await this.scores.recomputeFor(
+      ranked.map((r) => byId.get(r.id)!.userId),
+      now,
+    );
+
+    // 5. Close the contest, but only while this run still holds the lease.
     const closed = await this.contestModel
       .updateOne(
         { _id: contest._id, lockedUntil: contest.lockedUntil },

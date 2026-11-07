@@ -19,6 +19,7 @@ import { FinalizeService } from './finalize/finalize.service';
 import { FinalizeJob } from './finalize/finalize.job';
 import { ContestsGateway } from './contests.gateway';
 import { AuthModule } from '../auth/auth.module';
+import { ScoreModule } from '../score/score.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AuthModule } from '../auth/auth.module';
     ]),
     ActivityModule,
     AuthModule, // SocketAuthService for the gateway
+    ScoreModule, // recomputed at finalize
   ],
   controllers: [ContestsController],
   providers: [
