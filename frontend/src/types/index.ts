@@ -267,3 +267,52 @@ export interface SocketError {
   message: string
   timestamp: string
 }
+/* ------------------------------------------------------------- score ---- */
+
+export type BadgeId = 'first-rated' | 'winner' | 'podium' | 'top-10' | 'finisher' | 'regular' | 'streak'
+
+export interface BadgeState {
+  id: BadgeId
+  count: number
+  earnedAt: string | null
+  progress: number
+  goal: number
+}
+
+/** A candidate's score section. Locked badges come only to the candidate. */
+export interface UserScore {
+  user: Omit<PublicUser, 'email'> & { joinedAt: string }
+  // Null before the first rated contest.
+  score: number | null
+  provisional: boolean
+  formula: { weightedSum: number; weightTotal: number; multiplier: number; submitted: number; window: number } | null
+  ratedCount: number
+  enteredCount: number
+  lastActiveAt: string | null
+  history: { contestId: string; at: string; score: number }[]
+  badges: BadgeState[]
+}
+
+/** Activity per UTC day, only days with something on them. */
+export interface UserActivity {
+  from: string
+  to: string
+  days: { date: string; count: number }[]
+  total: number
+  years: number[]
+}
+
+export interface ContestHistoryItem {
+  contestId: string
+  title: string
+  at: string
+  rank: number
+  starters: number
+  percentile: number
+  points: number
+  totalPoints: number
+  submitted: boolean
+  rated: boolean
+  scoreAfter: number | null
+  change: number | null
+}

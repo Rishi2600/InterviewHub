@@ -18,6 +18,9 @@ import type {
   Room,
   RoomState,
   User,
+  UserActivity,
+  UserScore,
+  ContestHistoryItem,
   Workspace,
 } from '@/types'
 
@@ -74,6 +77,19 @@ export function uploadAvatar(id: string, file: File) {
   return http.post<User>(`/users/${id}/avatar`, form, {
     headers: { 'Content-Type': undefined },
   })
+}
+
+export function getUserScore(id: string) {
+  return http.get<UserScore>(`/users/${id}/score`)
+}
+
+/** The last 12 months, or one calendar year. */
+export function getUserActivity(id: string, year?: number) {
+  return http.get<UserActivity>(`/users/${id}/activity`, { params: { year } })
+}
+
+export function getUserContests(id: string, cursor?: string, limit = 10) {
+  return http.get<Page<ContestHistoryItem>>(`/users/${id}/contests`, { params: { cursor, limit } })
 }
 
 /* ------------------------------------------------------------- rooms ---- */
