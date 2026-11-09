@@ -7,19 +7,21 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
-    "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,test,scripts}/**/*.ts\"",
+    "lint:fix": "eslint \"{src,test,scripts}/**/*.ts\" --fix",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json --runInBand",
     "test:e2e:redis": "REDIS_URL_TEST=redis://127.0.0.1:6380 npm run test:e2e",
-    "test:e2e:db": "docker compose --profile test up -d --wait mongo-test redis-test"
+    "test:e2e:db": "docker compose --profile test up -d --wait mongo-test redis-test",
+    "db:seed": "node --env-file-if-exists=.env -r ts-node/register scripts/seed.ts",
+    "db:wipe": "node --env-file-if-exists=.env -r ts-node/register scripts/wipe.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.3.2",
