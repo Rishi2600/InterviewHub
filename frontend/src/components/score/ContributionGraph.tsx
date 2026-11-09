@@ -11,6 +11,8 @@ const STEP = 14
 const LEFT = 30
 const TOP = 18
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
+// Size every range for a full year, so a year that ends today keeps the same square size.
+const MIN_WEEKS = 53
 
 /** GitHub-style activity squares: the last 12 months, or a chosen year. */
 export function ContributionGraph({ userId }: { userId: string }) {
@@ -56,7 +58,7 @@ export function ContributionGraph({ userId }: { userId: string }) {
       ) : (
         <div className="overflow-x-auto">
           <svg
-            viewBox={`0 0 ${LEFT + graph.weeks.length * STEP} ${TOP + 7 * STEP}`}
+            viewBox={`0 0 ${LEFT + Math.max(MIN_WEEKS, graph.weeks.length) * STEP} ${TOP + 7 * STEP}`}
             className="w-full min-w-[680px] text-muted-foreground"
             role="img"
             aria-label={`${total} activities, one square per day`}
