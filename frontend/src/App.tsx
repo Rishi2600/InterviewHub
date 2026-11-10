@@ -57,12 +57,12 @@ export default function App() {
 
                 {/* Authenticated */}
                 <Route element={<ProtectedRoute />}>
-                  {/* The contest workspace is a focus screen, without the sidebar. */}
+                  {/* Focus screens, without the sidebar. */}
                   <Route path="/contests/:id/play" element={<ContestWorkspace />} />
+                  <Route path="/rooms/:id" element={<Room />} />
                   <Route element={<AppShell />}>
                     <Route index element={<Dashboard />} />
                     <Route path="/rooms/join" element={<JoinRoom />} />
-                    <Route path="/rooms/:id" element={<Room />} />
                     <Route path="/contests/:id" element={<ContestDetails />} />
                     <Route path="/contests/:id/results" element={<ContestResults />} />
                     <Route element={<RoleRoute />}>

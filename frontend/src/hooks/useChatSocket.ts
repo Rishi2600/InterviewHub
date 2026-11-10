@@ -25,6 +25,11 @@ export function useChatSocket(roomId: string | undefined) {
   const [messages, setMessages] = useState<Message[]>([])
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
   const [pinnedQuestion, setPinnedQuestion] = useState<string | null>(null)
+  // The socket, for the call to share, and whether it has joined the room.
+  const [socket, setSocket] = useState<Socket | null>(null)
+  const [inRoom, setInRoom] = useState(false)
+  // Set when the owner ends the room while we're in it.
+  const [ended, setEnded] = useState(false)
 
   const socketRef = useRef<Socket | null>(null)
   // Per-user timers that clear a stale "typing" if stop_typing never arrives.
@@ -38,6 +43,7 @@ export function useChatSocket(roomId: string | undefined) {
     // Status mirrors the socket we just opened (an external system).
     // oxlint-disable-next-line react/set-state-in-effect
     setStatus('connecting')
+    setSocket(socket)
 
     const onConnect = () => {
       setStatus('connected')
@@ -45,11 +51,16 @@ export function useChatSocket(roomId: string | undefined) {
       socket.emit('room:join', { roomId }, (ack?: { pinnedQuestion?: string | null }) => {
         if (ack && 'pinnedQuestion' in ack) {
           setPinnedQuestion(ack.pinnedQuestion ?? null)
+          setInRoom(true)
         }
       })
     }
 
-    const onDisconnect = () => setStatus('disconnected')
+    const onDisconnect = () => {
+      setStatus('disconnected')
+      setInRoom(false)
+    }
+    const onEnded = () => setEnded(true)
 
     const onConnectError = (err: Error) => {
       setStatus('error')
@@ -107,6 +118,7 @@ export function useChatSocket(roomId: string | undefined) {
     socket.on('question:pinned', onPinned)
     socket.on('question:unpinned', onUnpinned)
     socket.on('error', onError)
+    socket.on('room:ended', onEnded)
 
     const timers = typingTimers.current
     return () => {
@@ -116,6 +128,8 @@ export function useChatSocket(roomId: string | undefined) {
       socket.removeAllListeners()
       socket.disconnect()
       socketRef.current = null
+      setSocket(null)
+      setInRoom(false)
     }
   }, [currentUserId, roomId])
 
@@ -152,6 +166,9 @@ export function useChatSocket(roomId: string | undefined) {
   }, [roomId])
 
   return {
+    socket,
+    inRoom,
+    ended,
     status,
     messages,
     typingUsers,

@@ -48,6 +48,9 @@
   /* Semantic text colours: the accent and red as readable text. */
   --brand-text: #0b7f72;
   --danger-text: #dc2626;
+  /* Code: strings and numbers; keywords use --brand-text. */
+  --code-string: #a16207;
+  --code-number: #0fa192;
   /* Contribution graph, from no activity to the most. */
   --graph-0: #ebedf0;
   --graph-1: #c3f3ec;
@@ -87,6 +90,8 @@
   --sidebar-ring: #14c8b4;
   --brand-text: #14c8b4;
   --danger-text: #f87171;
+  --code-string: #e9c46a;
+  --code-number: #7de3d6;
   --graph-0: #1f1f1f;
   --graph-1: #0d3b36;
   --graph-2: #0f6e64;

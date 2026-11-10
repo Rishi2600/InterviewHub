@@ -80,4 +80,11 @@ export class CallStateDto {
 
   @IsBoolean()
   sharing: boolean;
+
+  // The screen share's stream id, so the others can tell it from a camera:
+  // both arrive as video.
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  screenId?: string;
 }

@@ -129,6 +129,11 @@ export function unpinQuestion(id: string) {
   return http.patch<Room>(`/rooms/${id}/unpin`)
 }
 
+/** STUN and short-lived TURN details for a room's call. */
+export function getIceServers(id: string) {
+  return http.get<{ iceServers: RTCIceServer[]; ttlSeconds: number }>(`/rooms/${id}/ice-servers`)
+}
+
 /* ---------------------------------------------------------- contests ---- */
 
 /** Contests the current user hosts or has joined, one page at a time. */

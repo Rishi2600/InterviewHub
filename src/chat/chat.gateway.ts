@@ -49,6 +49,7 @@ interface CallState {
   mic: boolean;
   cam: boolean;
   sharing: boolean;
+  screenId?: string;
 }
 
 type CallSocket = Pick<Socket, 'id'> & {
@@ -348,6 +349,7 @@ export class ChatGateway
       mic: body.mic,
       cam: body.cam,
       sharing: body.sharing,
+      screenId: body.screenId,
     });
     client.to(channel).emit('call:state', { socketId: client.id, ...body });
   }
@@ -362,6 +364,7 @@ export class ChatGateway
       mic: call?.mic ?? true,
       cam: call?.cam ?? true,
       sharing: call?.sharing ?? false,
+      screenId: call?.screenId,
     };
   }
 
