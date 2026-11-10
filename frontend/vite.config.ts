@@ -15,6 +15,11 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  // The code runner's worker loads these. Prepared up front, so the dev
+  // server doesn't reload the page the first time someone presses Run.
+  optimizeDeps: {
+    include: ['@bjorn3/browser_wasi_shim', '@jitl/quickjs-wasmfile-release-sync', 'quickjs-emscripten-core', 'sucrase'],
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
