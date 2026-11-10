@@ -1,6 +1,6 @@
 // Small pieces shared by the contest pages, matching the approved mockups.
 import type { ReactNode } from 'react'
-import { Award, Check, Mic } from 'lucide-react'
+import { Award, Check, CodeXml, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ContestPhase } from '@/types'
 
@@ -27,6 +27,16 @@ export function PhaseBadge({ phase }: { phase: ContestPhase }) {
     default:
       return <span className={cn(PILL, 'border text-muted-foreground')}>Ended</span>
   }
+}
+
+/** Marks a code contest; quiz contests carry no badge. */
+export function CodeBadge() {
+  return (
+    <span className={cn(PILL, 'bg-secondary')}>
+      <CodeXml className="size-3" aria-hidden />
+      Code
+    </span>
+  )
 }
 
 export function RatedBadge({ rated }: { rated: boolean | null }) {

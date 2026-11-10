@@ -11,6 +11,7 @@ import {
   CircleAlert,
   CircleCheck,
   CircleDot,
+  CodeXml,
   CircleX,
   Clock,
   CloudAlert,
@@ -55,6 +56,7 @@ import type { ContestDetailsInput } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
 import { clock, fromInputs, length, toDateInput, toTimeInput } from '@/lib/contest-time'
 import { LIMITS } from '@/lib/limits'
+import { CodeQuestionEditor } from '@/components/contest/CodeQuestionEditor'
 import { cn } from '@/lib/utils'
 import type { Contest, EditorQuestion, EditorView, QuestionKind } from '@/types'
 
@@ -64,17 +66,39 @@ const LENGTHS = [10, 15, 20, 30, 40, 45, 60, 90, 120, 180, 240, 360, 720, 1440]
 /** A short id for a new option, unique within its question. */
 const optionId = () => Math.random().toString(36).slice(2, 10)
 
-const newQuestion = (kind: QuestionKind): EditorQuestion => ({
-  kind,
-  prompt: '',
-  options: [
-    { id: optionId(), text: '' },
-    { id: optionId(), text: '' },
-  ],
-  correctOptionIds: [],
-  points: 1,
-  explanation: '',
-})
+const NO_CODE = {
+  title: '',
+  starterCode: { python: '', javascript: '', typescript: '' },
+  tests: [],
+  timeLimitMs: LIMITS.code.timeLimitMs.default,
+  hostAnswer: null,
+}
+
+const newQuestion = (kind: QuestionKind): EditorQuestion =>
+  kind === 'code'
+    ? {
+        ...NO_CODE,
+        kind,
+        prompt: '',
+        options: [],
+        correctOptionIds: [],
+        points: 10,
+        explanation: '',
+        // One example to start from; hosts add the hidden tests.
+        tests: [{ input: '', output: '', visible: true }],
+      }
+    : {
+        ...NO_CODE,
+        kind,
+        prompt: '',
+        options: [
+          { id: optionId(), text: '' },
+          { id: optionId(), text: '' },
+        ],
+        correctOptionIds: [],
+        points: 1,
+        explanation: '',
+      }
 
 /** The host's editor: details, questions and publishing, saved as you type. */
 export function ContestEditor() {
@@ -118,6 +142,8 @@ const formFrom = (c: Contest): DetailsForm => ({
 function Editor({ view }: { view: EditorView }) {
   const contest = view.contest
   const id = contest._id
+  const isCode = contest.format === 'code'
+  const maxQuestions = isCode ? LIMITS.code.questions : C.questions
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const now = useNow(30_000)
@@ -220,7 +246,7 @@ function Editor({ view }: { view: EditorView }) {
     setOpen(j)
   }
   const add = (kind: QuestionKind) => {
-    if (questions.length >= C.questions) return
+    if (questions.length >= maxQuestions) return
     setQuestions((qs) => [...qs, newQuestion(kind)])
     setOpen(questions.length)
   }
@@ -248,10 +274,12 @@ function Editor({ view }: { view: EditorView }) {
         {editable ? (
           <>
             <SaveBadge state={saveState} />
-            <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => setPreview(true)} disabled={questions.length === 0}>
-              <Eye aria-hidden />
-              Preview
-            </Button>
+            {!isCode && (
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => setPreview(true)} disabled={questions.length === 0}>
+                <Eye aria-hidden />
+                Preview
+              </Button>
+            )}
             {contest.status === 'draft' && (
               <Button size="sm" onClick={() => publish.mutate()} disabled={!ready || publish.isPending}>
                 {publish.isPending ? <Loader2 className="animate-spin" aria-hidden /> : <Send aria-hidden />}
@@ -286,6 +314,12 @@ function Editor({ view }: { view: EditorView }) {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold">{form.title || 'Untitled contest'}</h1>
             <PhaseBadge phase={phase} />
+            {isCode && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium">
+                <CodeXml className="size-3" aria-hidden />
+                Code contest
+              </span>
+            )}
           </div>
 
           <Panel title="Details">
@@ -375,48 +409,65 @@ function Editor({ view }: { view: EditorView }) {
               <p className="px-5 pt-5 text-sm text-muted-foreground">No questions yet. Add the first one below.</p>
             )}
             <ol className="divide-y">
-              {questions.map((q, i) => (
-                <QuestionEditor
-                  key={i}
-                  q={q}
-                  n={i + 1}
-                  open={open === i}
-                  editable={editable}
-                  first={i === 0}
-                  last={i === questions.length - 1}
-                  onToggle={() => setOpen(open === i ? -1 : i)}
-                  onChange={(patch) => update(i, patch)}
-                  onMove={(by) => move(i, by)}
-                  onDuplicate={() => {
-                    if (questions.length >= C.questions) return
-                    setQuestions((qs) => [
-                      ...qs.slice(0, i + 1),
-                      { ...q, _id: undefined, options: q.options.map((o) => ({ ...o })) },
-                      ...qs.slice(i + 1),
-                    ])
-                    setOpen(i + 1)
-                  }}
-                  onDelete={() => {
-                    setQuestions((qs) => qs.filter((_, j) => j !== i))
-                    setOpen(-1)
-                  }}
-                />
-              ))}
+              {questions.map((q, i) => {
+                const Item = q.kind === 'code' ? CodeQuestionEditor : QuestionEditor
+                return (
+                  <Item
+                    key={i}
+                    q={q}
+                    n={i + 1}
+                    open={open === i}
+                    editable={editable}
+                    first={i === 0}
+                    last={i === questions.length - 1}
+                    onToggle={() => setOpen(open === i ? -1 : i)}
+                    onChange={(patch) => update(i, patch)}
+                    onMove={(by) => move(i, by)}
+                    onDuplicate={() => {
+                      if (questions.length >= maxQuestions) return
+                      setQuestions((qs) => [
+                        ...qs.slice(0, i + 1),
+                        {
+                          ...q,
+                          _id: undefined,
+                          options: q.options.map((o) => ({ ...o })),
+                          tests: q.tests.map((t) => ({ ...t })),
+                        },
+                        ...qs.slice(i + 1),
+                      ])
+                      setOpen(i + 1)
+                    }}
+                    onDelete={() => {
+                      setQuestions((qs) => qs.filter((_, j) => j !== i))
+                      setOpen(-1)
+                    }}
+                  />
+                )
+              })}
             </ol>
             {editable && (
               <div className="grid gap-2 border-t p-5">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Button variant="outline" onClick={() => add('single')} disabled={questions.length >= C.questions}>
-                    <CircleDot aria-hidden />
-                    Single choice question
+                {isCode ? (
+                  <Button variant="outline" onClick={() => add('code')} disabled={questions.length >= maxQuestions}>
+                    <CodeXml aria-hidden />
+                    Code question
                   </Button>
-                  <Button variant="outline" onClick={() => add('multiple')} disabled={questions.length >= C.questions}>
-                    <ListChecks aria-hidden />
-                    Multiple choice question
-                  </Button>
-                </div>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Button variant="outline" onClick={() => add('single')} disabled={questions.length >= maxQuestions}>
+                      <CircleDot aria-hidden />
+                      Single choice question
+                    </Button>
+                    <Button variant="outline" onClick={() => add('multiple')} disabled={questions.length >= maxQuestions}>
+                      <ListChecks aria-hidden />
+                      Multiple choice question
+                    </Button>
+                  </div>
+                )}
                 <p className="text-center text-xs text-muted-foreground">
-                  1 to {C.questions} questions. Entrants see questions and options in a shuffled order.
+                  {isCode
+                    ? `1 to ${maxQuestions} questions, in your order. Entrants write Python, JavaScript or TypeScript.`
+                    : `1 to ${maxQuestions} questions. Entrants see questions and options in a shuffled order.`}
                 </p>
               </div>
             )}

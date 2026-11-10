@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlarmClock, ArrowLeft, ArrowRight, Check, CircleCheck, CloudAlert, CloudCheck, EyeOff, Loader2, Lock, Send, Timer } from 'lucide-react'
@@ -15,12 +14,16 @@ import {
 } from '@/components/ui/dialog'
 import { FullPageLoader } from '@/components/layout/FullPageLoader'
 import { Panel, PromptText, Stat } from '@/components/contest/bits'
+import { WorkspaceTopBar as TopBar } from '@/components/contest/WorkspaceTopBar'
 import { useNow } from '@/hooks/useNow'
 import { saveAnswer, startContest, submitContest } from '@/lib/endpoints'
 import { errorMessage, errorStatus } from '@/lib/api'
 import { clock, countdown } from '@/lib/contest-time'
 import { cn } from '@/lib/utils'
-import type { Workspace } from '@/types'
+import type { QuizQuestionView, Workspace } from '@/types'
+import { CodeWorkspace } from './CodeWorkspace'
+
+type QuizWorkspace = Omit<Workspace, 'questions'> & { questions: QuizQuestionView[] }
 
 type SaveState = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved'; at: number } | { kind: 'failed'; questionId: string }
 
@@ -47,10 +50,12 @@ export function ContestWorkspace() {
   }, [workspace.isError, workspace.error, navigate, id])
 
   if (workspace.isPending || workspace.isError) return <FullPageLoader label="Opening the workspace…" />
-  return <Screen ws={workspace.data} />
+  const ws = workspace.data
+  if (ws.contest.format === 'code') return <CodeWorkspace ws={ws} />
+  return <Screen ws={{ ...ws, questions: ws.questions as QuizQuestionView[] }} />
 }
 
-function Screen({ ws }: { ws: Workspace }) {
+function Screen({ ws }: { ws: QuizWorkspace }) {
   const contestId = ws.contest._id
   const queryClient = useQueryClient()
   // The device clock may be off; count down on the server's.
@@ -383,39 +388,6 @@ function Screen({ ws }: { ws: Workspace }) {
   )
 }
 
-function TopBar({
-  title,
-  endAt,
-  contestId,
-  pct,
-  children,
-}: {
-  title: string
-  endAt: string
-  contestId: string
-  pct: number
-  children: ReactNode
-}) {
-  return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
-        <Button variant="ghost" size="icon-sm" asChild>
-          <Link to={`/contests/${contestId}`} aria-label="Back to contest page">
-            <ArrowLeft aria-hidden />
-          </Link>
-        </Button>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-sm font-medium">{title}</div>
-          <div className="hidden text-xs text-muted-foreground sm:block">Ends at {clock(endAt)} for everyone</div>
-        </div>
-        {children}
-      </div>
-      <div className="h-1 bg-muted">
-        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-      </div>
-    </header>
-  )
-}
 
 function SaveStatus({ state, onRetry }: { state: SaveState; onRetry: (questionId: string) => void }) {
   const text = useMemo(() => {

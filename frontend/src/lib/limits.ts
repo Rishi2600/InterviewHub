@@ -11,4 +11,12 @@ export const LIMITS = {
     durationMinutes: { min: 10, max: 24 * 60 },
     capacity: 100_000,
   },
+  code: {
+    questions: 10,
+    statement: 8000,
+    codeBytes: 64 * 1024,
+    tests: 20,
+    testBytes: 16 * 1024,
+    timeLimitMs: { min: 1_000, max: 5_000, default: 2_000 },
+  },
 } as const

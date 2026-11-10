@@ -1,4 +1,5 @@
 import { http } from './api'
+import type { CodeLanguage } from './sandbox/types'
 import type {
   AuthPayload,
   BoardRow,
@@ -6,6 +7,7 @@ import type {
   BrowsePhase,
   Contest,
   ContestDetails,
+  ContestFormat,
   ContestResults,
   ContestStatus,
   EditorQuestion,
@@ -17,6 +19,7 @@ import type {
   Role,
   Room,
   RoomState,
+  Submission,
   User,
   UserActivity,
   UserScore,
@@ -152,8 +155,8 @@ export function getContestDetails(id: string) {
 
 // Host side
 
-export function createContest(title: string) {
-  return http.post<Contest>('/contests', { title })
+export function createContest(title: string, format: ContestFormat = 'quiz') {
+  return http.post<Contest>('/contests', { title, format })
 }
 
 export function getContestEditor(id: string) {
@@ -174,14 +177,28 @@ export function updateContest(id: string, body: ContestDetailsInput) {
 
 export function saveContestQuestions(id: string, questions: EditorQuestion[]) {
   // The server assigns ids; send only what the editor owns.
-  const body = questions.map(({ kind, prompt, options, correctOptionIds, points, explanation }) => ({
-    kind,
-    prompt,
-    options,
-    correctOptionIds,
-    points,
-    explanation,
-  }))
+  const body = questions.map((q) =>
+    q.kind === 'code'
+      ? {
+          kind: q.kind,
+          prompt: q.prompt,
+          points: q.points,
+          explanation: q.explanation,
+          title: q.title,
+          starterCode: q.starterCode,
+          tests: q.tests,
+          timeLimitMs: q.timeLimitMs,
+          hostAnswer: q.hostAnswer,
+        }
+      : {
+          kind: q.kind,
+          prompt: q.prompt,
+          options: q.options,
+          correctOptionIds: q.correctOptionIds,
+          points: q.points,
+          explanation: q.explanation,
+        },
+  )
   return http.put<EditorQuestion[]>(`/contests/${id}/questions`, { questions: body })
 }
 
@@ -214,6 +231,20 @@ export function startContest(id: string) {
 
 export function saveAnswer(id: string, questionId: string, optionIds: string[]) {
   return http.put<{ questionId: string; optionIds: string[] }>(`/contests/${id}/answers/${questionId}`, { optionIds })
+}
+
+/** Code contests: autosave the program for one question. */
+export function saveCodeDraft(id: string, questionId: string, body: { language: CodeLanguage; code: string }) {
+  return http.put<{ questionId: string; savedAt: string }>(`/contests/${id}/drafts/${questionId}`, body)
+}
+
+/** Queue a program to be judged against the hidden tests. */
+export function submitCode(id: string, questionId: string, body: { language: CodeLanguage; code: string }) {
+  return http.post<Submission>(`/contests/${id}/questions/${questionId}/submissions`, body)
+}
+
+export function listSubmissions(id: string, questionId: string) {
+  return http.get<Submission[]>(`/contests/${id}/questions/${questionId}/submissions`)
 }
 
 export function submitContest(id: string) {

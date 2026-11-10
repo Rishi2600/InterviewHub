@@ -5,6 +5,8 @@
  * this file is the single place the frontend needs to follow.
  */
 
+import type { CodeLanguage, TestVerdict } from '@/lib/sandbox/types'
+
 export type Role = 'candidate' | 'interviewer' | 'admin'
 
 /** Normalized current user. The backend is inconsistent here — `/auth/login`
@@ -79,6 +81,9 @@ export interface Message {
 
 export type ContestStatus = 'draft' | 'published' | 'cancelled'
 
+/** Chosen when the draft is created; the two never mix. */
+export type ContestFormat = 'quiz' | 'code'
+
 /** Where a contest is, worked out by the server from the clock. `pending`:
  *  it has ended but results are not out yet. */
 export type ContestPhase = 'draft' | 'cancelled' | 'upcoming' | 'live' | 'pending' | 'ended'
@@ -86,6 +91,7 @@ export type ContestPhase = 'draft' | 'cancelled' | 'upcoming' | 'live' | 'pendin
 /** A contest as stored: what lists of your own contests and the editor get. */
 export interface Contest {
   _id: string
+  format: ContestFormat
   title: string
   description: string
   hostId: string
@@ -110,6 +116,7 @@ export interface Contest {
 /** A browse card. Signed-in viewers also get `viewer`. */
 export interface ContestCard {
   _id: string
+  format: ContestFormat
   title: string
   hostName: string
   phase: ContestPhase
@@ -167,14 +174,25 @@ export interface ContestDetails extends Omit<ContestCard, 'viewer'> {
   top: Pick<BoardRow, 'username' | 'rank' | 'score' | 'timeUsedMs'>[]
 }
 
-export type QuestionKind = 'single' | 'multiple'
+export type QuestionKind = 'single' | 'multiple' | 'code'
 
 export interface QuestionOption {
   id: string
   text: string
 }
 
-/** A question as the host edits it, answer key included. */
+/** One test of a code question. Visible tests are shown as examples;
+ *  hidden ones never leave the server. */
+export interface CodeTest {
+  input: string
+  output: string
+  visible: boolean
+}
+
+export type StarterCode = Record<CodeLanguage, string>
+
+/** A question as the host edits it, answer key included. Code questions use
+ *  the title, starter code, tests, time limit and the host's own answer. */
 export interface EditorQuestion {
   _id?: string
   kind: QuestionKind
@@ -183,6 +201,11 @@ export interface EditorQuestion {
   correctOptionIds: string[]
   points: number
   explanation: string
+  title: string
+  starterCode: StarterCode
+  tests: CodeTest[]
+  timeLimitMs: number
+  hostAnswer: { language: CodeLanguage; code: string } | null
 }
 
 export interface PublishCheck {
@@ -204,6 +227,7 @@ export interface EditorView {
 export interface Workspace {
   contest: {
     _id: string
+    format: ContestFormat
     title: string
     startAt: string
     endAt: string
@@ -212,14 +236,55 @@ export interface Workspace {
   }
   serverNow: string
   entry: { joinedAt: string; startedAt: string | null; submittedAt: string | null }
-  questions: { _id: string; kind: QuestionKind; prompt: string; points: number; options: QuestionOption[] }[]
+  // Quiz questions in this entrant's own order, or code questions in the
+  // host's order.
+  questions: (QuizQuestionView | CodeQuestionView)[]
   answers: Record<string, string[]>
+  // Code contests: the saved draft and newest submission per question.
+  drafts: Record<string, { language: CodeLanguage; code: string; savedAt: string }>
+  latest: Record<string, Submission>
+}
+
+export interface QuizQuestionView {
+  _id: string
+  kind: 'single' | 'multiple'
+  prompt: string
+  points: number
+  options: QuestionOption[]
+}
+
+/** A code question as an entrant sees it: no hidden tests, no host answer. */
+export interface CodeQuestionView {
+  _id: string
+  kind: 'code'
+  title: string
+  prompt: string
+  points: number
+  timeLimitMs: number
+  starterCode: StarterCode
+  examples: { input: string; output: string }[]
+  hiddenCount: number
+}
+
+export type SubmissionStatus = 'queued' | 'running' | 'done' | 'failed'
+
+/** One Submit: a verdict and time per hidden test, never the test itself. */
+export interface Submission {
+  _id: string
+  questionId: string
+  language: CodeLanguage
+  status: SubmissionStatus
+  verdicts: { verdict: TestVerdict; ms: number }[]
+  passed: number
+  total: number
+  points: number
+  createdAt: string
 }
 
 export interface ResultQuestion {
   _id: string
   number: number
-  kind: QuestionKind
+  kind: 'single' | 'multiple'
   prompt: string
   points: number
   options: QuestionOption[]
@@ -233,9 +298,35 @@ export interface ResultQuestion {
   correctCount?: number
 }
 
+/** A code question after the end: examples, and the viewer's submission
+ *  that counted. Hidden tests stay hidden. */
+export interface CodeResultQuestion {
+  _id: string
+  number: number
+  kind: 'code'
+  title: string
+  prompt: string
+  points: number
+  explanation: string
+  examples: { input: string; output: string }[]
+  hiddenCount: number
+  submission: {
+    language: CodeLanguage
+    code: string
+    verdicts: { verdict: TestVerdict; ms: number }[]
+    passed: number
+    total: number
+    createdAt: string
+  } | null
+  earned: number
+  answeredCount?: number
+  correctCount?: number
+}
+
 export interface ContestResults {
   contest: {
     _id: string
+    format: ContestFormat
     title: string
     hostName: string
     endAt: string
@@ -246,7 +337,7 @@ export interface ContestResults {
   }
   top: BoardRow[]
   me: { rank: number; score: number; timeUsedMs: number; percentile: number; autoSubmitted: boolean } | null
-  questions: ResultQuestion[]
+  questions: (ResultQuestion | CodeResultQuestion)[]
 }
 
 export interface ContestCounts {

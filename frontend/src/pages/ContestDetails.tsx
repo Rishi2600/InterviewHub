@@ -37,6 +37,7 @@ import { UserAvatar } from '@/components/common/UserAvatar'
 import { ErrorState } from '@/components/common/States'
 import { PageHeader } from '@/components/layout/PageHeader'
 import {
+  CodeBadge,
   HostingBadge,
   JoinedBadge,
   Panel,
@@ -47,6 +48,7 @@ import {
   Stat,
 } from '@/components/contest/bits'
 import { useContestSocket } from '@/hooks/useContestSocket'
+import { cn } from '@/lib/utils'
 import { useCopy } from '@/hooks/useCopy'
 import { useNow } from '@/hooks/useNow'
 import { cancelContest, getContestDetails, joinContest, leaveContest } from '@/lib/endpoints'
@@ -122,6 +124,7 @@ export function ContestDetails() {
           <div className="grid gap-3">
             <div className="flex flex-wrap gap-1.5">
               <PhaseBadge phase={phase} />
+              {c.format === 'code' && <CodeBadge />}
               {v.entry && phase !== 'cancelled' && <JoinedBadge />}
               {v.hosting && <HostingBadge />}
               {phase === 'ended' && <RatedBadge rated={c.rated} />}
@@ -169,6 +172,21 @@ export function ContestDetails() {
 
 function rules(c: Details): [ReactNode, string][] {
   const end = c.endAt ? clock(c.endAt) : 'the end'
+  if (c.format === 'code') {
+    return [
+      [
+        <ListChecks key="q" />,
+        `${c.questionCount} problems. Write Python, JavaScript or TypeScript: programs read their input and print their answer.`,
+      ],
+      [<Clock key="c" />, `Everyone finishes at ${end}. Joining late gives you only the time that is left.`],
+      [
+        <Save key="s" />,
+        'Run checks your code on the examples, in your browser. Submit is judged on our server against hidden tests; points are split across them, and your last submission for each problem counts.',
+      ],
+      [<EyeOff key="e" />, 'No scores are shown while the contest runs. The leaderboard and your verdicts open at the end.'],
+      [<Award key="a" />, `Counts toward your score if ${RATED_AT} or more people start it.`],
+    ]
+  }
   return [
     [
       <ListChecks key="q" />,
@@ -417,13 +435,17 @@ function ActionCard({ contest: c, phase, now }: { contest: Details; phase: Conte
   }
   if (phase === 'live') {
     if (entry?.submittedAt) {
-      return wrap(<Note icon={<CircleCheck className="text-brand" />} strong>Your answers are in. Results open after {clock(c.endAt!)}.</Note>)
+      return wrap(
+        <Note icon={<CircleCheck className="text-brand" />} strong>
+          {c.format === 'code' ? 'You finished.' : 'Your answers are in.'} Results open after {clock(c.endAt!)}.
+        </Note>,
+      )
     }
     if (entry) {
       const pct = c.questionCount ? (entry.answered / c.questionCount) * 100 : 0
       return wrap(
         <>
-          <div className="grid gap-1.5">
+          <div className={cn('grid gap-1.5', c.format === 'code' && 'hidden')}>
             <div className="flex justify-between text-sm">
               <span>Your progress</span>
               <span className="font-medium tabular-nums">

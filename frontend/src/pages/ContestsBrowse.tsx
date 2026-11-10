@@ -10,7 +10,7 @@ import { LiveDot } from '@/components/common/LiveDot'
 import { UserAvatar } from '@/components/common/UserAvatar'
 import { ErrorState } from '@/components/common/States'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { HostingBadge, JoinedBadge, PhaseBadge, RATED_AT, RatedBadge, RatedMeter } from '@/components/contest/bits'
+import { CodeBadge, HostingBadge, JoinedBadge, PhaseBadge, RATED_AT, RatedBadge, RatedMeter } from '@/components/contest/bits'
 import { NewContestButton } from '@/components/contest/NewContestButton'
 import { useAuth } from '@/hooks/useAuth'
 import { useNow } from '@/hooks/useNow'
@@ -347,7 +347,8 @@ function UpcomingRow({ contest: c, now }: { contest: ContestCard; now: number })
             <span>·</span>
             {length(c.durationMinutes)}
             <span>·</span>
-            {c.questionCount} questions
+            {c.questionCount} {c.format === 'code' ? 'problems' : 'questions'}
+            {c.format === 'code' && <CodeBadge />}
           </div>
         </div>
         <div className="hidden text-right text-sm sm:block">

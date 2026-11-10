@@ -15,7 +15,8 @@ import { getContestResults, getLeaderboard } from '@/lib/endpoints'
 import { errorMessage, errorStatus } from '@/lib/api'
 import { clock, shortDay, timeUsed } from '@/lib/contest-time'
 import { cn } from '@/lib/utils'
-import type { BoardRow, ContestResults as Results, ResultQuestion } from '@/types'
+import { CodeReview } from '@/components/contest/CodeReview'
+import type { BoardRow, CodeResultQuestion, ContestResults as Results, ResultQuestion } from '@/types'
 
 const TOP = 10
 
@@ -101,7 +102,11 @@ export function ContestResults() {
           <div className="lg:sticky lg:top-24">
             <Leaderboard results={r} />
           </div>
-          <Review results={r} host={host} />
+          {r.contest.format === 'code' ? (
+            <CodeReview questions={r.questions as CodeResultQuestion[]} entered={Boolean(r.me)} host={host} />
+          ) : (
+            <Review results={r} host={host} />
+          )}
         </div>
       </div>
     </>
@@ -128,7 +133,11 @@ function ResultStrip({ results: r }: { results: Results }) {
           }
           className="py-0 [&_dd]:text-2xl"
         />
-        <Stat label="Time used" value={timeUsed(me.timeUsedMs)} className="py-0 [&_dd]:text-2xl" />
+        <Stat
+          label={r.contest.format === 'code' ? 'Last submit' : 'Time used'}
+          value={timeUsed(me.timeUsedMs)}
+          className="py-0 [&_dd]:text-2xl"
+        />
         <Stat label="Ahead of" value={`${Math.round(me.percentile * 100)}%`} className="py-0 [&_dd]:text-2xl" />
       </dl>
       <p className="flex max-w-xs gap-2 text-sm">
@@ -194,7 +203,10 @@ function Leaderboard({ results: r }: { results: Results }) {
   const isMe = (row: BoardRow) => row.userId === user?.id
   const meOutside = !all && r.me && r.me.rank > TOP && !r.top.some(isMe)
   const ties = rows.some((row, i) => i > 0 && rows[i - 1].rank === row.rank)
-  const anyAuto = rows.some((row) => row.autoSubmitted)
+  // A code contest ranks ties by the last submission that scored, and has
+  // no answers to hand in at the end.
+  const code = r.contest.format === 'code'
+  const anyAuto = !code && rows.some((row) => row.autoSubmitted)
 
   return (
     <Panel
@@ -218,7 +230,7 @@ function Leaderboard({ results: r }: { results: Results }) {
             <tr>
               <th className="py-2 pl-5 font-medium">#</th>
               <th className="py-2 font-medium">Entrant</th>
-              <th className="py-2 pr-3 text-right font-medium">Time</th>
+              <th className="py-2 pr-3 text-right font-medium">{code ? 'Last submit' : 'Time'}</th>
               <th className="py-2 pr-5 text-right font-medium">Score</th>
             </tr>
           </thead>
@@ -251,7 +263,13 @@ function Leaderboard({ results: r }: { results: Results }) {
         </table>
       )}
       <div className="grid gap-2 border-t px-5 py-3 text-xs text-muted-foreground empty:hidden">
-        {ties && <p>Ties on score go to whoever used less time. Exact ties share a rank.</p>}
+        {ties && (
+          <p>
+            {code
+              ? 'Ties on score go to whoever made their last scoring submission sooner. Exact ties share a rank.'
+              : 'Ties on score go to whoever used less time. Exact ties share a rank.'}
+          </p>
+        )}
         {anyAuto && (
           <p className="flex items-center gap-1.5">
             <AlarmClock className="size-3.5" aria-hidden />
@@ -291,7 +309,8 @@ const STATUS = {
 
 const PREVIEW = 8
 
-function Review({ results: r, host }: { results: Results; host: boolean }) {
+function Review({ results, host }: { results: Results; host: boolean }) {
+  const r = { ...results, questions: results.questions as ResultQuestion[] }
   const entered = Boolean(r.me)
   const [filter, setFilter] = useState<Filter>('all')
   const [expanded, setExpanded] = useState(false)

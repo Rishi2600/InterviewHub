@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +25,7 @@ export function CreateDialog({
   submitLabel,
   pending,
   onSubmit,
+  children,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -35,6 +36,8 @@ export function CreateDialog({
   submitLabel: string
   pending: boolean
   onSubmit: (title: string) => void
+  // Extra fields under the title.
+  children?: ReactNode
 }) {
   const [value, setValue] = useState('')
   const trimmed = value.trim()
@@ -69,6 +72,7 @@ export function CreateDialog({
               onChange={(e) => setValue(e.target.value)}
             />
           </div>
+          {children}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
