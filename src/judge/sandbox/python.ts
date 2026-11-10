@@ -34,7 +34,7 @@ class OutputLimit extends Error {}
 let loading: Promise<PythonRuntime> | null = null;
 
 /** Compiles CPython once per worker, with its memory capped. */
-function load(): Promise<PythonRuntime> {
+export function loadPython(): Promise<PythonRuntime> {
   loading ??= (async () => {
     // ESM-only package: loaded here so nothing else in the judge needs it.
     const shim = await import('@bjorn3/browser_wasi_shim');
@@ -166,7 +166,7 @@ export async function runPython(
   limits: RunLimits,
 ): Promise<RunResult> {
   const started = Date.now();
-  const { shim, module, lib, preopen } = await load();
+  const { shim, module, lib, preopen } = await loadPython();
   const encoder = new TextEncoder();
   const decoder = () => new TextDecoder('utf-8', { fatal: false });
   const out = decoder();

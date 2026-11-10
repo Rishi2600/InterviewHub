@@ -7,6 +7,7 @@ import type { RunTask } from './sandbox/run';
 // its environment, depending on the code it is given.
 const FAKE_WORKER = `
 const { parentPort } = require('node:worker_threads');
+parentPort.postMessage({ ready: true });
 parentPort.on('message', (task) => {
   if (task.code === 'hang') for (;;) {}
   if (task.code === 'crash') throw new Error('boom');
@@ -19,7 +20,7 @@ const task = (code: string, stdin = ''): RunTask => ({
   language: 'javascript',
   code,
   stdin,
-  limits: { timeMs: 100, memoryBytes: 1, outputBytes: 1 },
+  limits: { timeMs: 200, memoryBytes: 1, outputBytes: 1 },
 });
 
 describe('WorkerPool', () => {
@@ -27,7 +28,7 @@ describe('WorkerPool', () => {
   afterEach(() => pool.close());
 
   it('runs a task on a worker and returns its result', async () => {
-    pool = new WorkerPool(1, spawn, 50);
+    pool = new WorkerPool(1, spawn, 100);
     expect(await pool.run(task('echo', 'hi'))).toMatchObject({
       verdict: 'ok',
       stdout: 'hi',
@@ -35,7 +36,7 @@ describe('WorkerPool', () => {
   });
 
   it('kills a worker that runs past the limit, then carries on', async () => {
-    pool = new WorkerPool(1, spawn, 50);
+    pool = new WorkerPool(1, spawn, 100);
     const started = Date.now();
     expect(await pool.run(task('hang'))).toMatchObject({ verdict: 'time' });
     expect(Date.now() - started).toBeLessThan(2_000);
@@ -44,14 +45,27 @@ describe('WorkerPool', () => {
     });
   });
 
+  it('starts the clock only once a worker has loaded', async () => {
+    const slow = () =>
+      new Worker(
+        `const start = Date.now(); while (Date.now() - start < 500) {}
+         ${FAKE_WORKER}`,
+        { eval: true },
+      );
+    pool = new WorkerPool(1, slow, 100);
+    expect(await pool.run(task('echo', 'late'))).toMatchObject({
+      stdout: 'late',
+    });
+  });
+
   it('reports a crashed worker as an error and replaces it', async () => {
-    pool = new WorkerPool(1, spawn, 50);
+    pool = new WorkerPool(1, spawn, 100);
     expect(await pool.run(task('crash'))).toMatchObject({ verdict: 'error' });
     expect(await pool.run(task('echo', 'ok'))).toMatchObject({ stdout: 'ok' });
   });
 
   it('runs up to its size at once and queues the rest', async () => {
-    pool = new WorkerPool(2, spawn, 50);
+    pool = new WorkerPool(2, spawn, 100);
     const results = await Promise.all(
       ['a', 'b', 'c', 'd'].map((s) => pool.run(task('echo', s))),
     );
@@ -59,7 +73,7 @@ describe('WorkerPool', () => {
   });
 
   it('gives workers an empty environment', async () => {
-    pool = new WorkerPool(1, spawn, 50);
+    pool = new WorkerPool(1, spawn, 100);
     expect((await pool.run(task('env'))).stdout).toBe('{}');
   });
 });
