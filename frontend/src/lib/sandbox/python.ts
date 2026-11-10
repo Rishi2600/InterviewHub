@@ -76,6 +76,10 @@ function buildTree(files: Map<string, Uint8Array>): Inode {
     }
     dir.set(parts[parts.length - 1], data)
   }
+  // CPython looks for this folder and warns on stderr when it's missing.
+  for (const [name, child] of root) {
+    if (/^python3\.\d+$/.test(name) && child instanceof Map && !child.has('lib-dynload')) child.set('lib-dynload', new Map())
+  }
   const build = (node: Node): Inode =>
     new ReadOnlyDirectory(
       new Map(
@@ -146,7 +150,7 @@ export async function runPython(code: string, stdin: string, limits: RunLimits):
       ),
     ),
   ]
-  const process = new shim.WASI(['python', '-S', '-B', '/main.py'], ['PYTHONHOME=/'], fds, { debug: false })
+  const process = new shim.WASI(['python', '-S', '-B', '/main.py'], ['PYTHONHOME=/', 'PYTHON_COLORS=0'], fds, { debug: false })
   const instance = (await WebAssembly.instantiate(module, {
     wasi_snapshot_preview1: process.wasiImport,
   })) as Parameters<typeof process.start>[0]

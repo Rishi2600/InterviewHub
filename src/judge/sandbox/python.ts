@@ -141,6 +141,13 @@ function buildTree(
     }
     dir.set(parts[parts.length - 1], data);
   }
+  // CPython looks for this folder (compiled extensions) and warns on stderr
+  // when it's missing. The pack only holds files, so add it back, empty.
+  for (const [name, child] of root) {
+    if (/^python3\.\d+$/.test(name) && child instanceof Map) {
+      if (!child.has('lib-dynload')) child.set('lib-dynload', new Map());
+    }
+  }
   const build = (node: Node): Inode =>
     new Directory(
       new Map(
@@ -201,7 +208,8 @@ export async function runPython(
   ];
   const wasi = new shim.WASI(
     ['python', '-S', '-B', '/main.py'],
-    ['PYTHONHOME=/'],
+    // No colour codes in tracebacks: stderr is shown as plain text.
+    ['PYTHONHOME=/', 'PYTHON_COLORS=0'],
     fds,
     { debug: false },
   );
