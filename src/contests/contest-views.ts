@@ -31,6 +31,7 @@ export function toCard(c: ContestFields, now: Date, viewer: CardViewer | null) {
   return {
     _id: c._id,
     title: c.title,
+    format: c.format,
     hostName: c.hostName,
     phase: phaseOf(c, now),
     startAt: c.startAt,

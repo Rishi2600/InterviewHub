@@ -3,6 +3,7 @@ import { getQuickJS } from 'quickjs-emscripten';
 import { runProgram, RunTask } from './sandbox/run';
 import { loadPython, pythonInstalled } from './sandbox/python';
 import { READY } from './pool';
+import type { RunResult } from './sandbox/types';
 
 /**
  * One judge worker thread. It is started with an empty environment and only
@@ -15,9 +16,23 @@ async function warmUp(): Promise<void> {
   if (pythonInstalled()) await loadPython();
 }
 
+function failed(err: unknown): RunResult {
+  const missing = !pythonInstalled();
+  return {
+    verdict: 'error',
+    stdout: '',
+    stderr: missing
+      ? 'Python is not available on this judge.'
+      : `The judge could not run this program: ${String(err)}`,
+    ms: 0,
+  };
+}
+
 void warmUp().then(() => {
   parentPort?.postMessage(READY);
   parentPort?.on('message', (task: RunTask) => {
-    void runProgram(task).then((result) => parentPort?.postMessage(result));
+    void runProgram(task)
+      .catch(failed)
+      .then((result) => parentPort?.postMessage(result));
   });
 });

@@ -10,6 +10,10 @@ import {
   ContestQuestionSchema,
 } from './schemas/contest-question.schema';
 import { HostUsage, HostUsageSchema } from './schemas/host-usage.schema';
+import {
+  CodeSubmission,
+  CodeSubmissionSchema,
+} from './schemas/code-submission.schema';
 import { ActivityModule } from '../activity/activity.module';
 import { ContestsService } from './contests.service';
 import { ContestHostingService } from './contest-hosting.service';
@@ -28,6 +32,7 @@ import { ScoreModule } from '../score/score.module';
       { name: ContestEntry.name, schema: ContestEntrySchema },
       { name: ContestQuestion.name, schema: ContestQuestionSchema },
       { name: HostUsage.name, schema: HostUsageSchema },
+      { name: CodeSubmission.name, schema: CodeSubmissionSchema },
     ]),
     ActivityModule,
     AuthModule, // SocketAuthService for the gateway

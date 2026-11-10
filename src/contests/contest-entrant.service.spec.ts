@@ -17,6 +17,7 @@ describe('ContestEntrantService.join', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       contests as never,
       {} as never,
     );

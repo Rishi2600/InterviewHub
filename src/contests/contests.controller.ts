@@ -31,6 +31,7 @@ import { BrowseContestsDto } from './dto/browse-contests.dto';
 import { PageQueryDto } from '../common/pagination/pagination';
 import { UpdateContestDto } from './dto/update-contest.dto';
 import { SaveQuestionsDto } from './dto/save-questions.dto';
+import { CodeDto } from './dto/code.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('contests')
@@ -119,6 +120,39 @@ export class ContestsController {
     return this.entrant.saveAnswer(id, questionId, dto.optionIds, user);
   }
 
+  // Code contests: autosave the program for one question.
+  @Throttle(ANSWER_LIMIT)
+  @Put(':id/drafts/:questionId')
+  saveDraft(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CodeDto,
+  ) {
+    return this.entrant.saveDraft(id, questionId, dto, user);
+  }
+
+  // Queue a program for judging against the hidden tests.
+  @Post(':id/questions/:questionId/submissions')
+  submitCode(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CodeDto,
+  ) {
+    return this.entrant.submitCode(id, questionId, dto, user);
+  }
+
+  @Get(':id/questions/:questionId/submissions')
+  listSubmissions(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.entrant.listSubmissions(id, questionId, user);
+  }
+
+  // Finishes the entry: answers, or submissions, are final from here.
   @Post(':id/submit')
   @HttpCode(200)
   submit(@Param('id') id: string, @CurrentUser() user: AuthUser) {
