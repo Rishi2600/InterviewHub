@@ -25,7 +25,7 @@ function guardReturning(room: Partial<RoomDocument> | null): RoomOwnerGuard {
   const model = {
     findById: () => ({ exec: () => Promise.resolve(room) }),
   };
-  return new RoomOwnerGuard(new RoomsService(model as never));
+  return new RoomOwnerGuard(new RoomsService(model as never, {} as never));
 }
 
 describe('RoomOwnerGuard', () => {

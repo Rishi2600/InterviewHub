@@ -13,6 +13,7 @@ import {
   RoomState,
 } from './schemas/room.schema';
 import { ListRoomsDto } from './dto/list-rooms.dto';
+import { ActivityEvent } from '../activity/schemas/activity-event.schema';
 import {
   NEWEST_FIRST,
   Page,
@@ -31,6 +32,8 @@ const ROOM_CODE_PATTERN = new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`);
 export class RoomsService {
   constructor(
     @InjectModel(Room.name) private readonly roomModel: Model<RoomDocument>,
+    @InjectModel(ActivityEvent.name)
+    private readonly eventModel: Model<ActivityEvent>,
   ) {}
 
   private generateCode(): string {
@@ -202,7 +205,28 @@ export class RoomsService {
       );
     }
     room.state = state;
-    return room.save();
+    const saved = await room.save();
+    if (state === 'ended') await this.recordInterview(saved, new Date());
+    return saved;
+  }
+
+  /**
+   * One activity event for each candidate who joined, which puts a square on
+   * their contribution graph. Interviewers don't get one. The unique index
+   * on (kind, refId, userId) makes a repeat land on the same row.
+   */
+  private async recordInterview(room: RoomDocument, at: Date): Promise<void> {
+    const candidates = room.participants.filter((p) => p.role === 'candidate');
+    if (candidates.length === 0) return;
+    await this.eventModel.bulkWrite(
+      candidates.map((p) => ({
+        updateOne: {
+          filter: { kind: 'interview', refId: room._id, userId: p.userId },
+          update: { $set: { at, data: { title: room.title } } },
+          upsert: true,
+        },
+      })),
+    );
   }
 
   async pinQuestion(id: string, question: string): Promise<RoomDocument> {

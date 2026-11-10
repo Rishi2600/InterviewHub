@@ -15,8 +15,9 @@ function serviceWithRoom(state: RoomState): {
   service: RoomsService;
   room: StubRoom;
 } {
-  const room: StubRoom = {
+  const room: StubRoom & { participants: [] } = {
     state,
+    participants: [],
     save: jest.fn(function (this: void) {
       return Promise.resolve(room);
     }),
@@ -24,7 +25,7 @@ function serviceWithRoom(state: RoomState): {
   const model = {
     findById: () => ({ exec: () => Promise.resolve(room) }),
   };
-  return { service: new RoomsService(model as never), room };
+  return { service: new RoomsService(model as never, {} as never), room };
 }
 
 describe('RoomsService state machine', () => {
@@ -65,7 +66,7 @@ describe('RoomsService state machine', () => {
 
   it('throws when the room does not exist', async () => {
     const model = { findById: () => ({ exec: () => Promise.resolve(null) }) };
-    const service = new RoomsService(model as never);
+    const service = new RoomsService(model as never, {} as never);
     await expect(service.setState(ROOM_ID, 'active')).rejects.toThrow(
       NotFoundException,
     );
@@ -73,7 +74,7 @@ describe('RoomsService state machine', () => {
 
   it('throws NotFound for a malformed room id rather than casting', async () => {
     const model = { findById: () => ({ exec: () => Promise.resolve(null) }) };
-    const service = new RoomsService(model as never);
+    const service = new RoomsService(model as never, {} as never);
     await expect(
       service.setState('not-an-object-id', 'active'),
     ).rejects.toThrow(NotFoundException);
@@ -83,7 +84,7 @@ describe('RoomsService state machine', () => {
 describe('RoomsService.isOwnedBy', () => {
   const ownerId = new Types.ObjectId();
   const room = { ownerId } as RoomDocument;
-  const service = new RoomsService({} as never);
+  const service = new RoomsService({} as never, {} as never);
 
   it('accepts the owner', () => {
     expect(
@@ -120,9 +121,10 @@ describe('RoomsService.findForMember', () => {
     ownerId,
     participants: [{ userId: participantId }],
   } as unknown as RoomDocument;
-  const service = new RoomsService({
-    findById: () => ({ exec: () => Promise.resolve(room) }),
-  } as never);
+  const service = new RoomsService(
+    { findById: () => ({ exec: () => Promise.resolve(room) }) } as never,
+    {} as never,
+  );
   const as = (userId: Types.ObjectId, role = 'candidate') => ({
     userId: userId.toString(),
     role,
@@ -152,7 +154,7 @@ describe('RoomsService.findForMember', () => {
 
 describe('RoomsService.findByCode', () => {
   const findOne = jest.fn(() => ({ exec: () => Promise.resolve(null) }));
-  const service = new RoomsService({ findOne } as never);
+  const service = new RoomsService({ findOne } as never, {} as never);
 
   it('answers 404 without querying for a code that cannot exist', async () => {
     await expect(service.findByCode('{"$ne":1}')).rejects.toThrow(

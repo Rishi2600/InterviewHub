@@ -49,7 +49,7 @@ function buildGateway(roomOverrides: Record<string, unknown> = {}) {
   };
 
   // Real RoomsService so the gateway exercises the actual ownership rule.
-  const roomsService = new RoomsService(model as never);
+  const roomsService = new RoomsService(model as never, {} as never);
   const pinQuestion = jest
     .spyOn(roomsService, 'pinQuestion')
     .mockResolvedValue({ pinnedQuestion: 'Q1' } as never);
