@@ -199,14 +199,15 @@ function Leaderboard({ results: r }: { results: Results }) {
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: all,
   })
-  const rows = all ? (full.data?.pages.flatMap((p) => p.items) ?? r.top) : r.top
+  const code = r.contest.format === 'code'
+  // A code contest has nothing to hand in at the end, so no "didn't submit".
+  const rows = (all ? (full.data?.pages.flatMap((p) => p.items) ?? r.top) : r.top).map((row) =>
+    code ? { ...row, autoSubmitted: false } : row,
+  )
   const isMe = (row: BoardRow) => row.userId === user?.id
   const meOutside = !all && r.me && r.me.rank > TOP && !r.top.some(isMe)
   const ties = rows.some((row, i) => i > 0 && rows[i - 1].rank === row.rank)
-  // A code contest ranks ties by the last submission that scored, and has
-  // no answers to hand in at the end.
-  const code = r.contest.format === 'code'
-  const anyAuto = !code && rows.some((row) => row.autoSubmitted)
+  const anyAuto = rows.some((row) => row.autoSubmitted)
 
   return (
     <Panel
@@ -253,7 +254,7 @@ function Leaderboard({ results: r }: { results: Results }) {
                     rank: r.me!.rank,
                     score: r.me!.score,
                     timeUsedMs: r.me!.timeUsedMs,
-                    autoSubmitted: r.me!.autoSubmitted,
+                    autoSubmitted: !code && r.me!.autoSubmitted,
                   }}
                   me
                 />

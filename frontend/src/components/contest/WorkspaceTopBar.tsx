@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { clock } from '@/lib/contest-time'
+import { cn } from '@/lib/utils'
 
 /** The contest workspaces' top bar: back, title, end time and how much of the
  *  contest has gone, with the page's own controls on the right. */
@@ -11,17 +12,20 @@ export function WorkspaceTopBar({
   endAt,
   contestId,
   pct,
+  wide,
   children,
 }: {
   title: string
   endAt: string
   contestId: string
   pct: number
+  // Full width, for the code workspace.
+  wide?: boolean
   children: ReactNode
 }) {
   return (
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
+      <div className={cn('mx-auto flex h-16 items-center gap-3 px-4', !wide && 'max-w-6xl')}>
         <Button variant="ghost" size="icon-sm" asChild>
           <Link to={`/contests/${contestId}`} aria-label="Back to contest page">
             <ArrowLeft aria-hidden />

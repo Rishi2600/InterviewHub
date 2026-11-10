@@ -27,7 +27,8 @@ const LANGUAGE: Record<CodeLanguage, () => Extension> = {
 // Colours come from the app's tokens, so the editor follows light and dark.
 const theme = EditorView.theme({
   '&': { height: '100%', backgroundColor: 'transparent', color: 'var(--foreground)', fontSize: '13px' },
-  '.cm-scroller': { fontFamily: 'var(--font-mono, ui-monospace, monospace)', lineHeight: '1.6' },
+  // No ligatures: code should show exactly the characters typed.
+  '.cm-scroller': { fontFamily: 'var(--font-mono, ui-monospace, monospace)', lineHeight: '1.6', fontVariantLigatures: 'none' },
   '.cm-content': { caretColor: 'var(--primary)', padding: '8px 0' },
   '.cm-gutters': { backgroundColor: 'transparent', border: 'none', color: 'var(--muted-foreground)' },
   '.cm-activeLine': { backgroundColor: 'color-mix(in oklab, var(--primary) 7%, transparent)' },

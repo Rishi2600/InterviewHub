@@ -167,7 +167,7 @@ export function CodeWorkspace({ ws }: { ws: Workspace }) {
 
   return (
     <div className="min-h-svh bg-background">
-      <WorkspaceTopBar title={ws.contest.title} endAt={ws.contest.endAt} contestId={contestId} pct={elapsedPct}>
+      <WorkspaceTopBar wide title={ws.contest.title} endAt={ws.contest.endAt} contestId={contestId} pct={elapsedPct}>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5" role="timer" aria-label="Time left">
             <Timer className="size-4 text-brand" aria-hidden />
@@ -623,7 +623,7 @@ function DoneScreen({
   const submitted = questions.filter((q) => latest[q._id]).length
   return (
     <div className="min-h-svh bg-background">
-      <WorkspaceTopBar title={ws.contest.title} endAt={ws.contest.endAt} contestId={ws.contest._id} pct={pct}>
+      <WorkspaceTopBar wide title={ws.contest.title} endAt={ws.contest.endAt} contestId={ws.contest._id} pct={pct}>
         <span className="flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm">
           <Flag className="size-3.5" aria-hidden />
           {finishedAt ? 'Finished' : 'Ended'}
