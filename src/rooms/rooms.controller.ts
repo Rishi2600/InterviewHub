@@ -17,7 +17,9 @@ import {
   CurrentUser,
   AuthUser,
 } from '../common/decorators/current-user.decorator';
+import { ConfigService } from '@nestjs/config';
 import { RoomsService } from './rooms.service';
+import { iceConfigFrom, iceServers } from './ice-servers';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
 import { PinQuestionDto } from './dto/pin-question.dto';
@@ -26,7 +28,10 @@ import { ListRoomsDto } from './dto/list-rooms.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('rooms')
 export class RoomsController {
-  constructor(private readonly roomsService: RoomsService) {}
+  constructor(
+    private readonly roomsService: RoomsService,
+    private readonly config: ConfigService,
+  ) {}
 
   // Only interviewers/admins may create rooms.
   @UseGuards(RolesGuard)
@@ -46,6 +51,13 @@ export class RoomsController {
   @Get(':id')
   get(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.roomsService.findForMember(id, user);
+  }
+
+  // STUN and short-lived TURN credentials for the room's call. Members only.
+  @Get(':id/ice-servers')
+  async ice(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    await this.roomsService.findForMember(id, user);
+    return iceServers(iceConfigFrom(this.config), user.userId, new Date());
   }
 
   @Post(':code/join')

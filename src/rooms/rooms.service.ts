@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { randomInt } from 'crypto';
 import { Model, Types } from 'mongoose';
+import { Subject } from 'rxjs';
 import {
   ROOM_STATES,
   Room,
@@ -30,6 +31,9 @@ const ROOM_CODE_PATTERN = new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`);
 
 @Injectable()
 export class RoomsService {
+  /** Ids of rooms as they end, so the room's sockets can be told. */
+  readonly ended$ = new Subject<string>();
+
   constructor(
     @InjectModel(Room.name) private readonly roomModel: Model<RoomDocument>,
     @InjectModel(ActivityEvent.name)
@@ -206,7 +210,10 @@ export class RoomsService {
     }
     room.state = state;
     const saved = await room.save();
-    if (state === 'ended') await this.recordInterview(saved, new Date());
+    if (state === 'ended') {
+      await this.recordInterview(saved, new Date());
+      this.ended$.next(saved.id);
+    }
     return saved;
   }
 

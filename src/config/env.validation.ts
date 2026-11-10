@@ -37,4 +37,16 @@ export const envValidationSchema = Joi.object({
     .pattern(/^[^*]+$/, 'explicit origins (no "*")')
     .default('http://localhost:5173'),
   MAX_AVATAR_SIZE_BYTES: Joi.number().default(2097152),
+
+  // Calls. With none of these set, calls connect only when both people can
+  // reach each other directly, as on one network. See guides/calls.md.
+  STUN_URLS: Joi.string().allow('').default(''),
+  TURN_URLS: Joi.string().allow('').default(''),
+  TURN_SECRET: Joi.string()
+    .allow('')
+    .when('TURN_URLS', {
+      is: Joi.string().min(1),
+      then: Joi.string().min(16).required(),
+    }),
+  TURN_TTL_SECONDS: Joi.number().integer().min(60).max(86_400).default(3_600),
 });

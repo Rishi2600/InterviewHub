@@ -38,7 +38,10 @@ export const LIMITS = {
   // to about 300 KB of JSON, and 10 code questions with 20 tests each at
   // their limits to about 7 MB.
   questionsBodyBytes: '8mb',
-  socketMessageBytes: 16 * 1024,
+  // A call offer with camera, microphone and screen share is about 10 KB.
+  socketMessageBytes: 32 * 1024,
+  // People on video in one interview room; calls are peer to peer.
+  callMax: 4,
 } as const;
 
 /** Socket payloads are validated like HTTP bodies: unknown fields rejected. */

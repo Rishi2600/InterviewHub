@@ -39,6 +39,10 @@ export const WS_SEND_LIMIT = { default: { limit: 5, ttl: 5 * SECOND } };
 export const WS_TYPING_LIMIT = { default: { limit: 2, ttl: SECOND } };
 export const WS_SUBSCRIBE_LIMIT = { default: { limit: 10, ttl: 10 * SECOND } };
 export const WS_PIN_LIMIT = { default: { limit: 10, ttl: MINUTE } };
+// Setting up a call sends an offer, an answer and a burst of network
+// candidates to each other person; screen sharing renegotiates.
+export const WS_SIGNAL_LIMIT = { default: { limit: 300, ttl: 10 * SECOND } };
+export const WS_CALL_STATE_LIMIT = { default: { limit: 20, ttl: 10 * SECOND } };
 
 /** Open sockets allowed per user, per namespace. */
 export const MAX_SOCKETS_PER_USER = 5;

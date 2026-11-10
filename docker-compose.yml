@@ -57,5 +57,50 @@ services:
       timeout: 5s
       retries: 15
 
+  # TURN relay for calls, from the local image (never pulled). Started only
+  # with `docker compose --profile rtc up -d coturn`. Host networking, since
+  # TURN needs a range of UDP ports. Credentials expire: the API signs them
+  # with TURN_SECRET, which coturn checks. Relaying to private and local
+  # addresses is refused, so the relay can't be used to reach this machine's
+  # own network. See guides/calls.md.
+  coturn:
+    image: coturn/coturn:4.18.0-alpine
+    pull_policy: never
+    container_name: interviewhub-coturn
+    profiles: ["rtc"]
+    network_mode: host
+    environment:
+      TURN_SECRET: ${TURN_SECRET:-}
+    # The secret is checked here, not by compose, so the rest of this file
+    # works without it. Without a long enough secret coturn doesn't start:
+    # an empty one would let anyone sign their own credentials.
+    entrypoint:
+      - sh
+      - -c
+      - '[ "$${#TURN_SECRET}" -ge 16 ] || { echo "Set TURN_SECRET (16+ characters) in .env" >&2; exit 1; }; exec turnserver "$$@" --static-auth-secret="$$TURN_SECRET"'
+      - turnserver
+    command:
+      - -n
+      - --listening-port=3478
+      - --min-port=49160
+      - --max-port=49200
+      - --realm=interviewhub
+      - --use-auth-secret
+      - --fingerprint
+      - --no-tls
+      - --no-multicast-peers
+      - --user-quota=12
+      - --total-quota=400
+      - --denied-peer-ip=0.0.0.0-0.255.255.255
+      - --denied-peer-ip=10.0.0.0-10.255.255.255
+      - --denied-peer-ip=100.64.0.0-100.127.255.255
+      - --denied-peer-ip=127.0.0.0-127.255.255.255
+      - --denied-peer-ip=169.254.0.0-169.254.255.255
+      - --denied-peer-ip=172.16.0.0-172.31.255.255
+      - --denied-peer-ip=192.168.0.0-192.168.255.255
+      - --denied-peer-ip=::1
+      - --denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+      - --denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+
 volumes:
   mongo-data:
