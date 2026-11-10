@@ -71,12 +71,23 @@ await candidate.getByRole('button', { name: 'Share screen' }).first().click()
 await interviewer.getByText("Ada Okafor's screen").waitFor({ timeout: 15000 })
 console.log('screen share reached the interviewer')
 
-// Run JavaScript in the candidate's editor.
+// Run Python (the default language) in the candidate's editor. The first
+// run downloads CPython for the browser.
+await candidate.getByPlaceholder('What the program reads from stdin').fill('hello from python')
+await candidate.getByRole('button', { name: /^Run/ }).click()
+await candidate.getByText('Finished').waitFor({ timeout: 60000 })
+console.log('python run output:', JSON.stringify(await candidate.locator('pre').last().innerText()))
+
+// Then JavaScript.
 await candidate.getByRole('button', { name: /Python/ }).click()
 await candidate.getByRole('menuitemradio', { name: 'JavaScript' }).click()
 await candidate.getByPlaceholder('What the program reads from stdin').fill('hello from stdin')
 await candidate.getByRole('button', { name: /^Run/ }).click()
-await candidate.getByText('Finished').waitFor({ timeout: 20000 })
+await candidate.waitForFunction(
+  () => [...document.querySelectorAll('pre')].pop()?.textContent?.includes('hello from stdin'),
+  null,
+  { timeout: 20000 },
+)
 console.log('run output:', JSON.stringify(await candidate.locator('pre').last().innerText()))
 
 // Mute: the interviewer should see the candidate muted.

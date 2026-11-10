@@ -131,6 +131,16 @@ console.log('judged:', await entrant.getByText(/hidden tests passed/).first().in
 await entrant.waitForTimeout(800)
 if (OUT) await entrant.screenshot({ path: `${OUT}/code-judged.png` })
 
+// Problem 2 in Python, judged by the judge's CPython.
+await entrant.getByRole('tab', { name: /Sum/ }).click()
+await entrant.locator('.cm-content').first().click()
+await entrant.keyboard.press('ControlOrMeta+a')
+await entrant.keyboard.press('Delete')
+await entrant.keyboard.insertText('import sys\nprint(sum(map(int, sys.stdin.read().split())))')
+await entrant.getByRole('button', { name: 'Submit' }).click()
+await entrant.getByText('1 of 1 hidden tests passed').waitFor({ timeout: 60000 })
+console.log('python judged: 1 of 1 hidden tests passed')
+
 // End the contest; the API's minute job finalizes it.
 mongo(`db.contests.updateOne({ _id: ObjectId("${contest._id}") }, { $set: { startAt: new Date(Date.now() - 31 * 60000), endAt: new Date(Date.now() - 60000) } })`)
 for (let i = 0; i < 24; i++) {
