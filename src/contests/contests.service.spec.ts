@@ -13,7 +13,12 @@ function serviceWithContest(status: ContestStatus) {
   const contestModel = {
     findById: () => ({ exec: () => Promise.resolve(contest) }),
   };
-  return new ContestsService(contestModel as never, {} as never, {} as never);
+  return new ContestsService(
+    contestModel as never,
+    {} as never,
+    {} as never,
+    {} as never,
+  );
 }
 
 describe('ContestsService.findVisible', () => {

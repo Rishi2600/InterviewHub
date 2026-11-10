@@ -200,7 +200,7 @@ describe('hosting contests (e2e)', () => {
     expect(contest?.entrantCount).toBe(1);
   });
 
-  it('takes a full question list up to 512 KB on that route only', async () => {
+  it('takes a full question list up to 8 MB on that route only', async () => {
     const host = await signUp(t, 'bulk', 'interviewer');
     const api = as(host);
     const { _id } = data<{ _id: string }>(await api.create().expect(201));
@@ -215,8 +215,9 @@ describe('hosting contests (e2e)', () => {
     );
     await api.questions(_id, biggest).expect(200);
 
+    // Over 8 MB, the limit sized for code questions with their tests.
     const tooBig = Array.from({ length: 50 }, () =>
-      question({ prompt: 'p'.repeat(11_000) }),
+      question({ prompt: 'p'.repeat(180_000) }),
     );
     await api.questions(_id, tooBig).expect(413);
     await api.patch(_id, { description: 'd'.repeat(150_000) }).expect(413);

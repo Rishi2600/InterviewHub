@@ -26,6 +26,7 @@ import {
 import { BrowseContestsDto, BrowsePhase } from './dto/browse-contests.dto';
 import { CardViewer, ContestCard, toCard, toDetails } from './contest-views';
 import { ContestQuestion } from './schemas/contest-question.schema';
+import { CodeSubmission } from './schemas/code-submission.schema';
 import { isCorrect } from './finalize/scoring';
 
 // Rows of the board the results page shows before "Show all".
@@ -78,6 +79,8 @@ export class ContestsService {
     private readonly entryModel: Model<ContestEntryDocument>,
     @InjectModel(ContestQuestion.name)
     private readonly questionModel: Model<ContestQuestion>,
+    @InjectModel(CodeSubmission.name)
+    private readonly submissionModel: Model<CodeSubmission>,
   ) {}
 
   /**
@@ -279,9 +282,14 @@ export class ContestsService {
     const picks = new Map(
       (mine?.answers ?? []).map((a) => [a.questionId.toString(), a.optionIds]),
     );
+    const counted =
+      contest.format === 'code' && mine
+        ? await this.countedSubmissions(contest._id, mine.userId)
+        : new Map<string, CodeSubmission>();
     return {
       contest: {
         _id: contest._id,
+        format: contest.format,
         title: contest.title,
         hostName: contest.hostName,
         endAt: contest.endAt,
@@ -302,6 +310,38 @@ export class ContestsService {
             }
           : null,
       questions: questions.map((q, i) => {
+        if (q.kind === 'code') {
+          const submission = counted.get(q._id.toString()) ?? null;
+          return {
+            _id: q._id,
+            number: i + 1,
+            kind: q.kind,
+            title: q.title,
+            prompt: q.prompt,
+            points: q.points,
+            explanation: q.explanation,
+            // Hidden tests stay hidden after the end, so hosts can reuse
+            // their questions.
+            examples: q.tests
+              .filter((t) => t.visible)
+              .map((t) => ({ input: t.input, output: t.output })),
+            hiddenCount: q.tests.filter((t) => !t.visible).length,
+            // The viewer's own submission that counted, code included.
+            submission: submission && {
+              language: submission.language,
+              code: submission.code,
+              verdicts: submission.verdicts,
+              passed: submission.passed,
+              total: submission.total,
+              createdAt: submission.createdAt,
+            },
+            earned: submission?.points ?? 0,
+            ...(canManage && {
+              answeredCount: q.answeredCount,
+              correctCount: q.correctCount,
+            }),
+          };
+        }
         const picked = picks.get(q._id.toString()) ?? null;
         return {
           _id: q._id,
@@ -323,6 +363,23 @@ export class ContestsService {
         };
       }),
     };
+  }
+
+  /** Per question, the viewer's latest judged submission: the one that
+   *  counted at finalize. */
+  private async countedSubmissions(
+    contestId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<Map<string, CodeSubmission>> {
+    const rows = await this.submissionModel
+      .aggregate<CodeSubmission>([
+        { $match: { contestId, userId, status: 'done' } },
+        { $sort: { createdAt: -1 } },
+        { $group: { _id: '$questionId', doc: { $first: '$$ROOT' } } },
+        { $replaceWith: '$doc' },
+      ])
+      .exec();
+    return new Map(rows.map((s) => [s.questionId.toString(), s]));
   }
 
   /** The full board, a page at a time. Final, so plain offsets are safe. */
