@@ -20,10 +20,23 @@ export const LIMITS = {
     // A contest counts toward scores when at least this many started it.
     ratedMinStarters: 10,
   },
+  // Code contests and the interview editor. See docs/learning/sandbox/.
+  code: {
+    questions: { min: 1, max: 10 },
+    codeBytes: 64 * 1024,
+    tests: { max: 20 },
+    testBytes: 16 * 1024,
+    timeLimitMs: { min: 1_000, max: 5_000, default: 2_000 },
+    roomRunMs: 5_000,
+    memoryBytes: 256 * 1024 * 1024,
+    outputBytes: 64 * 1024,
+    submitsPerMinute: 10,
+  },
   bodyBytes: '100kb',
-  // The question editor saves the whole list at once: 50 questions at their
-  // text limits come to about 300 KB of JSON.
-  questionsBodyBytes: '512kb',
+  // The question editor saves the whole list at once: 50 quiz questions come
+  // to about 300 KB of JSON, and 10 code questions with 20 tests each at
+  // their limits to about 7 MB.
+  questionsBodyBytes: '8mb',
   socketMessageBytes: 16 * 1024,
 } as const;
 
