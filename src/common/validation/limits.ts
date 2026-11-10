@@ -23,6 +23,7 @@ export const LIMITS = {
   // Code contests and the interview editor. See docs/learning/sandbox/.
   code: {
     questions: { min: 1, max: 10 },
+    statement: 8000,
     codeBytes: 64 * 1024,
     tests: { max: 20 },
     testBytes: 16 * 1024,

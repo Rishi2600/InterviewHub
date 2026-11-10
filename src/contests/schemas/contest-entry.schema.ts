@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
+import { CODE_LANGUAGES, CodeLanguage } from '../../judge/sandbox/types';
 
 export type ContestEntryDocument = HydratedDocument<ContestEntry>;
 
@@ -16,6 +17,25 @@ export class EntryAnswer {
 }
 
 const EntryAnswerSchema = SchemaFactory.createForClass(EntryAnswer);
+
+/** Code being written for one question, saved as the entrant types. Only
+ *  submissions are judged; a draft is never scored. */
+@Schema({ _id: false })
+export class CodeDraft {
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  questionId: Types.ObjectId;
+
+  @Prop({ type: String, enum: CODE_LANGUAGES, required: true })
+  language: CodeLanguage;
+
+  @Prop({ default: '' })
+  code: string;
+
+  @Prop({ type: Date, required: true })
+  savedAt: Date;
+}
+
+const CodeDraftSchema = SchemaFactory.createForClass(CodeDraft);
 
 /** One user's entry in one contest: when they joined, started and
  *  submitted, their saved answers and, after the end, their result. */
@@ -45,6 +65,10 @@ export class ContestEntry {
 
   @Prop({ type: [EntryAnswerSchema], default: [] })
   answers: EntryAnswer[];
+
+  // Code contests: one draft per question, in the language last used.
+  @Prop({ type: [CodeDraftSchema], default: [] })
+  drafts: CodeDraft[];
 
   // Result fields, filled in at finalize.
   @Prop({ type: Number, default: null })

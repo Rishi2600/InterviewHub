@@ -4,10 +4,13 @@ import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 export type ContestDocument = HydratedDocument<Contest>;
 export const CONTEST_STATUSES = ['draft', 'published', 'cancelled'] as const;
 export type ContestStatus = (typeof CONTEST_STATUSES)[number];
+export const CONTEST_FORMATS = ['quiz', 'code'] as const;
+export type ContestFormat = (typeof CONTEST_FORMATS)[number];
 
 /**
- * A quiz contest. Upcoming, live and ended are worked out from the clock and
- * `startAt`/`endAt`, not stored. Questions live in `contest_questions`.
+ * A quiz or code contest; the two formats never mix. Upcoming, live and
+ * ended are worked out from the clock and `startAt`/`endAt`, not stored.
+ * Questions live in `contest_questions`.
  */
 @Schema({ timestamps: true, collection: 'contests' })
 export class Contest {
@@ -26,8 +29,9 @@ export class Contest {
   @Prop({ type: String, enum: CONTEST_STATUSES, default: 'draft' })
   status: ContestStatus;
 
-  @Prop({ type: String, default: 'quiz' })
-  format: 'quiz';
+  // Chosen when the draft is created and never changed.
+  @Prop({ type: String, enum: CONTEST_FORMATS, default: 'quiz' })
+  format: ContestFormat;
 
   // Null on a draft until the host picks them.
   @Prop({ type: Date, default: null })

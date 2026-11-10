@@ -7,7 +7,11 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, QueryFilter, Types } from 'mongoose';
-import { Contest, ContestDocument } from './schemas/contest.schema';
+import {
+  Contest,
+  ContestDocument,
+  ContestFormat,
+} from './schemas/contest.schema';
 import {
   ContestQuestion,
   ContestQuestionDocument,
@@ -54,9 +58,14 @@ export class ContestHostingService {
     private readonly usageModel: Model<HostUsageDocument>,
   ) {}
 
-  createDraft(host: AuthUser, title: string): Promise<ContestDocument> {
+  createDraft(
+    host: AuthUser,
+    title: string,
+    format: ContestFormat = 'quiz',
+  ): Promise<ContestDocument> {
     return this.contestModel.create({
       title,
+      format,
       hostId: new Types.ObjectId(host.userId),
       hostName: host.username,
       status: 'draft',
@@ -167,7 +176,11 @@ export class ContestHostingService {
           'Capacity cannot be below the number already entered',
         );
       }
-      this.assertChecksPass(next, await this.questionsOf(contest._id), now);
+      this.assertChecksPass(
+        { ...next, format: contest.format },
+        await this.questionsOf(contest._id),
+        now,
+      );
     }
 
     const updated = await this.contestModel
@@ -195,29 +208,7 @@ export class ContestHostingService {
     const contest = await this.findManaged(id, user);
     this.assertEditable(contest, now);
 
-    const questions = input.map((q, order) => {
-      const ids = q.options.map((o) => o.id);
-      if (new Set(ids).size !== ids.length) {
-        throw new BadRequestException(
-          `Question ${order + 1} has two options with the same id`,
-        );
-      }
-      return {
-        contestId: contest._id,
-        order,
-        kind: q.kind,
-        prompt: q.prompt,
-        options: q.options.map((o) => ({ id: o.id, text: o.text })),
-        // Drop marks on options that no longer exist.
-        correctOptionIds: [...new Set(q.correctOptionIds)].filter((c) =>
-          ids.includes(c),
-        ),
-        points: q.points ?? 1,
-        explanation: q.explanation ?? '',
-        answeredCount: 0,
-        correctCount: 0,
-      };
-    });
+    const questions = input.map((q, order) => toQuestion(q, order, contest));
     if (contest.status === 'published') {
       this.assertChecksPass(contest, questions, now);
     }
@@ -386,4 +377,72 @@ export class ContestHostingService {
     }
     await this.questionModel.deleteMany({ contestId: contest._id }).exec();
   }
+}
+
+const NO_CODE = {
+  title: '',
+  starterCode: { python: '', javascript: '', typescript: '' },
+  tests: [],
+  timeLimitMs: LIMITS.code.timeLimitMs.default,
+  hostAnswer: null,
+};
+
+/** One saved question, checked against the contest's format. Formats never
+ *  mix: a quiz has only choice questions, a code contest only code ones. */
+function toQuestion(q: QuestionDto, order: number, contest: ContestDocument) {
+  const n = order + 1;
+  const isCode = q.kind === 'code';
+  if (isCode !== (contest.format === 'code')) {
+    throw new BadRequestException(
+      `Question ${n} doesn't fit a ${contest.format} contest`,
+    );
+  }
+  const base = {
+    contestId: contest._id,
+    order,
+    kind: q.kind,
+    prompt: q.prompt,
+    points: q.points ?? 1,
+    explanation: q.explanation ?? '',
+    answeredCount: 0,
+    correctCount: 0,
+  };
+  if (isCode) {
+    return {
+      ...base,
+      options: [],
+      correctOptionIds: [],
+      title: q.title ?? '',
+      starterCode: { ...NO_CODE.starterCode, ...q.starterCode },
+      tests: (q.tests ?? []).map((t) => ({
+        input: t.input,
+        output: t.output,
+        visible: t.visible,
+      })),
+      timeLimitMs: q.timeLimitMs ?? LIMITS.code.timeLimitMs.default,
+      hostAnswer: q.hostAnswer
+        ? { language: q.hostAnswer.language, code: q.hostAnswer.code }
+        : null,
+    };
+  }
+
+  if (q.prompt.length > LIMITS.text) {
+    throw new BadRequestException(`Question ${n} is too long`);
+  }
+  const options = q.options ?? [];
+  const ids = options.map((o) => o.id);
+  if (new Set(ids).size !== ids.length) {
+    throw new BadRequestException(
+      `Question ${n} has two options with the same id`,
+    );
+  }
+  return {
+    ...base,
+    ...NO_CODE,
+    options: options.map((o) => ({ id: o.id, text: o.text })),
+    // Drop marks on options that no longer exist.
+    correctOptionIds: [...new Set(q.correctOptionIds ?? [])].filter((c) =>
+      ids.includes(c),
+    ),
+  };
 }

@@ -45,7 +45,7 @@ export class ContestsController {
   @Roles(Role.Interviewer, Role.Admin)
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateContestDto) {
-    return this.hosting.createDraft(user, dto.title);
+    return this.hosting.createDraft(user, dto.title, dto.format);
   }
 
   // Contests the caller hosts or has joined, one page at a time.
