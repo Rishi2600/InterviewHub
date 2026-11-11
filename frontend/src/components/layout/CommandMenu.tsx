@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/command'
 import { useLiveNow } from '@/hooks/useLiveNow'
 import { useTheme } from '@/hooks/use-theme'
-import { NAV_ITEMS } from './nav'
+import { useAuth } from '@/hooks/useAuth'
+import { navFor } from './nav'
 
 /** Ctrl/Cmd+K: jump to a page or a live room or contest. */
 export function CommandMenu({
@@ -25,6 +26,7 @@ export function CommandMenu({
   const navigate = useNavigate()
   const live = useLiveNow()
   const { theme, toggleTheme } = useTheme()
+  const { user } = useAuth()
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -48,7 +50,7 @@ export function CommandMenu({
       <CommandList>
         <CommandEmpty>Nothing matches.</CommandEmpty>
         <CommandGroup heading="Pages">
-          {NAV_ITEMS.map((item) => (
+          {navFor(user?.role).map((item) => (
             <CommandItem key={item.href} onSelect={() => run(() => navigate(item.href))}>
               <item.icon aria-hidden />
               {item.label}

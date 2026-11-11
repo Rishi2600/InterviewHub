@@ -27,7 +27,7 @@ import { LiveDot } from '@/components/common/LiveDot'
 import { useAuth } from '@/hooks/useAuth'
 import { useLiveNow } from '@/hooks/useLiveNow'
 import { useTheme } from '@/hooks/use-theme'
-import { NAV_ITEMS, SEARCH_SHORTCUT, isActivePath } from './nav'
+import { SEARCH_SHORTCUT, isActivePath, navFor } from './nav'
 
 const ROLE_LABEL = { candidate: 'Candidate', interviewer: 'Interviewer', admin: 'Admin' } as const
 
@@ -72,7 +72,7 @@ export function AppSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV_ITEMS.map((item) => (
+              {navFor(user?.role).map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild tooltip={item.label} isActive={isActivePath(pathname, item.href)}>
                     <Link to={item.href}>

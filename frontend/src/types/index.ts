@@ -407,3 +407,83 @@ export interface ContestHistoryItem {
   scoreAfter: number | null
   change: number | null
 }
+
+/* ------------------------------------------------------- AI practice ---- */
+
+export type PracticeKind = 'technical' | 'behavioural'
+export type PracticeLevel = 'junior' | 'mid' | 'senior'
+export type PracticeMode = 'chat' | 'voice'
+export type PracticeStatus = 'active' | 'ended' | 'done' | 'failed' | 'cancelled'
+
+export interface PracticeTurn {
+  kind: 'ai' | 'candidate' | 'run'
+  text: string
+  at: string
+  run?: { input: string; output: string; status: 'ok' | 'error' | 'timeout'; ms: number }
+}
+
+export interface CodingQuestion {
+  title: string
+  statement: string
+  exampleInput: string
+  exampleOutput: string
+}
+
+export interface PracticeFeedback {
+  summary: string
+  areas: { name: string; score: number }[]
+  strengths: string[]
+  improve: { point: string; detail: string }[]
+  questions: { title: string; score: number; note: string; tip: string; coding: boolean }[]
+}
+
+export interface PracticeInterview {
+  id: string
+  kind: PracticeKind
+  topic: string
+  mixed: boolean
+  level: PracticeLevel
+  minutes: number
+  language: CodeLanguage | null
+  mode: PracticeMode
+  status: PracticeStatus
+  startedAt: string
+  endsAt: string
+  endedAt: string | null
+  endReason: 'candidate' | 'ai' | 'time' | 'answers' | null
+  answers: number
+  maxAnswers: number
+  turns: PracticeTurn[]
+  codingQuestion: CodingQuestion | null
+  feedback: PracticeFeedback | null
+  score: number | null
+}
+
+export interface PracticeListItem {
+  id: string
+  kind: PracticeKind
+  topic: string
+  mixed: boolean
+  level: PracticeLevel
+  minutes: number
+  mode: PracticeMode
+  status: PracticeStatus
+  startedAt: string
+  score: number | null
+}
+
+export interface PracticeOverview {
+  enabled: boolean
+  allowance: { used: number; limit: number; resetsAt: string }
+  running: { id: string; kind: PracticeKind; topic: string; level: PracticeLevel; endsAt: string } | null
+  items: PracticeListItem[]
+}
+
+export interface StartPracticeBody {
+  kind: PracticeKind
+  topic: string
+  level: PracticeLevel
+  minutes: number
+  language?: CodeLanguage
+  mode: PracticeMode
+}

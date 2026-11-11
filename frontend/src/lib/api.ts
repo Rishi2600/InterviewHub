@@ -104,8 +104,10 @@ api.interceptors.response.use(
       clearSession()
     }
 
-    const normalized = new Error(message) as Error & { status?: number }
+    const normalized = new Error(message) as Error & { status?: number; code?: string }
     normalized.status = error.response?.status
+    // The server's own name for the error, such as "PracticeBusy".
+    normalized.code = typeof body?.error === 'string' ? body.error : undefined
     return Promise.reject(normalized)
   },
 )
@@ -148,6 +150,11 @@ export const http = {
 /** The HTTP status of a failed call, when there was a response. */
 export function errorStatus(err: unknown): number | undefined {
   return (err as { status?: number } | null)?.status
+}
+
+/** The server's name for a failed call's error, such as "PracticeBusy". */
+export function errorCode(err: unknown): string | undefined {
+  return (err as { code?: string } | null)?.code
 }
 
 /** Best-effort message extraction for anything thrown at a UI boundary. */

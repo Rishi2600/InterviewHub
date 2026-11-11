@@ -30,4 +30,8 @@ export function connectContests(): Socket {
   return connect('/contests')
 }
 
+export function connectPractice(): Socket {
+  return connect('/practice')
+}
+
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error'

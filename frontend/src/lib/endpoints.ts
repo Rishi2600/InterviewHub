@@ -25,6 +25,9 @@ import type {
   UserScore,
   ContestHistoryItem,
   Workspace,
+  PracticeInterview,
+  PracticeOverview,
+  StartPracticeBody,
 } from '@/types'
 
 /**
@@ -261,4 +264,28 @@ export function getLeaderboard(id: string, cursor?: string) {
   return http.get<{ items: BoardRow[]; nextCursor: string | null; total: number }>(`/contests/${id}/leaderboard`, {
     params: { cursor, limit: 50 },
   })
+}
+
+/* ------------------------------------------------------- AI practice ---- */
+
+/** The practice page: allowance, a running interview and past ones. */
+export function getPracticeOverview() {
+  return http.get<PracticeOverview>('/practice')
+}
+
+export function startPractice(body: StartPracticeBody) {
+  return http.post<PracticeInterview>('/practice', body)
+}
+
+export function getPractice(id: string) {
+  return http.get<PracticeInterview>(`/practice/${id}`)
+}
+
+export function endPractice(id: string) {
+  return http.post<PracticeInterview>(`/practice/${id}/end`)
+}
+
+/** Deletes the feedback for good; the activity square stays. */
+export function deletePractice(id: string) {
+  return http.delete<void>(`/practice/${id}`)
 }
