@@ -12,21 +12,21 @@ import {
 
 /**
  * What the AI interviewer is told and shown. Groq's free tier allows 8,000
- * tokens a minute per model, so every request is kept well under that: the
- * conversation sent is capped, and older turns are dropped in blocks so the
- * start of the prompt stays the same for many turns and keeps hitting the
- * provider's cache (cached tokens don't count toward the limits).
+ * tokens a minute and 200,000 a day per model, and doesn't cache prompts
+ * (checked 2026-11-11), so every token counts each time. The conversation
+ * sent is capped, and older turns are dropped in blocks, which keeps the
+ * start of the prompt the same for many turns should a provider cache it.
  */
 
 // Rough characters per token for English and code, on the safe side.
 export const CHARS_PER_TOKEN = 3.5;
 // Reasoning plus a short reply, or a coding question.
-export const REPLY_MAX_TOKENS = 700;
-export const FEEDBACK_MAX_TOKENS = 2_000;
+export const REPLY_MAX_TOKENS = 500;
+export const FEEDBACK_MAX_TOKENS = 1_800;
 // The conversation sent with each reply, and the transcript the feedback
 // is written from.
-const HISTORY_CHARS = 14_000;
-const FEEDBACK_TRANSCRIPT_CHARS = 15_000;
+const HISTORY_CHARS = 8_000;
+const FEEDBACK_TRANSCRIPT_CHARS = 12_000;
 // Older turns are dropped this many at a time.
 const TRIM_BLOCK = 8;
 

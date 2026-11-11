@@ -59,8 +59,9 @@ export const envValidationSchema = Joi.object({
   // limits. An interview starts only if a full-length one still fits.
   AI_DAILY_REQUESTS: Joi.number().integer().min(0).default(1_800),
   AI_DAILY_TOKENS: Joi.number().integer().min(0).default(360_000),
-  // Tokens set aside when an interview starts; the unused rest is given back.
-  AI_TOKENS_PER_INTERVIEW: Joi.number().integer().min(1_000).default(30_000),
-  // Interviews running at once, to stay under the per-minute limits.
-  AI_MAX_RUNNING: Joi.number().integer().min(1).default(5),
+  // Tokens set aside when an interview starts: about what a full-length one
+  // uses. The unused rest is given back when it ends.
+  AI_TOKENS_PER_INTERVIEW: Joi.number().integer().min(1_000).default(100_000),
+  // Interviews running at once, to stay under 8,000 tokens a minute a model.
+  AI_MAX_RUNNING: Joi.number().integer().min(1).default(3),
 });

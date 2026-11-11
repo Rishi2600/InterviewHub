@@ -27,8 +27,8 @@ export type EndReason = (typeof END_REASONS)[number];
 
 /**
  * One step of the conversation. What the AI is sent is rendered from these
- * fields the same way every time, so earlier turns stay byte-identical and
- * the provider's prompt cache keeps working.
+ * fields the same way every time, so earlier turns stay byte-identical, as
+ * a provider's prompt cache needs.
  */
 @Schema({ _id: false })
 export class Turn {
