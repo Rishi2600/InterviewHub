@@ -174,3 +174,14 @@
     border-radius: 2px;
   }
 }
+
+/* AI practice: bars that rise and fall while the interviewer writes or speaks. */
+@keyframes level {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}

@@ -24,6 +24,7 @@ const ContestWorkspace = lazy(() => import('@/pages/ContestWorkspace').then((m) 
 const ContestResults = lazy(() => import('@/pages/ContestResults').then((m) => ({ default: m.ContestResults })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
 const Practice = lazy(() => import('@/pages/Practice').then((m) => ({ default: m.Practice })))
+const PracticeInterview = lazy(() => import('@/pages/PracticeInterview').then((m) => ({ default: m.PracticeInterview })))
 const UserProfile = lazy(() => import('@/pages/UserProfile').then((m) => ({ default: m.UserProfile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 
@@ -61,6 +62,7 @@ export default function App() {
                   {/* Focus screens, without the sidebar. */}
                   <Route path="/contests/:id/play" element={<ContestWorkspace />} />
                   <Route path="/rooms/:id" element={<Room />} />
+                  <Route path="/practice/:id" element={<PracticeInterview />} />
                   <Route element={<AppShell />}>
                     <Route index element={<Dashboard />} />
                     <Route path="/rooms/join" element={<JoinRoom />} />

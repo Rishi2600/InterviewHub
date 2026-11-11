@@ -8,14 +8,10 @@ import { useRunner } from '@/hooks/useRunner'
 import { RUN_LIMITS } from '@/lib/sandbox/runner'
 import type { CodeLanguage } from '@/lib/sandbox/types'
 import { cn } from '@/lib/utils'
+import { STARTERS } from './starters'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 
-const STARTERS: Record<CodeLanguage, string> = {
-  python: 'import sys\n\ndata = sys.stdin.read()\nprint(data)\n',
-  javascript: "const input = require('fs').readFileSync(0, 'utf8')\nconsole.log(input)\n",
-  typescript: "const input: string = require('fs').readFileSync(0, 'utf8')\nconsole.log(input)\n",
-}
 
 interface Draft {
   language: CodeLanguage
