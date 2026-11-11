@@ -131,6 +131,11 @@ export class PracticeInterview {
   @Prop({ type: String, enum: [...END_REASONS, null], default: null })
   endReason: EndReason | null;
 
+  // Questions from the candidate's recent interviews, for the AI to avoid.
+  // Fixed at the start so the instructions never change mid-interview.
+  @Prop({ type: [String], default: [] })
+  avoid: string[];
+
   @Prop({ default: 0 })
   answers: number;
 
