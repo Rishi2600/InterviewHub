@@ -10,6 +10,8 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { HttpThrottleGuard } from '../src/common/throttle/http-throttle.guard';
 import { FinalizeJob } from '../src/contests/finalize/finalize.job';
+import { PracticeJob } from '../src/practice/practice.job';
+import { AiClient } from '../src/ai/ai.types';
 
 export const ORIGIN = 'http://localhost:5173';
 export const PASSWORD = 'Quiet-river9';
@@ -24,20 +26,24 @@ export interface TestApp {
 /**
  * The real app, set up exactly as main.ts does, on a random port, with an
  * empty database. Rate limits are off so tests can sign in freely; they have
- * their own unit tests. The every-minute finalize job is off too.
+ * their own unit tests. The every-minute jobs are off too, and AI tests
+ * pass a fake AI.
  */
 export async function startApp(
   // A second server sharing the first one's database keeps its data.
-  opts: { keepData?: boolean } = {},
+  opts: { keepData?: boolean; ai?: AiClient } = {},
 ): Promise<TestApp> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+  let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(HttpThrottleGuard)
     .useValue({ canActivate: () => true })
-    // No background finalize racing the tests: they call FinalizeService
+    // No background jobs racing the tests: they call the services
     // themselves, with their own clock.
     .overrideProvider(FinalizeJob)
     .useValue({})
-    .compile();
+    .overrideProvider(PracticeJob)
+    .useValue({});
+  if (opts.ai) builder = builder.overrideProvider(AiClient).useValue(opts.ai);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>({
     logger: ['error'],
   });

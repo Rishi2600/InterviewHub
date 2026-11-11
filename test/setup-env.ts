@@ -24,3 +24,10 @@ process.env.REDIS_ENABLED = redisUrl ? 'true' : 'false';
 if (redisUrl) process.env.REDIS_URL = redisUrl;
 process.env.LOG_LEVEL = 'silent';
 process.env.CORS_ORIGINS = 'http://localhost:5173';
+// AI practice: never the real Groq (tests pass a fake), and small numbers.
+process.env.GROQ_API_KEY = '';
+process.env.AI_MODELS = 'fake-model';
+process.env.AI_DAILY_REQUESTS = '1000';
+process.env.AI_DAILY_TOKENS = '300000';
+process.env.AI_TOKENS_PER_INTERVIEW = '30000';
+process.env.AI_MAX_RUNNING = '5';

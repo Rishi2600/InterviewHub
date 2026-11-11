@@ -43,6 +43,8 @@ export const WS_PIN_LIMIT = { default: { limit: 10, ttl: MINUTE } };
 // candidates to each other person; screen sharing renegotiates.
 export const WS_SIGNAL_LIMIT = { default: { limit: 300, ttl: 10 * SECOND } };
 export const WS_CALL_STATE_LIMIT = { default: { limit: 20, ttl: 10 * SECOND } };
+// Runs in an AI practice interview; each is recorded for the AI to see.
+export const WS_PRACTICE_RUN_LIMIT = { default: { limit: 20, ttl: MINUTE } };
 
 /** Open sockets allowed per user, per namespace. */
 export const MAX_SOCKETS_PER_USER = 5;

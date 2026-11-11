@@ -50,7 +50,7 @@ export class PracticeFeedbackService {
           $set: { feedbackLeaseUntil: new Date(now.getTime() + LEASE_MS) },
           $inc: { feedbackTries: 1 },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .lean()
       .exec();
@@ -102,7 +102,7 @@ export class PracticeFeedbackService {
           },
           $inc: { usedRequests: 1, usedTokens: tokens },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .lean()
       .exec();
@@ -160,7 +160,7 @@ export class PracticeFeedbackService {
               feedbackLeaseUntil: null,
             },
           },
-          { new: true },
+          { returnDocument: 'after' },
         )
         .lean()
         .exec();

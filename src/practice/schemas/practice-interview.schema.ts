@@ -139,6 +139,10 @@ export class PracticeInterview {
   @Prop({ default: 0 })
   answers: number;
 
+  // Runs recorded; capped per interview.
+  @Prop({ default: 0 })
+  runs: number;
+
   // The conversation. Removed once the feedback is written or given up.
   @Prop({ type: [TurnSchema], default: [] })
   turns: Turn[];

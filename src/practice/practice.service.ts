@@ -203,7 +203,7 @@ export class PracticeService {
           $set: { ...set, status: 'cancelled', turns: [] },
           $unset: { running: 1 },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .lean()
       .exec();
@@ -213,7 +213,7 @@ export class PracticeService {
         .findOneAndUpdate(
           { _id, status: 'active', answers: { $gt: 0 } },
           { $set: { ...set, status: 'ended' }, $unset: { running: 1 } },
-          { new: true },
+          { returnDocument: 'after' },
         )
         .lean()
         .exec());
