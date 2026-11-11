@@ -35,6 +35,11 @@ services:
       - "127.0.0.1:27018:27017"
     tmpfs:
       - /data/db
+    # Every test file drops and rebuilds the database, and Mongo keeps a file
+    # open per collection and index: more than Docker's default 1024. 64000
+    # is MongoDB's recommended limit.
+    ulimits:
+      nofile: { soft: 64000, hard: 64000 }
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 2s
