@@ -41,7 +41,7 @@ import {
  * The live side of a practice interview, for its candidate only.
  *
  * Events in:  practice:join, practice:answer, practice:run
- * Events out: practice:turn, practice:delta, practice:question,
+ * Events out: practice:turn, practice:draft, practice:question,
  *             practice:retracted, practice:failed, practice:ended,
  *             practice:feedback
  */

@@ -55,8 +55,8 @@ export class FakeAi extends AiClient {
             ? { text: this.feedbackFor(req) }
             : { text: 'Tell me more?' }));
     const text = reply.text ?? '';
-    // Stream it in small pieces, like the real thing.
-    for (let i = 0; i < text.length; i += 6) onText?.(text.slice(i, i + 6));
+    // Stream it a few characters at a time: the reply so far, each time.
+    for (let i = 6; i < text.length + 6; i += 6) onText?.(text.slice(0, i));
     return {
       text,
       toolCalls: reply.toolCalls ?? [],

@@ -58,7 +58,10 @@ export abstract class AiClient {
   /** False when no API key is set: AI features are switched off. */
   abstract readonly enabled: boolean;
 
-  /** Sends the conversation; `onText` gets the reply as it is written. */
+  /**
+   * Sends the conversation. `onText` gets the reply so far each time it
+   * grows; after a retry it starts again from the new attempt.
+   */
   abstract chat(
     req: ChatRequest,
     onText?: (text: string) => void,

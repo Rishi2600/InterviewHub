@@ -110,8 +110,8 @@ describe('AI practice interviews', () => {
     const cid = await signUp(t, 'cid');
     ai.queue.push({ text: 'Hi Cid. What is a tuple?' });
     const { id, s } = await begin(cid);
-    const pieces: string[] = [];
-    s.on('practice:delta', (d: { text: string }) => pieces.push(d.text));
+    const drafts: string[] = [];
+    s.on('practice:draft', (d: { text: string }) => drafts.push(d.text));
 
     ai.queue.push({ text: 'Why does that matter?' });
     const reply = nextEvent<TurnView>(s, 'practice:turn');
@@ -120,14 +120,16 @@ describe('AI practice interviews', () => {
       kind: 'candidate',
       text: 'An immutable list.',
     });
-    expect(pieces.join('')).toBe('Why does that matter?');
+    // The draft grows as the reply streams, each one the whole text so far.
+    expect(drafts.at(-1)).toBe('Why does that matter?');
+    expect(drafts.length).toBeGreaterThan(1);
 
     const sent = ai.last().messages;
     expect(sent[0].role).toBe('system');
     expect(sent.at(-2)?.content).toContain('An immutable list.');
     expect(sent.at(-1)).toEqual({
       role: 'system',
-      content: '[App note: 30 min and 39 answers left.]',
+      content: 'Time left: 30 min. Answers left: 39.',
     });
 
     const iv = await view(cid, id);
@@ -264,6 +266,68 @@ describe('AI practice interviews', () => {
         .collection('activity_events')
         .countDocuments({ refId: new Types.ObjectId(id) }),
     ).toBe(1);
+  });
+
+  it('never shows the candidate a bracketed remark, even while streaming', async () => {
+    const max = await signUp(t, 'max');
+    const { id, s } = await begin(max);
+    const drafts: string[] = [];
+    s.on('practice:draft', (d: { text: string }) => drafts.push(d.text));
+    ai.queue.push({
+      text: 'Good. [Pauses] What is a set? [Candidate: an unordered collection] Great!',
+    });
+    const reply = new Promise<TurnView>((resolve) =>
+      s.on('practice:turn', (t: TurnView) => t.kind === 'ai' && resolve(t)),
+    );
+    await answer(s, id, 'Lists keep order.');
+    expect((await reply).text).toBe('Good. What is a set?');
+    expect(drafts.every((d) => !d.includes('['))).toBe(true);
+    await end(max, id);
+  });
+
+  it('asks again when the AI ends far too early', async () => {
+    const ned = await signUp(t, 'ned');
+    const { id, s } = await begin(ned);
+    ai.queue.push(
+      { toolCalls: [{ id: 'e1', name: 'end_interview', arguments: '{}' }] },
+      { text: 'Next: what is a generator?' },
+    );
+    const reply = new Promise<TurnView>((resolve) =>
+      s.on('practice:turn', (t: TurnView) => t.kind === 'ai' && resolve(t)),
+    );
+    await answer(s, id, 'A tuple cannot change.');
+    expect((await reply).text).toBe('Next: what is a generator?');
+    expect(ai.last().messages.at(-1)?.content).toContain(
+      "Don't end the interview yet",
+    );
+    expect((await view(ned, id)).status).toBe('active');
+    await end(ned, id);
+  });
+
+  it('asks again when the AI poses the coding question straight away', async () => {
+    const ola = await signUp(t, 'ola');
+    const { id, s } = await begin(ola);
+    const pose = {
+      id: 'p1',
+      name: 'pose_coding_question',
+      arguments: JSON.stringify({
+        title: 'Sum',
+        statement: 'Add them.',
+        example_input: '1 2',
+        example_output: '3',
+      }),
+    };
+    ai.queue.push(
+      { toolCalls: [pose] },
+      { text: 'First, what is a decorator?' },
+    );
+    const reply = new Promise<TurnView>((resolve) =>
+      s.on('practice:turn', (t: TurnView) => t.kind === 'ai' && resolve(t)),
+    );
+    await answer(s, id, 'Mutable means it can change.');
+    expect((await reply).text).toBe('First, what is a decorator?');
+    expect((await view(ola, id)).codingQuestion).toBeNull();
+    await end(ola, id);
   });
 
   it('lets the AI end the interview', async () => {

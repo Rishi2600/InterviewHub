@@ -65,7 +65,7 @@ describe('GroqClient', () => {
     );
   });
 
-  it('streams text pieces and reads usage from the last chunk', async () => {
+  it('streams the reply so far and reads usage from the last chunk', async () => {
     fetchMock.mockResolvedValueOnce(
       sse([delta({ content: 'Hello ' }), delta({ content: 'there.' }), usage]),
     );
@@ -74,7 +74,7 @@ describe('GroqClient', () => {
       { messages: [{ role: 'user', content: 'Hi' }], maxTokens: 100 },
       (t) => pieces.push(t),
     );
-    expect(pieces).toEqual(['Hello ', 'there.']);
+    expect(pieces).toEqual(['Hello ', 'Hello there.']);
     expect(result.text).toBe('Hello there.');
     expect(result.usage).toEqual({
       model: 'model-a',
@@ -125,6 +125,42 @@ describe('GroqClient', () => {
     expect(second.text).toBe('B again');
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(sentBody(2).model).toBe('model-b');
+  });
+
+  it('waits a few seconds for the first model rather than skip it', async () => {
+    fetchMock
+      .mockResolvedValueOnce(limited(1))
+      .mockResolvedValueOnce(sse([delta({ content: 'A' }), usage]));
+    const result = await client().chat({ messages: [], maxTokens: 10 });
+    expect(result.usage.model).toBe('model-a');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks again after a broken tool call, then tries the next model', async () => {
+    const broken = sse([
+      delta({ content: 'Let' }),
+      {
+        error: {
+          message: 'Tool call validation failed',
+          code: 'tool_use_failed',
+        },
+      },
+    ]);
+    fetchMock
+      .mockResolvedValueOnce(broken)
+      .mockResolvedValueOnce(sse([delta({ content: 'Fixed' }), usage]));
+    const fixed = await client().chat({ messages: [], maxTokens: 10 });
+    expect(fixed.text).toBe('Fixed');
+    expect(fixed.usage.model).toBe('model-a');
+
+    const refused = () =>
+      new Response('{"error":{"code":"tool_use_failed"}}', { status: 400 });
+    fetchMock
+      .mockResolvedValueOnce(refused())
+      .mockResolvedValueOnce(refused())
+      .mockResolvedValueOnce(sse([delta({ content: 'B' }), usage]));
+    const next = await client().chat({ messages: [], maxTokens: 10 });
+    expect(next.usage.model).toBe('model-b');
   });
 
   it('gives up when every model is at its limit for long', async () => {

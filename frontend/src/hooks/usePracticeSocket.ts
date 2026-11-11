@@ -13,8 +13,8 @@ interface Ended {
 /**
  * The live side of a practice interview over /practice. Joining sends the
  * interview's turns so far; the first join also starts the AI's greeting.
- * The AI's reply arrives in pieces (practice:delta) and then as a finished
- * turn. An answer the AI couldn't reply to comes back (practice:retracted)
+ * The AI's reply arrives as a growing draft (practice:draft) and then as a
+ * finished turn. An answer the AI couldn't reply to comes back (practice:retracted)
  * so it can be sent again.
  */
 export function usePracticeSocket(interview: PracticeInterview) {
@@ -55,9 +55,10 @@ export function usePracticeSocket(interview: PracticeInterview) {
       if (e?.message) toast.error(e.message)
     })
 
-    socket.on('practice:delta', ({ text }: { text: string }) => {
+    // The reply so far, already cleaned by the server: replace, don't append.
+    socket.on('practice:draft', ({ text }: { text: string }) => {
       setWaiting(true)
-      setDraft((d) => d + text)
+      setDraft(text)
     })
     socket.on('practice:turn', (turn: PracticeTurn) => {
       setTurns((t) => [...t, turn])

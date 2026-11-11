@@ -1,6 +1,7 @@
 import {
   cleanReply,
   conversation,
+  draftReply,
   estimateTokens,
   feedbackRequest,
   overallScore,
@@ -71,7 +72,7 @@ describe('systemPrompt', () => {
 });
 
 describe('conversation', () => {
-  it('renders the code with the answer and the run as a note', () => {
+  it("sends the app's notes as plain system messages, never in brackets", () => {
     const msgs = conversation(
       {
         ...technical,
@@ -88,14 +89,23 @@ describe('conversation', () => {
       },
       [],
     );
-    expect(msgs[0].role).toBe('system');
-    expect(msgs[3].content).toContain('```python\nprint(1)\n```');
-    expect(msgs.at(-1)).toEqual({
-      role: 'system',
-      content: '[App note: 20 min and 30 answers left.]',
-    });
-    expect(msgs[4].content).toContain('finished in 38 ms');
-    expect(msgs[4].content).toContain('Input:\naabb\nOutput:\n0');
+    expect(msgs.map((m) => m.role)).toEqual([
+      'system',
+      'user',
+      'assistant',
+      'user',
+      'system',
+      'system',
+      'system',
+    ]);
+    expect(msgs[1].content).toBe("Hi, I'm ready to start.");
+    expect(msgs[3].content).toBe('Done');
+    expect(msgs[4].content).toContain('```python\nprint(1)\n```');
+    expect(msgs[5].content).toContain('finished in 38 ms');
+    expect(msgs[5].content).toContain('Input:\naabb\nOutput:\n0');
+    expect(msgs.at(-1)?.content).toBe('Time left: 20 min. Answers left: 30.');
+    // Nothing the app adds to the dialogue uses square brackets.
+    for (const m of msgs.slice(1)) expect(m.content).not.toMatch(/\[[A-Z]/);
   });
 
   it('follows a tool call with its result', () => {
@@ -179,31 +189,62 @@ describe('feedback', () => {
 });
 
 describe('cleanReply', () => {
-  it('drops notes the AI copied from ours', () => {
-    expect(cleanReply('What is a tuple? [0:39]', false).text).toBe(
-      'What is a tuple?',
-    );
+  const clean = (t: string) => cleanReply(t, false).text;
+
+  it('drops bracketed remarks, and cuts where the AI plays the next turn', () => {
+    expect(clean('What is a tuple? [0:39]')).toBe('What is a tuple?');
     expect(
-      cleanReply(
+      clean(
         'Thanks. Why? [15 min and 38 answers left.] What about generators?',
-        false,
-      ).text,
+      ),
     ).toBe('Thanks. Why?');
+    expect(clean('Go on. [12 min and 30 answers left.]')).toBe('Go on.');
+    expect(clean('[Pauses] Good. What is a closure?')).toBe(
+      'Good. What is a closure?',
+    );
     expect(
-      cleanReply(
-        'Why is that?Thanks for the explanation. Next: what is a closure?',
-        false,
-      ).text,
+      clean('Nice. [The candidate seems unsure.] Can you give an example?'),
+    ).toBe('Nice. Can you give an example?');
+    expect(
+      clean(
+        'What is a closure? [Candidate: It keeps variables.] Great. And decorators?',
+      ),
+    ).toBe('What is a closure?');
+    expect(clean('Okay [waits for the answer]')).toBe('Okay');
+  });
+
+  it('leaves code alone', () => {
+    expect(clean('Try a[1:3] first.')).toBe('Try a[1:3] first.');
+    expect(clean('Look at items[0] first.')).toBe('Look at items[0] first.');
+    expect(clean('Given [1, 2, 3], what prints?')).toBe(
+      'Given [1, 2, 3], what prints?',
+    );
+    expect(clean('What does `[Note] x` print?')).toBe(
+      'What does `[Note] x` print?',
+    );
+    expect(clean('See [the docs](https://docs.python.org).')).toBe(
+      'See [the docs](https://docs.python.org).',
+    );
+  });
+
+  it('keeps one turn of at most two questions', () => {
+    expect(
+      clean('Why is that?Thanks for the explanation. Next: what is a closure?'),
     ).toBe('Why is that?');
-    expect(cleanReply('Is it O(n)? Why?', false).text).toBe('Is it O(n)? Why?');
-    expect(cleanReply('Try a[1:3] first.', false).text).toBe(
-      'Try a[1:3] first.',
+    expect(
+      clean(
+        'Could you give an example?A `@staticmethod` is best when it needs no class.',
+      ),
+    ).toBe('Could you give an example?');
+    expect(clean('Run it again.How would you avoid the copy?')).toBe(
+      'Run it again.',
     );
-    expect(cleanReply('Go on. [12 min and 30 answers left.]', false).text).toBe(
-      'Go on.',
+    expect(clean('Look at pathlib.Path and os.path first.')).toBe(
+      'Look at pathlib.Path and os.path first.',
     );
-    expect(cleanReply('Look at items[0] first.', false).text).toBe(
-      'Look at items[0] first.',
+    expect(clean('Is it O(n)? Why?')).toBe('Is it O(n)? Why?');
+    expect(clean('What is X? Why? How would you test it? And Y?')).toBe(
+      'What is X? Why?',
     );
   });
 
@@ -220,5 +261,15 @@ describe('cleanReply', () => {
     expect(
       cleanReply('```json\n{"title":"x","statement":"y"}\n```', false).question,
     ).toBeUndefined();
+  });
+});
+
+describe('draftReply', () => {
+  it('never shows a remark while it is still being written', () => {
+    expect(draftReply('Good. [Pau')).toBe('Good.');
+    expect(draftReply('Good. [Pauses] What')).toBe('Good. What');
+    expect(draftReply('Why? [Candidate: becau')).toBe('Why?');
+    expect(draftReply('Look at `items[0')).toBe('Look at `items[0');
+    expect(draftReply('Here:\n```py\nx = [1')).toBe('Here:');
   });
 });

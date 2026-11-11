@@ -17,6 +17,8 @@ import { turnView } from './practice.views';
 import {
   cleanReply,
   conversation,
+  draftReply,
+  questionCount,
   END_LINE,
   interviewTools,
   POSE_LINE,
@@ -53,7 +55,7 @@ const clip = (s: string, max: number) =>
  * interview sets `busyUntil`, so a second answer waits.
  *
  * Events sent to the interview's room: practice:turn (a finished turn),
- * practice:delta (reply text as it arrives), practice:question (the coding
+ * practice:draft (the reply so far, cleaned), practice:question (the coding
  * question), practice:retracted (an answer the AI couldn't reply to).
  */
 @Injectable()
@@ -199,24 +201,45 @@ export class PracticeConversationService {
   /** Asks the AI for its next turn, streaming it to the room. */
   private async reply(iv: Stored): Promise<void> {
     const id = iv._id.toString();
-    const result = await this.ai.chat(
-      {
-        messages: conversation(iv, iv.avoid),
-        tools: interviewTools(!!iv.language),
-        maxTokens: REPLY_MAX_TOKENS,
-      },
-      (text) => this.notifier.emit(id, 'practice:delta', { text }),
-    );
-    const tokens = countedTokens(result.usage);
-    await this.budget.spent(iv.quota, tokens);
-    let next: ReturnType<typeof toTurn>;
-    try {
-      next = toTurn(result, !!iv.language);
-    } catch (err) {
+    const ask = async (nudge?: string) => {
+      // The candidate sees the reply cleaned as it streams: the whole draft
+      // each time it changes, never a raw remark.
+      let shown = '';
+      const result = await this.ai.chat(
+        {
+          messages: [
+            ...conversation(iv, iv.avoid),
+            ...(nudge ? [{ role: 'system' as const, content: nudge }] : []),
+          ],
+          tools: interviewTools(!!iv.language),
+          maxTokens: REPLY_MAX_TOKENS,
+        },
+        (soFar) => {
+          const draft = draftReply(soFar);
+          if (draft !== shown) {
+            shown = draft;
+            this.notifier.emit(id, 'practice:draft', { text: draft });
+          }
+        },
+      );
+      const tokens = countedTokens(result.usage);
+      await this.budget.spent(iv.quota, tokens);
       await this.spent(iv._id, tokens);
-      throw err;
+      return result;
+    };
+
+    let result = await ask();
+    // Ending or posing the coding question far too early: ask once more,
+    // with a note saying why. A second call is taken as meant.
+    const early = tooEarly(result.toolCalls[0], iv);
+    if (early) {
+      this.logger.log(
+        `Asked again: ${result.toolCalls[0].name} came too early`,
+      );
+      this.notifier.emit(id, 'practice:draft', { text: '' });
+      result = await ask(early);
     }
-    const { turn, question, end } = next;
+    const { turn, question, end } = toTurn(result, !!iv.language);
     await this.model
       .updateOne(
         { _id: iv._id },
@@ -226,7 +249,6 @@ export class PracticeConversationService {
             busyUntil: null,
             ...(question && { codingQuestion: question }),
           },
-          $inc: { usedRequests: 1, usedTokens: tokens },
         },
       )
       .exec();
@@ -300,7 +322,8 @@ function toTurn(result: ChatResult, coding: boolean) {
   let end = false;
   if (call?.name === 'pose_coding_question') {
     question = parseQuestion(call.arguments);
-    text ||= POSE_LINE;
+    // Whatever else it wrote alongside tends to be another question.
+    text = POSE_LINE;
   } else if (call?.name === 'end_interview') {
     end = true;
     text ||= END_LINE;
@@ -313,6 +336,50 @@ function toTurn(result: ChatResult, coding: boolean) {
     ...((question || end) && { tool: call }),
   };
   return { turn, question, end };
+}
+
+// The candidate asks to stop, or to move on to the code.
+const ASKS_TO_STOP =
+  /\b(stop|end (it|this|the interview|here|now)|finish|quit|wrap (it )?up|that'?s (all|enough)|i'?m done)\b/i;
+const ASKS_FOR_CODE = /\b(cod(e|ing)|program|problem)\b/i;
+
+/**
+ * Why a tool call comes far too early, as a note for the AI, or null when
+ * it's fine. Weaker models end after a few answers, or jump to the coding
+ * question straight away.
+ */
+function tooEarly(
+  call: AiToolCall | undefined,
+  iv: Pick<
+    Stored,
+    'kind' | 'minutes' | 'language' | 'answers' | 'turns' | 'codingQuestion'
+  >,
+): string | null {
+  if (!call) return null;
+  const last = iv.turns.findLast((t) => t.kind === 'candidate');
+  const minutesLeft = last?.minutesLeft ?? iv.minutes;
+  const used = 1 - minutesLeft / iv.minutes;
+  const planned = questionCount(iv);
+  if (call.name === 'end_interview') {
+    const done =
+      used >= 0.6 ||
+      (last?.answersLeft ?? PRACTICE_LIMITS.maxAnswers) <= 3 ||
+      iv.answers >= planned + (iv.language ? 4 : 1) ||
+      ASKS_TO_STOP.test(last?.text ?? '');
+    return done
+      ? null
+      : `Don't end the interview yet: about ${minutesLeft} minutes are left. Carry on with your next question.`;
+  }
+  if (call.name === 'pose_coding_question' && !iv.codingQuestion) {
+    const due =
+      used >= 0.35 ||
+      iv.answers >= Math.max(1, Math.floor(planned / 2)) ||
+      ASKS_FOR_CODE.test(last?.text ?? '');
+    return due
+      ? null
+      : 'Not yet: ask a few concept questions first, then the coding question.';
+  }
+  return null;
 }
 
 /**
