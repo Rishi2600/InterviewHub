@@ -49,4 +49,18 @@ export const envValidationSchema = Joi.object({
       then: Joi.string().min(16).required(),
     }),
   TURN_TTL_SECONDS: Joi.number().integer().min(60).max(86_400).default(3_600),
+
+  // AI practice interviews. Without a key the feature is switched off.
+  // See guides/ai-practice.md.
+  GROQ_API_KEY: Joi.string().allow('').default(''),
+  // Tried in order: when one hits its limit, the next takes over.
+  AI_MODELS: Joi.string().default('openai/gpt-oss-120b,openai/gpt-oss-20b'),
+  // The app's own daily budget across all models, kept under Groq's free
+  // limits. An interview starts only if a full-length one still fits.
+  AI_DAILY_REQUESTS: Joi.number().integer().min(0).default(1_800),
+  AI_DAILY_TOKENS: Joi.number().integer().min(0).default(360_000),
+  // Tokens set aside when an interview starts; the unused rest is given back.
+  AI_TOKENS_PER_INTERVIEW: Joi.number().integer().min(1_000).default(30_000),
+  // Interviews running at once, to stay under the per-minute limits.
+  AI_MAX_RUNNING: Joi.number().integer().min(1).default(5),
 });
