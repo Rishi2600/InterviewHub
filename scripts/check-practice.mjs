@@ -1,6 +1,7 @@
 // An AI practice interview in a real browser, against the real AI (Groq's
-// free tier): the setup sentence, the greeting, answers, the coding question
-// with a Run, ending, and the feedback report. Needs the API (with
+// free tier): the setup sentence, the greeting, a typed answer, a spoken
+// answer (through a stand-in for the browser's speech, which headless Chrome
+// can't do), the coding question with a Run, ending, and the feedback. Needs the API (with
 // GROQ_API_KEY set) and the frontend running. Uses about 6 AI requests.
 // Run: npm run check:practice [screenshot folder]
 import { chromium } from 'playwright-core'
@@ -30,7 +31,30 @@ const email = `practice-${stamp}@check.interviewhub.dev`
 await api('/auth/register', { method: 'POST', body: { username: `practice_${stamp}`, email, password: PASSWORD, role: 'candidate' } })
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true })
-const page = await (await browser.newContext({ viewport: { width: 1440, height: 950 } })).newPage()
+const context = await browser.newContext({ viewport: { width: 1440, height: 950 } })
+// Stand-ins for speech: the recognizer "hears" window.__say once it starts,
+// and speaking only records what would have been said.
+await context.addInitScript(() => {
+  window.__spoken = []
+  window.SpeechRecognition = window.webkitSpeechRecognition = class {
+    start() {
+      setTimeout(() => this.onstart?.(), 50)
+      setTimeout(() => {
+        if (!window.__say) return
+        const transcript = window.__say
+        window.__say = null
+        this.onresult?.({ resultIndex: 0, results: [{ isFinal: true, 0: { transcript } }] })
+      }, 400)
+    }
+    stop() {}
+    abort() {}
+  }
+  window.speechSynthesis.speak = (u) => {
+    window.__spoken.push(u.text)
+    setTimeout(() => u.onend?.(), 100)
+  }
+})
+const page = await context.newPage()
 page.on('console', (m) => {
   if (m.type() === 'error' && !m.text().includes('401')) console.log(`[browser] ${m.text()}`)
 })
@@ -73,7 +97,16 @@ await shot(page, 'practice-greeting')
 await say('A list can change after it is made and a tuple cannot. I use tuples for fixed records, and they can be dictionary keys.')
 console.log('reply:', (await latestAi()).split('\n').slice(-1)[0])
 
-await say("I think we've covered that well. I'm ready for the coding question now.")
+// The next answer by voice: sent after the pause, and the reply is spoken.
+await page.evaluate(() => (window.__say = "I think we've covered that well. I'm ready for the coding question now."))
+await page.getByRole('button', { name: 'Use voice' }).click()
+await page.getByText('Sends after a 2-second pause').waitFor()
+await shot(page, 'practice-voice')
+await page.getByText("I'm ready for the coding question now.").last().waitFor({ timeout: 10_000 })
+await page.waitForFunction(() => window.__spoken.length > 0, null, { timeout: AI_WAIT })
+console.log('spoken:', await page.evaluate(() => window.__spoken.at(-1)))
+await page.getByRole('button', { name: 'Switch to typing' }).first().click()
+await ready()
 const question = page.getByRole('tab', { name: 'Question' })
 const posed = await question.waitFor({ timeout: 5_000 }).then(() => true, () => false)
 console.log('coding question posed:', posed)
@@ -87,7 +120,7 @@ if (posed) {
 }
 
 // End, wait for the feedback, read it.
-await page.getByRole('button', { name: /End interview|^End$/ }).click()
+await page.getByRole('button', { name: 'End interview' }).first().click()
 await page.getByRole('alertdialog').getByRole('button', { name: 'End interview' }).click()
 await page.getByText("That's the interview done").waitFor()
 await shot(page, 'practice-ending')

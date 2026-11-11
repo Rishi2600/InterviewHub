@@ -189,6 +189,13 @@ describe('cleanReply', () => {
         false,
       ).text,
     ).toBe('Thanks. Why?');
+    expect(
+      cleanReply(
+        'Why is that?Thanks for the explanation. Next: what is a closure?',
+        false,
+      ).text,
+    ).toBe('Why is that?');
+    expect(cleanReply('Is it O(n)? Why?', false).text).toBe('Is it O(n)? Why?');
     expect(cleanReply('Try a[1:3] first.', false).text).toBe(
       'Try a[1:3] first.',
     );

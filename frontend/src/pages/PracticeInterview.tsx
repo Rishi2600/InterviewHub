@@ -2,7 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ArrowLeft, ArrowRight, Bot, Check, Code2, Loader2, MessageSquare, RefreshCw, Square, Timer, X } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  AudioLines,
+  Bot,
+  Check,
+  Code2,
+  Keyboard,
+  Loader2,
+  MessageSquare,
+  Mic,
+  MicOff,
+  RefreshCw,
+  Square,
+  Timer,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,11 +39,13 @@ import { Conversation, InlineText } from '@/components/practice/Conversation'
 import { PracticeComposer } from '@/components/practice/PracticeComposer'
 import { PracticeEditor } from '@/components/practice/PracticeEditor'
 import { AiTile, YouTile } from '@/components/practice/Tiles'
+import { VoicePanel } from '@/components/practice/VoicePanel'
 import type { AiState } from '@/components/practice/Tiles'
 import { KIND_LABEL, practiceTitle } from '@/components/practice/labels'
 import { useAuth } from '@/hooks/useAuth'
 import { useNow } from '@/hooks/useNow'
 import { usePracticeSocket } from '@/hooks/usePracticeSocket'
+import { useVoice, voiceSupport } from '@/hooks/useVoice'
 import { errorMessage } from '@/lib/api'
 import { endPractice, getPractice } from '@/lib/endpoints'
 import type { CodingQuestion, PracticeInterview as Interview } from '@/types'
@@ -96,10 +116,26 @@ function InterviewScreen({ interview }: { interview: Interview }) {
   const question = live.question
   const coding = Boolean(interview.language && question)
   const lastAi = [...live.turns].reverse().find((t) => t.kind === 'ai')
-  const aiState: AiState = live.waiting ? 'writing' : 'waiting'
   const canAnswer = live.status === 'connected' && !live.waiting && live.turns.length > 0 && !timeUp
-
   const send = (text: string) => live.answer(text, interview.language ? code.current : undefined)
+
+  // Voice: the browser listens and sends after a pause, and reads replies aloud.
+  const support = voiceSupport()
+  const [mode, setMode] = useState<'chat' | 'voice'>(interview.mode === 'voice' && support.listen ? 'voice' : 'chat')
+  const [speaker, setSpeaker] = useState(true)
+  const voice = useVoice({ on: mode === 'voice', paused: !canAnswer, onAnswer: send })
+  const { speak, stopSpeaking } = voice
+  const spoken = useRef(live.turns.length)
+  useEffect(() => {
+    const latest = live.turns[live.turns.length - 1]
+    if (live.turns.length > spoken.current && latest?.kind === 'ai' && mode === 'voice' && speaker) speak(latest.text)
+    spoken.current = live.turns.length
+  }, [live.turns, mode, speaker, speak])
+  const switchMode = () => {
+    stopSpeaking()
+    setMode((m) => (m === 'voice' ? 'chat' : 'voice'))
+  }
+  const aiState: AiState = voice.speaking ? 'speaking' : live.waiting ? 'writing' : 'waiting'
 
   return (
     <div className="min-h-svh bg-background">
@@ -127,6 +163,12 @@ function InterviewScreen({ interview }: { interview: Interview }) {
             {live.status !== 'connected' && <ConnectionStatus status={live.status} />}
           </span>
         </div>
+        {support.listen && (
+          <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={switchMode}>
+            {mode === 'voice' ? <Keyboard aria-hidden /> : <AudioLines aria-hidden />}
+            {mode === 'voice' ? 'Switch to typing' : 'Switch to voice'}
+          </Button>
+        )}
         <Button variant="outline" size="sm" className="border-danger/40 text-danger hover:bg-danger/10" onClick={() => setEndOpen(true)} disabled={end.isPending}>
           <Square aria-hidden />
           <span className="hidden sm:inline">End interview</span>
@@ -134,13 +176,13 @@ function InterviewScreen({ interview }: { interview: Interview }) {
         </Button>
       </header>
 
-      <div className="grid items-start gap-3 p-3 pb-8 sm:p-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="grid items-start gap-3 p-3 pb-24 sm:p-4 sm:pb-24 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="grid content-start gap-3">
           {coding ? (
             <>
               <div className="grid grid-cols-2 gap-3">
                 <AiTile state={aiState} compact className="h-24" />
-                <YouTile name={user?.username ?? 'You'} listening={false} className="h-24" />
+                <YouTile name={user?.username ?? 'You'} listening={voice.listening} className="h-24" />
               </div>
               <PracticeEditor
                 interviewId={interview.id}
@@ -155,7 +197,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
             <>
               <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                 <AiTile state={aiState} className="aspect-video" />
-                <YouTile name={user?.username ?? 'You'} listening={false} className="aspect-video sm:aspect-auto" />
+                <YouTile name={user?.username ?? 'You'} listening={voice.listening} className="aspect-video sm:aspect-auto" />
               </div>
               {live.failure ? (
                 <div className="flex flex-wrap items-center gap-3 rounded-xl border border-danger/40 bg-danger/5 px-4 py-3 text-sm">
@@ -200,17 +242,77 @@ function InterviewScreen({ interview }: { interview: Interview }) {
             <>
               <Conversation turns={live.turns} draft={live.draft} waiting={live.waiting} />
               <div className="border-t p-2.5">
-                <PracticeComposer
-                  onSend={send}
-                  disabled={!canAnswer}
-                  disabledReason={live.waiting ? 'The interviewer is writing…' : live.status !== 'connected' ? 'Reconnecting…' : undefined}
-                  restore={live.retracted}
-                />
+                {mode === 'voice' ? (
+                  <VoicePanel
+                    text={voice.text}
+                    listening={voice.listening}
+                    speaking={voice.speaking}
+                    waiting={live.waiting}
+                    error={voice.error}
+                    onSendNow={voice.sendNow}
+                    onStopSpeaking={stopSpeaking}
+                    onType={switchMode}
+                  />
+                ) : (
+                  <PracticeComposer
+                    onSend={send}
+                    disabled={!canAnswer}
+                    disabledReason={live.waiting ? 'The interviewer is writing…' : live.status !== 'connected' ? 'Reconnecting…' : undefined}
+                    restore={live.retracted}
+                    extra={
+                      support.listen && (
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-muted-foreground" onClick={switchMode}>
+                          <Mic aria-hidden />
+                          Use voice
+                        </Button>
+                      )
+                    }
+                  />
+                )}
               </div>
             </>
           )}
         </section>
       </div>
+
+      {(support.listen || support.speak) && (
+        <div className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border bg-card p-1.5 shadow-sm">
+          {support.listen && (
+            <button
+              type="button"
+              onClick={switchMode}
+              aria-label={mode === 'voice' ? 'Switch to typing' : 'Answer by voice'}
+              title={mode === 'voice' ? 'Switch to typing' : 'Answer by voice'}
+              className={cn(
+                'grid size-9 place-items-center rounded-full border',
+                mode === 'voice' ? 'bg-card hover:bg-muted' : 'border-danger/40 bg-danger/10 text-danger',
+              )}
+            >
+              {mode === 'voice' ? <Mic className="size-4" aria-hidden /> : <MicOff className="size-4" aria-hidden />}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (speaker) stopSpeaking()
+              setSpeaker((s) => !s)
+            }}
+            aria-label={speaker ? "Mute the interviewer's voice" : "Hear the interviewer's voice"}
+            title={speaker ? "Mute the interviewer's voice" : "Hear the interviewer's voice"}
+            className="grid size-9 place-items-center rounded-full border bg-card hover:bg-muted"
+          >
+            {speaker && mode === 'voice' ? <Volume2 className="size-4" aria-hidden /> : <VolumeX className="size-4" aria-hidden />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEndOpen(true)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#dc2626] px-3 text-sm font-medium text-white hover:bg-[#b91c1c]"
+          >
+            <Square className="size-4" aria-hidden />
+            End
+          </button>
+        </div>
+      )}
 
       <AlertDialog open={endOpen} onOpenChange={setEndOpen}>
         <AlertDialogContent>

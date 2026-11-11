@@ -88,6 +88,7 @@ export function systemPrompt(s: Setup, avoid: string[]): string {
     'How to interview',
     '- Start with a one-sentence greeting and your first question.',
     '- Ask one question at a time, in under 80 words. Plain text: no headings, lists or tables. Short code in backticks is fine.',
+    "- Each reply is one message with at most one question. Then stop and wait for the candidate's answer: never write their side, or a second turn of your own.",
     '- Follow up on what the candidate actually said: ask why, probe gaps, trade-offs and edge cases. Move on after two or three follow-ups, or once an answer is complete.',
     "- If the candidate is stuck, give a small hint, never the answer. If they ask for the answer, say you can't give it during the interview and offer a hint instead.",
     "- Don't teach, don't lecture, and don't say how well they are doing overall. That comes in the written feedback afterwards.",
@@ -377,6 +378,8 @@ export const overallScore = (f: Feedback) =>
  */
 const COPIED_NOTE =
   /(?:^|\s)\[(?:App note:[^\]\n]*|[^\]\n]{0,40}\bleft\b[^\]\n]{0,20}|\d+:\d+)\]/i;
+/** A second turn stuck straight onto the first, after a question. */
+const GLUED_TURN = /[?!](?=[A-Z][a-z])/;
 /** A JSON code block in a reply. */
 const JSON_BLOCK = /```(?:json)?\s*(\{[\s\S]*?\})\s*```/;
 
@@ -397,6 +400,9 @@ export function cleanReply(
     const before = out.slice(0, note.index).trim();
     out = before || out.slice(note.index + note[0].length).trim();
   }
+  // Turns run together with no space ("…object?Thanks, next…"): keep the first.
+  const glued = GLUED_TURN.exec(out);
+  if (glued) out = out.slice(0, glued.index + 1).trim();
   const block = liftQuestion ? JSON_BLOCK.exec(out) : null;
   if (block) {
     try {

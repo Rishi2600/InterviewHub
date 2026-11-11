@@ -96,7 +96,9 @@ export class PracticeConversationService {
   ): Promise<{ ok: boolean; message?: string }> {
     const current = await this.model
       .findOne({ _id: id, userId })
-      .select('status endsAt answers language turns.kind turns.code')
+      .select(
+        'status endsAt answers language codingQuestion turns.kind turns.code',
+      )
       .lean()
       .exec();
     if (!current || current.status !== 'active') {
@@ -313,12 +315,19 @@ function toTurn(result: ChatResult, coding: boolean) {
   return { turn, question, end };
 }
 
-/** The code, if it changed since the last answer that carried code. */
+/**
+ * The code, once there is a coding question and only if it changed since
+ * the last answer that carried it.
+ */
 function changedCode(
-  iv: { language: string | null; turns: Pick<Turn, 'kind' | 'code'>[] },
+  iv: {
+    language: string | null;
+    codingQuestion: CodingQuestion | null;
+    turns: Pick<Turn, 'kind' | 'code'>[];
+  },
   code: string | undefined,
 ): string | undefined {
-  if (!iv.language || !code?.trim()) return undefined;
+  if (!iv.language || !iv.codingQuestion || !code?.trim()) return undefined;
   const clipped = clip(code, PRACTICE_LIMITS.codeChars);
   const last = iv.turns.findLast((t) => t.kind === 'candidate' && t.code);
   return last?.code === clipped ? undefined : clipped;
