@@ -72,7 +72,7 @@ export class SessionsService {
             ...clean(client),
           },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
     if (session) return { userId: session.userId.toString(), token: next };

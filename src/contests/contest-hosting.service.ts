@@ -187,7 +187,7 @@ export class ContestHostingService {
       .findOneAndUpdate(
         { _id: contest._id, status: contest.status },
         { $set: { ...next, endAt } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
     if (!updated) throw new ConflictException('The contest changed; reload it');
@@ -269,7 +269,7 @@ export class ContestHostingService {
       .findOneAndUpdate(
         { _id: contest._id, status: 'draft' },
         { $set: { status: 'published', publishedAt: now } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
     if (!published) {
@@ -343,7 +343,7 @@ export class ContestHostingService {
       .findOneAndUpdate(
         { ...base, entrantCount: 0, startAt: { $gt: now } },
         set,
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
     if (early) {
@@ -353,7 +353,7 @@ export class ContestHostingService {
       return early;
     }
     const late = await this.contestModel
-      .findOneAndUpdate(base, set, { new: true })
+      .findOneAndUpdate(base, set, { returnDocument: 'after' })
       .exec();
     if (!late) {
       throw new ConflictException(

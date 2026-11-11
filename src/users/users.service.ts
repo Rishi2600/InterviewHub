@@ -48,7 +48,7 @@ export class UsersService {
 
   async setAvatarUrl(id: string, avatarUrl: string): Promise<UserDocument> {
     const user = await this.userModel
-      .findByIdAndUpdate(id, { avatarUrl }, { new: true })
+      .findByIdAndUpdate(id, { avatarUrl }, { returnDocument: 'after' })
       .exec();
     if (!user) throw new NotFoundException('User not found');
     return user;

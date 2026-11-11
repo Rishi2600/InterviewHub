@@ -126,7 +126,7 @@ export class FinalizeService {
           $or: [{ lockedUntil: null }, { lockedUntil: { $lte: now } }],
         },
         { $set: { lockedUntil: new Date(now.getTime() + LEASE_MS) } },
-        { new: true, sort: { endAt: 1 } },
+        { returnDocument: 'after', sort: { endAt: 1 } },
       )
       .exec();
   }
