@@ -89,8 +89,11 @@ describe('conversation', () => {
       [],
     );
     expect(msgs[0].role).toBe('system');
-    expect(msgs[3].content).toContain('[20 min and 30 answers left.]');
     expect(msgs[3].content).toContain('```python\nprint(1)\n```');
+    expect(msgs.at(-1)).toEqual({
+      role: 'system',
+      content: '[App note: 20 min and 30 answers left.]',
+    });
     expect(msgs[4].content).toContain('finished in 38 ms');
     expect(msgs[4].content).toContain('Input:\naabb\nOutput:\n0');
   });
@@ -101,7 +104,7 @@ describe('conversation', () => {
       { ...technical, turns: [{ kind: 'ai', text: 'Bye', at, tool }] },
       [],
     );
-    expect(msgs.slice(2)).toEqual([
+    expect(msgs.slice(2, -1)).toEqual([
       { role: 'assistant', content: 'Bye', toolCalls: [tool] },
       { role: 'tool', content: 'Done.', toolCallId: 'c1' },
     ]);
@@ -179,6 +182,15 @@ describe('cleanReply', () => {
   it('drops notes the AI copied from ours', () => {
     expect(cleanReply('What is a tuple? [0:39]', false).text).toBe(
       'What is a tuple?',
+    );
+    expect(
+      cleanReply(
+        'Thanks. Why? [15 min and 38 answers left.] What about generators?',
+        false,
+      ).text,
+    ).toBe('Thanks. Why?');
+    expect(cleanReply('Try a[1:3] first.', false).text).toBe(
+      'Try a[1:3] first.',
     );
     expect(cleanReply('Go on. [12 min and 30 answers left.]', false).text).toBe(
       'Go on.',

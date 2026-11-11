@@ -124,8 +124,11 @@ describe('AI practice interviews', () => {
 
     const sent = ai.last().messages;
     expect(sent[0].role).toBe('system');
-    expect(sent.at(-1)?.content).toContain('An immutable list.');
-    expect(sent.at(-1)?.content).toContain('[30 min and 39 answers left.]');
+    expect(sent.at(-2)?.content).toContain('An immutable list.');
+    expect(sent.at(-1)).toEqual({
+      role: 'system',
+      content: '[App note: 30 min and 39 answers left.]',
+    });
 
     const iv = await view(cid, id);
     expect(iv.answers).toBe(1);
@@ -217,7 +220,7 @@ describe('AI practice interviews', () => {
 
     // The same code again isn't sent twice.
     await answer(s, id, 'Still done', 'print(first_unique())');
-    expect(ai.last().messages.at(-1)?.content).not.toContain('```python');
+    expect(ai.last().messages.at(-2)?.content).not.toContain('```python');
     const iv = await view(eve, id);
     expect(iv.codingQuestion?.title).toBe('First unique character');
     await end(eve, id);

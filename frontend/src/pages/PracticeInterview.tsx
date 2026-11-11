@@ -39,6 +39,8 @@ import { cn } from '@/lib/utils'
 export function PracticeInterview() {
   const { id = '' } = useParams<{ id: string }>()
   const query = useQuery({ queryKey: ['practice', id], queryFn: () => getPractice(id), enabled: Boolean(id) })
+  const [sawLive, setSawLive] = useState(false)
+  if (query.data?.status === 'active' && !sawLive) setSawLive(true)
 
   if (query.isLoading) return <FullPageLoader label="Opening the interview…" />
   if (query.isError || !query.data) {
@@ -49,7 +51,9 @@ export function PracticeInterview() {
     )
   }
   const iv = query.data
-  if (iv.status === 'done' || iv.status === 'failed') return <Navigate to={`/practice/${iv.id}/feedback`} replace />
+  // Opened after it finished: straight to the feedback. Ended while here:
+  // the ending screen stays, with its "View feedback" button.
+  if ((iv.status === 'done' || iv.status === 'failed') && !sawLive) return <Navigate to={`/practice/${iv.id}/feedback`} replace />
   if (iv.status !== 'active') return <EndingScreen interview={iv} />
   return <InterviewScreen interview={iv} />
 }

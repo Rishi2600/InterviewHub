@@ -79,7 +79,7 @@ export function systemPrompt(s: Setup, avoid: string[]): string {
     '',
     'The interview',
     `- Type: ${s.kind}. Topic: ${s.topic}${s.mixed ? ' (picked at random; tell the candidate in your greeting)' : ''}. Level: ${s.level}, so focus on ${LEVEL_GUIDE[s.level]}.`,
-    `- Length: ${s.minutes} minutes or ${PRACTICE_LIMITS.maxAnswers} answers, whichever comes first. Each candidate message ends with a note in square brackets of the time and answers left. Use it to pace yourself; don't mention it.`,
+    `- Length: ${s.minutes} minutes or ${PRACTICE_LIMITS.maxAnswers} answers, whichever comes first. The last message you get is an app note with the time and answers left. Use it to pace yourself; never mention or copy it.`,
     `- Plan: ${plan}`,
     avoid.length
       ? `- The candidate was recently asked these; pick different questions: ${avoid.join('; ')}.`
@@ -168,7 +168,7 @@ function renderTurn(t: Turn, language: string | null): AiMessage[] {
     ];
   }
   if (t.kind === 'candidate') {
-    let content = `${t.text}\n\n[${t.minutesLeft} min and ${t.answersLeft} answers left.]`;
+    let content = t.text;
     if (t.code) {
       content += `\n[Their code now:\n\`\`\`${language ?? ''}\n${t.code}\n\`\`\`]`;
     }
@@ -213,7 +213,17 @@ export function conversation(
     OPENING,
     ...(from ? [TRIMMED] : []),
     ...rendered.slice(from).flat(),
+    // Last, so the prompt before it stays the same from turn to turn.
+    { role: 'system', content: timeNote(iv) },
   ];
+}
+
+/** The time and answers left, as of the candidate's latest answer. */
+function timeNote(iv: Setup & { turns: Turn[] }): string {
+  const last = iv.turns.findLast((t) => t.kind === 'candidate');
+  const minutes = last?.minutesLeft ?? iv.minutes;
+  const answers = last?.answersLeft ?? PRACTICE_LIMITS.maxAnswers;
+  return `[App note: ${minutes} min and ${answers} answers left.]`;
 }
 
 // ── Feedback ────────────────────────────────────────────────────────────────
@@ -360,8 +370,13 @@ export const overallScore = (f: Feedback) =>
   Math.round((f.areas.reduce((s, a) => s + a.score, 0) / f.areas.length) * 10) /
   10;
 
-/** A note in square brackets at the end of a reply, copied from ours. */
-const TRAILING_NOTE = /\s*\[[^\]\n]{0,60}\]\s*$/;
+/**
+ * A note like ours that the AI wrote itself: "[12 min and 30 answers
+ * left.]" or "[0:39]". Only at the start or after a space, so code such as
+ * a[1:3] is left alone.
+ */
+const COPIED_NOTE =
+  /(?:^|\s)\[(?:App note:[^\]\n]*|[^\]\n]{0,40}\bleft\b[^\]\n]{0,20}|\d+:\d+)\]/i;
 /** A JSON code block in a reply. */
 const JSON_BLOCK = /```(?:json)?\s*(\{[\s\S]*?\})\s*```/;
 
@@ -375,7 +390,13 @@ export function cleanReply(
   liftQuestion: boolean,
 ): { text: string; question?: string } {
   let out = text.trim();
-  while (TRAILING_NOTE.test(out)) out = out.replace(TRAILING_NOTE, '').trim();
+  // A copied note: the AI may have gone on to play the next turn, so keep
+  // only what came before it (or after it, if it opened with one).
+  const note = COPIED_NOTE.exec(out);
+  if (note) {
+    const before = out.slice(0, note.index).trim();
+    out = before || out.slice(note.index + note[0].length).trim();
+  }
   const block = liftQuestion ? JSON_BLOCK.exec(out) : null;
   if (block) {
     try {
