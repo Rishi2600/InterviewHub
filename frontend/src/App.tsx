@@ -24,6 +24,7 @@ const ContestWorkspace = lazy(() => import('@/pages/ContestWorkspace').then((m) 
 const ContestResults = lazy(() => import('@/pages/ContestResults').then((m) => ({ default: m.ContestResults })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
 const Practice = lazy(() => import('@/pages/Practice').then((m) => ({ default: m.Practice })))
+const PracticeFeedback = lazy(() => import('@/pages/PracticeFeedback').then((m) => ({ default: m.PracticeFeedback })))
 const PracticeInterview = lazy(() => import('@/pages/PracticeInterview').then((m) => ({ default: m.PracticeInterview })))
 const UserProfile = lazy(() => import('@/pages/UserProfile').then((m) => ({ default: m.UserProfile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
@@ -72,6 +73,7 @@ export default function App() {
                       <Route path="/contests/:id/edit" element={<ContestEditor />} />
                     </Route>
                     <Route path="/practice" element={<Practice />} />
+                    <Route path="/practice/:id/feedback" element={<PracticeFeedback />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/users/:id" element={<UserProfile />} />
 
