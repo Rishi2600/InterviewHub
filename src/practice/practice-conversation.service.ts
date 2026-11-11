@@ -4,6 +4,7 @@ import { WsException } from '@nestjs/websockets';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import {
   AiClient,
+  AiToolCall,
   AiUnavailableError,
   ChatResult,
   countedTokens,
@@ -14,6 +15,7 @@ import { PracticeService } from './practice.service';
 import { PRACTICE_LIMITS } from './practice.constants';
 import { turnView } from './practice.views';
 import {
+  cleanReply,
   conversation,
   END_LINE,
   interviewTools,
@@ -207,7 +209,7 @@ export class PracticeConversationService {
     await this.budget.spent(iv.quota, tokens);
     let next: ReturnType<typeof toTurn>;
     try {
-      next = toTurn(result);
+      next = toTurn(result, !!iv.language);
     } catch (err) {
       await this.spent(iv._id, tokens);
       throw err;
@@ -279,9 +281,19 @@ export class PracticeConversationService {
  * The AI's result as a turn. A tool call without words gets a fixed line,
  * so it costs no second request. Throws if the reply is unusable.
  */
-function toTurn(result: ChatResult) {
-  const call = result.toolCalls[0];
-  let text = result.text.trim();
+function toTurn(result: ChatResult, coding: boolean) {
+  const cleaned = cleanReply(result.text, coding);
+  let call: AiToolCall | undefined = result.toolCalls[0];
+  let text = cleaned.text;
+  // A question written out as JSON instead of the tool call: treat it as
+  // the call, so it still reaches the editor and the history stays right.
+  if (!call && cleaned.question) {
+    call = {
+      id: `call_${Date.now()}`,
+      name: 'pose_coding_question',
+      arguments: cleaned.question,
+    };
+  }
   let question: CodingQuestion | null = null;
   let end = false;
   if (call?.name === 'pose_coding_question') {

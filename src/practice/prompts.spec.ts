@@ -1,4 +1,5 @@
 import {
+  cleanReply,
   conversation,
   estimateTokens,
   feedbackRequest,
@@ -171,5 +172,34 @@ describe('feedback', () => {
       parseFeedback(JSON.stringify({ summary: '', areas: [] }), areas),
     ).toThrow();
     expect(() => parseFeedback('not json', areas)).toThrow();
+  });
+});
+
+describe('cleanReply', () => {
+  it('drops notes the AI copied from ours', () => {
+    expect(cleanReply('What is a tuple? [0:39]', false).text).toBe(
+      'What is a tuple?',
+    );
+    expect(cleanReply('Go on. [12 min and 30 answers left.]', false).text).toBe(
+      'Go on.',
+    );
+    expect(cleanReply('Look at items[0] first.', false).text).toBe(
+      'Look at items[0] first.',
+    );
+  });
+
+  it('lifts out a coding question written as JSON', () => {
+    const json =
+      '{"title":"Balanced brackets","statement":"Print YES or NO.","example_input":"()","example_output":"YES"}';
+    const out = cleanReply(
+      `Now the coding part.\n\n\`\`\`json\n${json}\n\`\`\`\n\nWrite it in Python.`,
+      true,
+    );
+    expect(out.question).toBe(json);
+    expect(out.text).toBe('Now the coding part.\n\nWrite it in Python.');
+    // Without coding, the text is left alone.
+    expect(
+      cleanReply('```json\n{"title":"x","statement":"y"}\n```', false).question,
+    ).toBeUndefined();
   });
 });
