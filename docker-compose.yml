@@ -8,6 +8,7 @@
 services:
   mongo:
     image: mongo:7.0
+    pull_policy: never
     container_name: interviewhub-mongo
     restart: unless-stopped
     ports:
@@ -17,11 +18,19 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env}
     volumes:
       - mongo-data:/data/db
+    # MongoDB's recommended open-file limit; Docker's default of 1024 makes it
+    # warn at every start.
+    ulimits:
+      nofile: { soft: 64000, hard: 64000 }
+    # Each check opens a few connections, and Mongo logs every one: every 2 s
+    # while starting, then every 30 s, keeps the log readable.
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 5s
+      interval: 30s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
+      start_interval: 2s
 
   # Throwaway database for the end-to-end tests, started only with
   # `npm run test:e2e:db`. Same image as above, never pulled; data lives in
