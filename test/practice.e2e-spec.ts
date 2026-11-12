@@ -3,7 +3,7 @@ import { Socket } from 'socket.io-client';
 import { AiUnavailableError } from '../src/ai/ai.types';
 import { PracticeService } from '../src/practice/practice.service';
 import { END_LINE, POSE_LINE } from '../src/practice/prompts';
-import { utcDay } from '../src/practice/ai-budget.service';
+import { utcDay } from '../src/ai/daily-budget';
 import { FakeAi } from './fake-ai';
 import {
   bearer,

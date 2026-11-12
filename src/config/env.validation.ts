@@ -64,4 +64,15 @@ export const envValidationSchema = Joi.object({
   AI_TOKENS_PER_INTERVIEW: Joi.number().integer().min(1_000).default(100_000),
   // Interviews running at once, to stay under 8,000 tokens a minute a model.
   AI_MAX_RUNNING: Joi.number().integer().min(1).default(3),
+
+  // Interview prep. Its own key (falls back to GROQ_API_KEY) and its own
+  // model, so it never uses practice's per-model quota. See guides/prep.md.
+  GROQ_API_KEY_PREP: Joi.string().allow('').default(''),
+  AI_PREP_MODELS: Joi.string().default('qwen/qwen3.8-27b'),
+  AI_PREP_DAILY_REQUESTS: Joi.number().integer().min(0).default(900),
+  AI_PREP_DAILY_TOKENS: Joi.number().integer().min(0).default(180_000),
+  // Set aside when a coach session starts; the unused rest is given back.
+  AI_PREP_TOKENS_PER_COACH: Joi.number().integer().min(1_000).default(50_000),
+  // Coach sessions running at once (one model: 8,000 tokens a minute).
+  AI_PREP_MAX_RUNNING: Joi.number().integer().min(1).default(2),
 });

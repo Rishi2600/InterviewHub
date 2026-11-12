@@ -1,10 +1,18 @@
 /** What a practice interview can be set to, and its limits. */
+import {
+  LEVELS,
+  Level,
+  TOPIC_KINDS,
+  TOPICS,
+  TopicKind,
+  skillAreas,
+} from '../common/topics';
 
-export const PRACTICE_KINDS = ['technical', 'behavioural'] as const;
-export type PracticeKind = (typeof PRACTICE_KINDS)[number];
+export const PRACTICE_KINDS = TOPIC_KINDS;
+export type PracticeKind = TopicKind;
 
-export const PRACTICE_LEVELS = ['junior', 'mid', 'senior'] as const;
-export type PracticeLevel = (typeof PRACTICE_LEVELS)[number];
+export const PRACTICE_LEVELS = LEVELS;
+export type PracticeLevel = Level;
 
 export const PRACTICE_MINUTES = [15, 30, 40] as const;
 export type PracticeMinutes = (typeof PRACTICE_MINUTES)[number];
@@ -19,54 +27,12 @@ export type PracticeLanguage = (typeof PRACTICE_LANGUAGES)[number];
 export const PRACTICE_MODES = ['chat', 'voice'] as const;
 export type PracticeMode = (typeof PRACTICE_MODES)[number];
 
-export const TOPICS: Record<PracticeKind, readonly string[]> = {
-  technical: [
-    'JavaScript',
-    'TypeScript',
-    'Python',
-    'React',
-    'Node.js',
-    'SQL',
-    'Data structures',
-    'Algorithms',
-    'Web basics',
-  ],
-  behavioural: [
-    'Teamwork',
-    'Conflict',
-    'Ownership',
-    'Failure and learning',
-    'Leadership',
-    'Deadlines',
-  ],
-};
+export { TOPICS };
 /** Picks a topic at random on the server: models are poor at random. */
 export const MIXED = 'Mixed';
 
 /** The areas feedback scores, 1 to 5 each. */
-export function feedbackAreas(
-  kind: PracticeKind,
-  coding: boolean,
-): readonly string[] {
-  if (kind === 'behavioural') {
-    return [
-      'Structure',
-      'Ownership',
-      'Communication',
-      'Self-awareness',
-      'Results',
-    ];
-  }
-  return coding
-    ? [
-        'Knowledge',
-        'Problem solving',
-        'Code quality',
-        'Edge cases',
-        'Communication',
-      ]
-    : ['Knowledge', 'Problem solving', 'Depth', 'Edge cases', 'Communication'];
-}
+export const feedbackAreas = skillAreas;
 
 export const PRACTICE_LIMITS = {
   perMonth: 3,

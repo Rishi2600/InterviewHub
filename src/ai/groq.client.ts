@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   AiClient,
@@ -53,24 +53,43 @@ interface WireReply {
   usage?: WireUsage;
 }
 
+/** Which settings a client reads: practice's, or prep's own. */
+export interface GroqSettings {
+  /** Key variables, first one set wins. */
+  keys: string[];
+  models: string;
+  label: string;
+}
+export const PRACTICE_GROQ: GroqSettings = {
+  keys: ['GROQ_API_KEY'],
+  models: 'AI_MODELS',
+  label: 'practice',
+};
+export const PREP_GROQ: GroqSettings = {
+  keys: ['GROQ_API_KEY_PREP', 'GROQ_API_KEY'],
+  models: 'AI_PREP_MODELS',
+  label: 'prep',
+};
+
 /**
  * Groq's OpenAI-compatible chat API, called with fetch so the rate-limit
  * headers stay visible. Models are tried in order (AI_MODELS): one that hits
  * its limit rests until Groq says it may be used again, and the next one
  * takes over. See docs/learning/ai/.
  */
-@Injectable()
 export class GroqClient extends AiClient {
-  private readonly logger = new Logger(GroqClient.name);
+  private readonly logger: Logger;
   private readonly key: string;
   private readonly models: string[];
   /** Models at their limit, and when they may be tried again. */
   private readonly restingUntil = new Map<string, number>();
 
-  constructor(config: ConfigService) {
+  constructor(config: ConfigService, settings: GroqSettings = PRACTICE_GROQ) {
     super();
-    this.key = config.get<string>('GROQ_API_KEY') ?? '';
-    this.models = (config.get<string>('AI_MODELS') ?? '')
+    this.logger = new Logger(`GroqClient:${settings.label}`);
+    this.key =
+      settings.keys.map((k) => config.get<string>(k) ?? '').find(Boolean) ?? '';
+    this.models = (config.get<string>(settings.models) ?? '')
       .split(',')
       .map((m) => m.trim())
       .filter(Boolean);

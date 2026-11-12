@@ -67,3 +67,6 @@ export abstract class AiClient {
     onText?: (text: string) => void,
   ): Promise<ChatResult>;
 }
+
+/** Prep's AI: its own key and model, so it never uses practice's quota. */
+export abstract class PrepAiClient extends AiClient {}

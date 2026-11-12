@@ -4,10 +4,11 @@ import { HydratedDocument } from 'mongoose';
 export type AiBudgetDocument = HydratedDocument<AiBudget>;
 
 /**
- * The app's AI use for one UTC day. `reserved*` is what interviews have set
- * aside (a full interview's worth while running, what they used once
- * settled); a new interview starts only if its share still fits under the
- * budget. `used*` is what was really spent, for the admin view.
+ * One feature's AI use for one UTC day. `reserved*` is what sessions have set
+ * aside (a full session's worth while running, what they used once
+ * settled); a new session starts only if its share still fits under the
+ * budget. `used*` is what was really spent, for the admin view. Practice
+ * keeps it in `ai_budget`, prep in `prep_ai_budget` (see DailyBudget).
  */
 @Schema({ timestamps: true, collection: 'ai_budget' })
 export class AiBudget {
@@ -27,7 +28,7 @@ export class AiBudget {
   @Prop({ default: 0 })
   usedTokens: number;
 
-  // Interviews started this day that are still running.
+  // Sessions started this day that are still running.
   @Prop({ default: 0 })
   running: number;
 }

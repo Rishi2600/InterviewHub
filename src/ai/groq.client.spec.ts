@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { AiUnavailableError, countedTokens } from './ai.types';
-import { GroqClient } from './groq.client';
+import { GroqClient, PREP_GROQ } from './groq.client';
 
 const config = (values: Record<string, string>) =>
   ({ get: (k: string) => values[k] }) as unknown as ConfigService;
@@ -63,6 +63,33 @@ describe('GroqClient', () => {
     await expect(off.chat({ messages: [], maxTokens: 10 })).rejects.toThrow(
       AiUnavailableError,
     );
+  });
+
+  it("gives prep its own key and models, falling back to practice's key", async () => {
+    const shared = config({
+      GROQ_API_KEY: 'gsk_main',
+      AI_PREP_MODELS: 'model-p',
+    });
+    const own = config({
+      GROQ_API_KEY: 'gsk_main',
+      GROQ_API_KEY_PREP: 'gsk_prep',
+      AI_PREP_MODELS: 'model-p',
+    });
+    for (const [values, key] of [
+      [shared, 'gsk_main'],
+      [own, 'gsk_prep'],
+    ] as const) {
+      fetchMock.mockResolvedValueOnce(sse([delta({ content: 'Hi.' }), usage]));
+      await new GroqClient(values, PREP_GROQ).chat({
+        messages: [],
+        maxTokens: 10,
+      });
+      const [, init] = fetchMock.mock.calls.at(-1)!;
+      expect((init.headers as Record<string, string>).Authorization).toBe(
+        `Bearer ${key}`,
+      );
+      expect(JSON.parse(init.body as string).model).toBe('model-p');
+    }
   });
 
   it('streams the reply so far and reads usage from the last chunk', async () => {

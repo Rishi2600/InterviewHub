@@ -11,7 +11,7 @@ import { PracticeGateway } from './practice.gateway';
 import { PracticeJob } from './practice.job';
 import { PracticeNotifier } from './practice.notifier';
 import { PracticeService } from './practice.service';
-import { AiBudget, AiBudgetSchema } from './schemas/ai-budget.schema';
+import { AiBudget, AiBudgetSchema } from '../ai/schemas/ai-budget.schema';
 import {
   PracticeInterview,
   PracticeInterviewSchema,
