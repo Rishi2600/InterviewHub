@@ -50,11 +50,16 @@ export class Room {
   @Prop({ type: String, default: null })
   pinnedQuestion: string | null;
 
+  // When the room ended; reviews are open for a while after it.
+  @Prop({ type: Date, default: null })
+  endedAt: Date | null;
+
   // Users already announced with "joined the room". Internal, never returned.
   @Prop({ type: [SchemaTypes.ObjectId], default: [], select: false })
   announcedUserIds: Types.ObjectId[];
 
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
