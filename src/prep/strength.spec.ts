@@ -53,6 +53,22 @@ describe('topic strength', () => {
     expect(round(sql([interview('SQL', 3)]).strength)).toBe(0.55);
   });
 
+  it('counts everything from today fully, even hours ago', () => {
+    const t = sql([
+      fromDrill({
+        topic: 'SQL',
+        level: 'mid',
+        answered: 10,
+        right: 3,
+        total: 10,
+        startedAt: new Date(NOW.getTime() - 5 * 3_600_000),
+        endedAt: new Date(NOW.getTime() - 5 * 3_600_000),
+      })!,
+    ]);
+    expect(t.evidence).toBe(0.5);
+    expect(t.strength).not.toBeNull();
+  });
+
   it('one bad drill is not enough, three are', () => {
     const one = sql([drill('SQL', 4)]);
     expect(round(one.strength)).toBe(0.533);

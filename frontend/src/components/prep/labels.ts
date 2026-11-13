@@ -3,6 +3,10 @@ import type { PracticeLevel } from '@/types'
 import { LEVEL_LABEL } from '@/components/practice/labels'
 
 export const OWN_TOPIC_MAX = 60
+
+/** Topics a coding exercise fits, in a language the editor can run. SQL,
+ *  web basics and the candidate's own topics get none. */
+export const CODING_TOPICS = ['JavaScript', 'TypeScript', 'Python', 'React', 'Node.js', 'Data structures', 'Algorithms']
 /** Letters, numbers, spaces and simple punctuation, as the server allows. */
 export const OWN_TOPIC_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} .,+#&/()'-]*$/u
 

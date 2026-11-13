@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, ErrorState } from '@/components/common/States'
 import { InlineText } from '@/components/practice/Conversation'
-import { TOPICS } from '@/components/practice/labels'
 import { drillTitle } from '@/components/prep/labels'
 import { useStartPrep } from '@/hooks/useStartPrep'
 import { errorMessage, errorStatus } from '@/lib/api'
@@ -299,7 +298,6 @@ function Results({ drill, onReview }: { drill: Drill; onReview: (i: number) => v
   const navigate = useNavigate()
   const { start, pending } = useStartPrep()
   const missed = drill.items.filter((i) => i.correct === false)
-  const technical = TOPICS.technical.includes(drill.topic)
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
       <section className="grid gap-5 rounded-2xl border border-primary/30 bg-primary/[0.06] p-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
@@ -318,7 +316,7 @@ function Results({ drill, onReview }: { drill: Drill; onReview: (i: number) => v
           </div>
           <div className="flex flex-wrap gap-2">
             {missed.length > 0 && (
-              <Button disabled={!!pending} onClick={() => start({ mode: 'coach', topic: drill.topic, level: drill.level, technical })}>
+              <Button disabled={!!pending} onClick={() => start({ mode: 'coach', topic: drill.topic, level: drill.level })}>
                 <GraduationCap aria-hidden />
                 Coach me on {drill.topic}
               </Button>

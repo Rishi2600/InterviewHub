@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { languageFor } from '@/components/practice/labels'
-import { PREP_REFUSED } from '@/components/prep/labels'
+import { CODING_TOPICS, PREP_REFUSED } from '@/components/prep/labels'
 import { errorCode, errorMessage } from '@/lib/api'
 import { startCoach, startDrill } from '@/lib/endpoints'
 import type { PracticeKind, PracticeLevel, PrepMode } from '@/types'
@@ -16,8 +16,6 @@ export interface PrepStart {
   focus?: string | null
   /** For the candidate's own coach topic: its type. */
   kind?: PracticeKind
-  /** Technical topics code in this language; listed ones choose their own. */
-  technical?: boolean
 }
 
 /**
@@ -36,7 +34,7 @@ export function useStartPrep() {
         level: s.level,
         ...(s.kind && { kind: s.kind }),
         ...(s.focus && { focus: s.focus }),
-        ...(s.technical !== false && { language: languageFor(s.topic) }),
+        ...(CODING_TOPICS.includes(s.topic) && { language: languageFor(s.topic) }),
       })
       return { path: `/practice/${session.id}` }
     },

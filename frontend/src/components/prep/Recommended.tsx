@@ -73,7 +73,7 @@ function Actions({
         size="sm"
         variant="outline"
         disabled={!!busy}
-        onClick={() => onStart({ mode: 'coach', topic: t.topic, level: t.level, focus: t.focus, technical })}
+        onClick={() => onStart({ mode: 'coach', topic: t.topic, level: t.level, focus: t.focus })}
       >
         <GraduationCap aria-hidden />
         {pending('coach') ? 'Starting…' : 'Coach me'}
@@ -152,7 +152,7 @@ function FocusRow({
             type="button"
             disabled={!!busy}
             className="text-brand hover:underline disabled:opacity-50"
-            onClick={() => onStart({ mode: 'coach', topic: t.topic, level: t.level, focus: t.focus, technical: t.kind === 'technical' })}
+            onClick={() => onStart({ mode: 'coach', topic: t.topic, level: t.level, focus: t.focus })}
           >
             Coach
           </button>

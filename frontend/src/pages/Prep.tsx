@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { EmptyState, ErrorState } from '@/components/common/States'
 import { LiveDot } from '@/components/common/LiveDot'
-import { TOPICS, practiceTitle } from '@/components/practice/labels'
+import { practiceTitle } from '@/components/practice/labels'
 import { PREP_REFUSED, drillTitle } from '@/components/prep/labels'
 import { PrepSentence } from '@/components/prep/PrepSentence'
 import { DEFAULT_CHOICE } from '@/components/prep/choice'
@@ -79,13 +79,11 @@ function PrepHome({ data }: { data: PrepOverview }) {
     : left.drill <= 0
       ? 'PrepDayUsed'
       : refused
-  const technical = choice.own ? choice.ownKind === 'technical' : TOPICS.technical.includes(choice.topic)
   const startChoice = () =>
     start({
       mode: choice.mode,
       topic: choice.topic,
       level: choice.level,
-      technical,
       ...(choice.own && { kind: choice.ownKind }),
     })
 

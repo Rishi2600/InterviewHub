@@ -27,6 +27,7 @@
     "check:call": "node scripts/check-call.mjs",
     "check:code-contest": "node --env-file-if-exists=.env scripts/check-code-contest.mjs",
     "check:practice": "node scripts/check-practice.mjs",
+    "check:prep": "node scripts/check-prep.mjs",
     "eval:practice": "node --env-file-if-exists=.env scripts/eval-practice.mjs"
   },
   "dependencies": {

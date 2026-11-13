@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { AiUnavailableError, countedTokens } from './ai.types';
-import { GroqClient, PREP_GROQ } from './groq.client';
+import { GroqClient, PREP_GROQ, groqDuration } from './groq.client';
 
 const config = (values: Record<string, string>) =>
   ({ get: (k: string) => values[k] }) as unknown as ConfigService;
@@ -190,6 +190,24 @@ describe('GroqClient', () => {
     expect(next.usage.model).toBe('model-b');
   });
 
+  it('waits out a per-minute limit when prep has only one model', async () => {
+    jest.useFakeTimers();
+    try {
+      fetchMock
+        .mockResolvedValueOnce(limited(20))
+        .mockResolvedValueOnce(sse([delta({ content: 'Hi' }), usage]));
+      const prep = new GroqClient(
+        config({ GROQ_API_KEY: 'gsk_test', AI_PREP_MODELS: 'model-p' }),
+        PREP_GROQ,
+      );
+      const pending = prep.chat({ messages: [], maxTokens: 10 });
+      await jest.advanceTimersByTimeAsync(20_000);
+      expect((await pending).text).toBe('Hi');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('gives up when every model is at its limit for long', async () => {
     fetchMock.mockResolvedValue(limited(300));
     await expect(
@@ -256,5 +274,22 @@ describe('GroqClient', () => {
       },
       { role: 'tool', content: 'done', tool_call_id: 'c1' },
     ]);
+  });
+});
+
+describe('groqDuration', () => {
+  it.each([
+    ['150ms', 150],
+    ['2.925s', 2_925],
+    ['18m43.2s', 1_123_200],
+    ['1h2m3s', 3_723_000],
+  ])('reads %s', (text, ms) => {
+    expect(groqDuration(text)).toBe(ms);
+  });
+
+  it('ignores what it cannot read', () => {
+    expect(groqDuration(null)).toBeNull();
+    expect(groqDuration('soon')).toBeNull();
+    expect(groqDuration('5 s')).toBeNull();
   });
 });

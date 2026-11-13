@@ -31,7 +31,17 @@ function StatePill({ state }: { state: AiState }) {
 }
 
 /** The interviewer's tile: the brand mark on a dark stage, never a face. */
-export function AiTile({ state, compact, className }: { state: AiState; compact?: boolean; className?: string }) {
+export function AiTile({
+  state,
+  compact,
+  className,
+  name = 'AI interviewer',
+}: {
+  state: AiState
+  compact?: boolean
+  className?: string
+  name?: string
+}) {
   return (
     <div className={cn('relative overflow-hidden rounded-xl bg-[#0d1312]', className)}>
       <div className="absolute inset-0" style={{ background: 'radial-gradient(80% 90% at 50% 30%, #14c8b433 0%, #0d1312 70%)' }} />
@@ -41,7 +51,7 @@ export function AiTile({ state, compact, className }: { state: AiState; compact?
             <Bot className="size-6" aria-hidden />
           </span>
           <span className="grid min-w-0 justify-items-start gap-1.5">
-            <span className="text-sm font-medium text-white">AI interviewer</span>
+            <span className="text-sm font-medium text-white">{name}</span>
             <StatePill state={state} />
           </span>
         </div>
@@ -55,7 +65,7 @@ export function AiTile({ state, compact, className }: { state: AiState; compact?
               <StatePill state={state} />
             </div>
           </div>
-          <span className="absolute bottom-2 left-2 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-medium text-white">AI interviewer</span>
+          <span className="absolute bottom-2 left-2 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-medium text-white">{name}</span>
         </>
       )}
     </div>

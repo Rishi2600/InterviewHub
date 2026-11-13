@@ -381,8 +381,18 @@ function tooEarly(
   const minutesLeft = last?.minutesLeft ?? iv.minutes;
   const used = 1 - minutesLeft / iv.minutes;
   if (iv.purpose === 'coach') {
-    // A coach may set its exercise whenever it fits, and end once a few
-    // ideas are covered.
+    // A coach first finds out what the learner knows, then sets its
+    // exercise when it fits, and ends once a few ideas are covered.
+    if (call.name === 'pose_coding_question') {
+      const due =
+        !!iv.codingQuestion ||
+        iv.answers >= 2 ||
+        used >= 0.25 ||
+        ASKS_FOR_CODE.test(last?.text ?? '');
+      return due
+        ? null
+        : 'Not yet: first find out what the candidate knows with a question or two, then set the exercise.';
+    }
     if (call.name !== 'end_interview') return null;
     const done =
       used >= 0.5 ||

@@ -12,9 +12,6 @@ import {
 
 const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const TIMEOUT_MS = 60_000;
-// When every model is at its limit, wait this long at most for the soonest
-// one, then give up.
-const MAX_WAIT_MS = 8_000;
 // The first model, at its per-minute limit for at most this long, is
 // waited for rather than skipped.
 const BRIEF_WAIT_MS = 6_000;
@@ -59,16 +56,23 @@ export interface GroqSettings {
   keys: string[];
   models: string;
   label: string;
+  /** When every model is at its limit, wait this long at most for the
+   *  soonest one, then give up. */
+  maxWaitMs: number;
 }
 export const PRACTICE_GROQ: GroqSettings = {
   keys: ['GROQ_API_KEY'],
   models: 'AI_MODELS',
   label: 'practice',
+  maxWaitMs: 8_000,
 };
+// Prep has one model, so nothing to fall back to: it waits out a per-minute
+// limit instead.
 export const PREP_GROQ: GroqSettings = {
   keys: ['GROQ_API_KEY_PREP', 'GROQ_API_KEY'],
   models: 'AI_PREP_MODELS',
   label: 'prep',
+  maxWaitMs: 30_000,
 };
 
 /**
@@ -79,6 +83,7 @@ export const PREP_GROQ: GroqSettings = {
  */
 export class GroqClient extends AiClient {
   private readonly logger: Logger;
+  private readonly maxWaitMs: number;
   private readonly key: string;
   private readonly models: string[];
   /** Models at their limit, and when they may be tried again. */
@@ -87,6 +92,7 @@ export class GroqClient extends AiClient {
   constructor(config: ConfigService, settings: GroqSettings = PRACTICE_GROQ) {
     super();
     this.logger = new Logger(`GroqClient:${settings.label}`);
+    this.maxWaitMs = settings.maxWaitMs;
     this.key =
       settings.keys.map((k) => config.get<string>(k) ?? '').find(Boolean) ?? '';
     this.models = (config.get<string>(settings.models) ?? '')
@@ -123,7 +129,7 @@ export class GroqClient extends AiClient {
       const wait = Math.min(
         ...this.models.map((m) => (this.restingUntil.get(m) ?? 0) - Date.now()),
       );
-      if (attempt > 0 || wait > MAX_WAIT_MS) break;
+      if (attempt > 0 || wait > this.maxWaitMs) break;
       await new Promise((r) => setTimeout(r, Math.max(0, wait)));
     }
     throw new AiUnavailableError('The AI is busy right now');
@@ -196,11 +202,14 @@ export class GroqClient extends AiClient {
 
     if (res.status === 429) {
       const seconds = Number(res.headers.get('retry-after'));
-      throw new RateLimited(
+      // No retry-after: Groq's own "tokens back in" time, else a minute.
+      const waitMs =
         Number.isFinite(seconds) && seconds > 0
           ? seconds * 1000
-          : DEFAULT_REST_MS,
-      );
+          : (groqDuration(res.headers.get('x-ratelimit-reset-tokens')) ??
+            DEFAULT_REST_MS);
+      this.logger.warn(`${model}: at its limit for ${waitMs / 1000} s`);
+      throw new RateLimited(waitMs);
     }
     if (!res.ok) {
       const detail = (await res.text()).slice(0, 300);
@@ -273,6 +282,19 @@ export class GroqClient extends AiClient {
 }
 
 /** gpt-oss reasons before it answers: keep that short and out of the reply. */
+/** Groq's reset times, such as "150ms", "2.9s" or "18m43.2s", in ms. */
+export function groqDuration(text: string | null): number | null {
+  if (!text) return null;
+  const parts = [...text.matchAll(/(\d+(?:\.\d+)?)(ms|h|m|s)/g)];
+  if (!parts.length || parts.map((p) => p[0]).join('') !== text) return null;
+  const unit = { ms: 1, s: 1_000, m: 60_000, h: 3_600_000 } as const;
+  const ms = parts.reduce(
+    (sum, [, n, u]) => sum + Number(n) * unit[u as keyof typeof unit],
+    0,
+  );
+  return Math.max(1, Math.ceil(ms));
+}
+
 function reasoningParams(model: string): Record<string, unknown> {
   if (model.startsWith('openai/gpt-oss')) {
     return { reasoning_effort: 'low', include_reasoning: false };

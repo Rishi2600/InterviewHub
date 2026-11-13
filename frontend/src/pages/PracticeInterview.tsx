@@ -183,7 +183,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
           {coding ? (
             <>
               <div className="grid grid-cols-2 gap-3">
-                <AiTile state={aiState} compact className="h-24" />
+                <AiTile state={aiState} compact className="h-24" name={w.aiName} />
                 <YouTile name={user?.username ?? 'You'} listening={voice.listening} className="h-24" />
               </div>
               <PracticeEditor
@@ -198,7 +198,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
           ) : (
             <>
               <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                <AiTile state={aiState} className="aspect-video" />
+                <AiTile state={aiState} className="aspect-video" name={w.aiName} />
                 <YouTile name={user?.username ?? 'You'} listening={voice.listening} className="aspect-video sm:aspect-auto" />
               </div>
               {live.failure ? (
@@ -242,7 +242,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
             <QuestionPanel question={question} />
           ) : (
             <>
-              <Conversation turns={live.turns} draft={live.draft} waiting={live.waiting} />
+              <Conversation turns={live.turns} draft={live.draft} waiting={live.waiting} aiName={w.aiName} />
               <div className="border-t p-2.5">
                 {mode === 'voice' ? (
                   <VoicePanel

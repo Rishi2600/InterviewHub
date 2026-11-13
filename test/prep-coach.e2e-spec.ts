@@ -211,6 +211,47 @@ describe('Interview prep: the coach', () => {
     expect((await usage())?.coach).toBe(0);
   });
 
+  it('asks again when the coach opens with an exercise', async () => {
+    const u = await signUp(t, 'coach_eli');
+    const session = data<View>(
+      await start(u, { language: 'python' }).expect(201),
+    );
+    const s = await connectSocket(t, '/practice', u);
+    sockets.push(s);
+    prepAi.queue.push(
+      {
+        toolCalls: [
+          {
+            id: 'call_1',
+            name: 'pose_coding_question',
+            arguments: JSON.stringify({
+              title: 'Sum a column',
+              statement: 'Print the sum.',
+              example_input: '1 2',
+              example_output: '3',
+            }),
+          },
+        ],
+      },
+      { text: 'Hi Eli. What do you already know about joins?' },
+    );
+    const greeting = nextEvent<{ text: string }>(s, 'practice:turn');
+    await s
+      .timeout(5_000)
+      .emitWithAck('practice:join', { interviewId: session.id });
+    expect((await greeting).text).toBe(
+      'Hi Eli. What do you already know about joins?',
+    );
+    expect(prepAi.last().messages.at(-1)?.content).toContain(
+      'Not yet: first find out',
+    );
+    await t
+      .api()
+      .post(`/practice/${session.id}/end`)
+      .set(bearer(u))
+      .expect(200);
+  });
+
   it('says so when the coach is not set up', async () => {
     const u = await signUp(t, 'coach_cat');
     prepAi.enabled = false;

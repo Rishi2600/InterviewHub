@@ -165,7 +165,8 @@ export function strengths(all: Evidence[], now: Date): TopicStrength[] {
     const items = recent
       .filter((e) => e.topic === topic)
       .map((e) => {
-        const age = (now.getTime() - e.at.getTime()) / DAY;
+        // Whole days, so everything from today counts fully.
+        const age = Math.floor((now.getTime() - e.at.getTime()) / DAY);
         return { e, w: e.weight * 0.5 ** (age / halfLifeDays) };
       });
     const evidence = items.reduce((n, i) => n + i.w, 0);

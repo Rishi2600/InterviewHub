@@ -36,13 +36,13 @@ function Caret() {
   return <span className="ml-0.5 inline-block h-[1.05em] w-0.5 translate-y-[0.18em] animate-pulse bg-primary" aria-hidden />
 }
 
-function AiBubble({ text, at, writing }: { text: string; at?: string; writing?: boolean }) {
+function AiBubble({ text, at, writing, name }: { text: string; at?: string; writing?: boolean; name: string }) {
   return (
     <div className="flex gap-2.5">
       <AiMark />
       <div className="max-w-[88%] min-w-0">
         <div className="mb-1 flex items-baseline gap-1.5 text-xs">
-          <span className="font-medium">AI interviewer</span>
+          <span className="font-medium">{name}</span>
           <span className="text-muted-foreground">{writing ? 'writing…' : at && time(at)}</span>
         </div>
         <div className="rounded-2xl rounded-tl-md bg-muted px-3.5 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap">
@@ -75,13 +75,23 @@ function RunLine({ turn }: { turn: PracticeTurn }) {
 }
 
 /** The conversation, newest at the bottom, with the reply being written. */
-export function Conversation({ turns, draft, waiting }: { turns: PracticeTurn[]; draft: string; waiting: boolean }) {
+export function Conversation({
+  turns,
+  draft,
+  waiting,
+  aiName = 'AI interviewer',
+}: {
+  turns: PracticeTurn[]
+  draft: string
+  waiting: boolean
+  aiName?: string
+}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto" aria-live="polite">
       <div className="grid gap-4 p-3">
         {turns.map((t, i) =>
           t.kind === 'ai' ? (
-            <AiBubble key={i} text={t.text} at={t.at} />
+            <AiBubble key={i} text={t.text} at={t.at} name={aiName} />
           ) : t.kind === 'run' ? (
             <RunLine key={i} turn={t} />
           ) : (
@@ -93,7 +103,7 @@ export function Conversation({ turns, draft, waiting }: { turns: PracticeTurn[];
             </div>
           ),
         )}
-        {waiting && <AiBubble text={draft} writing />}
+        {waiting && <AiBubble text={draft} writing name={aiName} />}
       </div>
     </div>
   )
