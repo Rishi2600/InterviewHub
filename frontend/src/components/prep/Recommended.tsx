@@ -227,7 +227,7 @@ export function Recommended({
             <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
             <p className="text-muted-foreground">
               {judged
-                ? 'No weak spots right now. Nice. Keep practising, and anything that slips shows up here with the reason.'
+                ? "No weak spots right now. One result alone doesn't mark a topic weak: anything that keeps slipping shows up here, with the reason."
                 : "Nothing to suggest yet. Take a drill or an AI practice interview: your weak spots show here once there's enough to go on."}
             </p>
           </div>

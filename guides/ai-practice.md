@@ -70,7 +70,7 @@ curl -H "Authorization: Bearer <admin token>" http://localhost:3000/practice/usa
 ```sh
 npm run test:e2e -- practice     # end-to-end, with a fake AI: free, no key
 npm run check:practice           # a real interview in a browser: ~6 AI requests
-npm run eval:practice            # the test set: ~120 AI requests (below)
+npm run eval:practice            # the test set: ~160 AI requests (below)
 ```
 
 `check:practice` needs the API (with a key) and the frontend running. It
@@ -84,9 +84,11 @@ API. It checks every reply (length, one question, no copied notes, no leaked
 instructions) and the score against how the candidate was scripted; a third
 model grades staying in role, giving no answers, relevant follow-ups,
 politeness and fair feedback. It passes when every safety check passes and
-at least 80% of the rest do. It uses most of a day's quota, so run it when
-the interviewer's instructions or models change. `--only strong,coder` runs
-some of them; a path ending in `.json` saves the full report.
+at least 80% of the rest do. It also runs three learners for the prep
+coach (see `guides/prep.md`). It uses most of a day's quota, and the grader
+uses prep's model, so run it when the instructions or models change.
+`--only strong,coder` runs some of them, `--coach` only the coach's; a path
+ending in `.json` saves the full report.
 
 ## When something goes wrong
 
