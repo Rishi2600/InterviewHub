@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AiClient, countedTokens } from '../ai/ai.types';
-import { AiBudgetService } from './ai-budget.service';
+import { countedTokens } from '../ai/ai.types';
+import { PracticeEngines } from './practice-engines';
 import { PracticeNotifier } from './practice.notifier';
 import { feedbackAreas, PRACTICE_LIMITS } from './practice.constants';
 import { feedbackRequest, overallScore, parseFeedback } from './prompts';
@@ -29,8 +29,7 @@ export class PracticeFeedbackService {
   constructor(
     @InjectModel(PracticeInterview.name)
     private readonly model: Model<PracticeInterview>,
-    private readonly ai: AiClient,
-    private readonly budget: AiBudgetService,
+    private readonly engines: PracticeEngines,
     private readonly notifier: PracticeNotifier,
   ) {}
 
@@ -58,10 +57,11 @@ export class PracticeFeedbackService {
 
     let feedback: Feedback;
     let tokens = 0;
+    const { ai, budget } = this.engines.for(iv);
     try {
-      const result = await this.ai.chat(feedbackRequest(iv));
+      const result = await ai.chat(feedbackRequest(iv));
       tokens = countedTokens(result.usage);
-      await this.budget.spent(iv.quota, tokens);
+      await budget.spent(iv.quota, tokens);
       feedback = parseFeedback(
         result.text,
         feedbackAreas(iv.kind, !!iv.language),
@@ -108,7 +108,7 @@ export class PracticeFeedbackService {
       .exec();
     // Deleted by the candidate while it was being written.
     if (!done) return false;
-    await this.budget.settle(done.quota, {
+    await budget.settle(done.quota, {
       requests: done.usedRequests,
       tokens: done.usedTokens,
     });
@@ -166,7 +166,7 @@ export class PracticeFeedbackService {
         .exec();
       if (!iv) continue;
       failed++;
-      await this.budget.settle(iv.quota, {
+      await this.engines.for(iv).budget.settle(iv.quota, {
         requests: iv.usedRequests,
         tokens: iv.usedTokens,
       });

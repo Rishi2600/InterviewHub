@@ -1,4 +1,4 @@
-import { PRACTICE_LIMITS } from './practice.constants';
+import { answerLimit } from './practice.constants';
 import { PracticeInterview, Turn } from './schemas/practice-interview.schema';
 import { Types } from 'mongoose';
 
@@ -16,6 +16,8 @@ export const turnView = (t: Turn) => ({
 export function interviewView(iv: Stored) {
   return {
     id: iv._id.toString(),
+    purpose: iv.purpose ?? 'interview',
+    focus: iv.focus ?? null,
     kind: iv.kind,
     topic: iv.topic,
     mixed: iv.mixed,
@@ -29,7 +31,7 @@ export function interviewView(iv: Stored) {
     endedAt: iv.endedAt,
     endReason: iv.endReason,
     answers: iv.answers,
-    maxAnswers: PRACTICE_LIMITS.maxAnswers,
+    maxAnswers: answerLimit(iv.purpose),
     turns: iv.turns.map(turnView),
     codingQuestion: iv.codingQuestion,
     feedback: iv.feedback,

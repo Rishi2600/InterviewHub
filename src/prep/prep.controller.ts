@@ -17,9 +17,11 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { CoachService } from './coach.service';
 import { DrillService } from './drill.service';
 import { AnswerDrillDto } from './dto/answer-drill.dto';
 import { SetFocusDto } from './dto/set-focus.dto';
+import { StartCoachDto } from './dto/start-coach.dto';
 import { StartDrillDto } from './dto/start-drill.dto';
 import { PrepBudgetService } from './prep-budget.service';
 import { PrepService } from './prep.service';
@@ -32,6 +34,7 @@ export class PrepController {
   constructor(
     private readonly prep: PrepService,
     private readonly drills: DrillService,
+    private readonly coach: CoachService,
     private readonly budget: PrepBudgetService,
   ) {}
 
@@ -55,6 +58,12 @@ export class PrepController {
   @Get('usage')
   usage() {
     return this.budget.today(new Date());
+  }
+
+  // A coach session; it then runs on /practice/:id and the practice socket.
+  @Post('coach')
+  startCoach(@CurrentUser() user: AuthUser, @Body() dto: StartCoachDto) {
+    return this.coach.start(user, dto);
   }
 
   @Post('drills')

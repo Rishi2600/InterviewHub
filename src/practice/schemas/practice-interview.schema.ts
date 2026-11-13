@@ -5,10 +5,12 @@ import {
   PRACTICE_LANGUAGES,
   PRACTICE_LEVELS,
   PRACTICE_MODES,
+  PRACTICE_PURPOSES,
   PracticeKind,
   PracticeLanguage,
   PracticeLevel,
   PracticeMode,
+  type PracticePurpose,
 } from '../practice.constants';
 
 export type PracticeInterviewDocument = HydratedDocument<PracticeInterview>;
@@ -88,6 +90,14 @@ export interface Feedback {
 export class PracticeInterview {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
+
+  // An interview, or a prep coach session on the same engine.
+  @Prop({ type: String, enum: PRACTICE_PURPOSES, default: 'interview' })
+  purpose: PracticePurpose;
+
+  // A coach session's focus area, such as "Edge cases"; null otherwise.
+  @Prop({ type: String, default: null })
+  focus: string | null;
 
   @Prop({ type: String, enum: PRACTICE_KINDS, required: true })
   kind: PracticeKind;

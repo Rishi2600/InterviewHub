@@ -3,8 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ActivityModule } from '../activity/activity.module';
 import { AiModule } from '../ai/ai.module';
 import { AuthModule } from '../auth/auth.module';
+import { PrepBudgetModule } from '../prep/prep-budget.module';
 import { AiBudgetService } from './ai-budget.service';
 import { PracticeConversationService } from './practice-conversation.service';
+import { PracticeEngines } from './practice-engines';
 import { PracticeFeedbackService } from './practice-feedback.service';
 import { PracticeController } from './practice.controller';
 import { PracticeGateway } from './practice.gateway';
@@ -21,7 +23,10 @@ import {
   PracticeUsageSchema,
 } from './schemas/practice-usage.schema';
 
-/** AI practice interviews. See docs/learning/ai/ and guides/ai-practice.md. */
+/**
+ * AI practice interviews, and the engine prep's coach sessions run on. See
+ * docs/learning/ai/ and guides/ai-practice.md.
+ */
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -32,10 +37,12 @@ import {
     ActivityModule, // a square on the activity graph
     AuthModule, // SocketAuthService for the gateway
     AiModule,
+    PrepBudgetModule, // coach sessions are charged to prep's budget
   ],
   controllers: [PracticeController],
   providers: [
     AiBudgetService,
+    PracticeEngines,
     PracticeNotifier,
     PracticeFeedbackService,
     PracticeService,
@@ -43,5 +50,7 @@ import {
     PracticeGateway,
     PracticeJob,
   ],
+  // Prep starts coach sessions on this engine and reads their recaps.
+  exports: [MongooseModule, PracticeService],
 })
 export class PracticeModule {}

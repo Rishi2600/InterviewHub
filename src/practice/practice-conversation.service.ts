@@ -3,26 +3,24 @@ import { InjectModel } from '@nestjs/mongoose';
 import { WsException } from '@nestjs/websockets';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import {
-  AiClient,
   AiToolCall,
   AiUnavailableError,
   ChatResult,
   countedTokens,
 } from '../ai/ai.types';
-import { AiBudgetService } from './ai-budget.service';
+import { PracticeEngines } from './practice-engines';
 import { PracticeNotifier } from './practice.notifier';
 import { PracticeService } from './practice.service';
-import { PRACTICE_LIMITS } from './practice.constants';
+import { answerLimit, PRACTICE_LIMITS } from './practice.constants';
 import { turnView } from './practice.views';
 import {
   cleanReply,
   conversation,
   draftReply,
   questionCount,
-  END_LINE,
   interviewTools,
-  POSE_LINE,
   REPLY_MAX_TOKENS,
+  toolLines,
 } from './prompts';
 import {
   CodingQuestion,
@@ -65,8 +63,7 @@ export class PracticeConversationService {
   constructor(
     @InjectModel(PracticeInterview.name)
     private readonly model: Model<PracticeInterview>,
-    private readonly ai: AiClient,
-    private readonly budget: AiBudgetService,
+    private readonly engines: PracticeEngines,
     private readonly practice: PracticeService,
     private readonly notifier: PracticeNotifier,
   ) {}
@@ -84,7 +81,7 @@ export class PracticeConversationService {
     } catch (err) {
       await this.release(iv._id);
       this.notifier.emit(id.toString(), 'practice:failed', {
-        message: this.failure(err, 'start'),
+        message: this.failure(err, 'start', iv.purpose),
       });
     }
   }
@@ -99,7 +96,7 @@ export class PracticeConversationService {
     const current = await this.model
       .findOne({ _id: id, userId })
       .select(
-        'status endsAt answers language codingQuestion turns.kind turns.code',
+        'purpose status endsAt answers language codingQuestion turns.kind turns.code',
       )
       .lean()
       .exec();
@@ -111,8 +108,13 @@ export class PracticeConversationService {
       throw new WsException('Time is up');
     }
     if (!current.turns.length) {
-      throw new WsException('Wait for the interviewer to start');
+      throw new WsException(
+        current.purpose === 'coach'
+          ? 'Wait for the coach to start'
+          : 'Wait for the interviewer to start',
+      );
     }
+    const limit = answerLimit(current.purpose);
     const turn: Turn = {
       kind: 'candidate',
       text: input.text,
@@ -120,7 +122,7 @@ export class PracticeConversationService {
       minutesLeft: Math.ceil(
         (current.endsAt.getTime() - now.getTime()) / 60_000,
       ),
-      answersLeft: PRACTICE_LIMITS.maxAnswers - current.answers - 1,
+      answersLeft: limit - current.answers - 1,
       code: changedCode(current, input.code),
     };
     const iv = await this.claim(
@@ -128,12 +130,18 @@ export class PracticeConversationService {
         _id: current._id,
         userId,
         status: 'active',
-        answers: { $lt: PRACTICE_LIMITS.maxAnswers },
+        answers: { $lt: limit },
       },
       { $push: { turns: turn }, $inc: { answers: 1 } },
       now,
     );
-    if (!iv) throw new WsException('Wait for the interviewer to finish');
+    if (!iv) {
+      throw new WsException(
+        current.purpose === 'coach'
+          ? 'Wait for the coach to finish'
+          : 'Wait for the interviewer to finish',
+      );
+    }
     this.notifier.emit(id, 'practice:turn', turnView(turn));
 
     try {
@@ -150,7 +158,7 @@ export class PracticeConversationService {
           },
         )
         .exec();
-      const message = this.failure(err, 'reply');
+      const message = this.failure(err, 'reply', iv.purpose);
       this.notifier.emit(id, 'practice:retracted', {
         at: now,
         text: input.text,
@@ -158,7 +166,7 @@ export class PracticeConversationService {
       });
       return { ok: false, message };
     }
-    if (iv.answers >= PRACTICE_LIMITS.maxAnswers) {
+    if (iv.answers >= limit) {
       await this.practice.end(iv._id, 'answers');
     }
     return { ok: true };
@@ -201,11 +209,12 @@ export class PracticeConversationService {
   /** Asks the AI for its next turn, streaming it to the room. */
   private async reply(iv: Stored): Promise<void> {
     const id = iv._id.toString();
+    const { ai, budget } = this.engines.for(iv);
     const ask = async (nudge?: string) => {
       // The candidate sees the reply cleaned as it streams: the whole draft
       // each time it changes, never a raw remark.
       let shown = '';
-      const result = await this.ai.chat(
+      const result = await ai.chat(
         {
           messages: [
             ...conversation(iv, iv.avoid),
@@ -223,7 +232,7 @@ export class PracticeConversationService {
         },
       );
       const tokens = countedTokens(result.usage);
-      await this.budget.spent(iv.quota, tokens);
+      await budget.spent(iv.quota, tokens);
       await this.spent(iv._id, tokens);
       return result;
     };
@@ -239,7 +248,7 @@ export class PracticeConversationService {
       this.notifier.emit(id, 'practice:draft', { text: '' });
       result = await ask(early);
     }
-    const { turn, question, end } = toTurn(result, !!iv.language);
+    const { turn, question, end } = toTurn(result, iv);
     await this.model
       .updateOne(
         { _id: iv._id },
@@ -291,13 +300,18 @@ export class PracticeConversationService {
       .exec();
   }
 
-  private failure(err: unknown, when: 'start' | 'reply'): string {
+  private failure(
+    err: unknown,
+    when: 'start' | 'reply',
+    purpose?: Stored['purpose'],
+  ): string {
     if (!(err instanceof AiUnavailableError)) {
       this.logger.error(`AI ${when} failed: ${(err as Error).message}`);
     }
+    const who = purpose === 'coach' ? 'coach' : 'interviewer';
     return when === 'start'
-      ? "The interviewer couldn't start just now. Try again in a minute."
-      : "The interviewer couldn't reply just now. Try sending again in a minute.";
+      ? `The ${who} couldn't start just now. Try again in a minute.`
+      : `The ${who} couldn't reply just now. Try sending again in a minute.`;
   }
 }
 
@@ -305,8 +319,9 @@ export class PracticeConversationService {
  * The AI's result as a turn. A tool call without words gets a fixed line,
  * so it costs no second request. Throws if the reply is unusable.
  */
-function toTurn(result: ChatResult, coding: boolean) {
-  const cleaned = cleanReply(result.text, coding);
+function toTurn(result: ChatResult, iv: Pick<Stored, 'language' | 'purpose'>) {
+  const lines = toolLines(iv.purpose);
+  const cleaned = cleanReply(result.text, !!iv.language);
   let call: AiToolCall | undefined = result.toolCalls[0];
   let text = cleaned.text;
   // A question written out as JSON instead of the tool call: treat it as
@@ -323,10 +338,10 @@ function toTurn(result: ChatResult, coding: boolean) {
   if (call?.name === 'pose_coding_question') {
     question = parseQuestion(call.arguments);
     // Whatever else it wrote alongside tends to be another question.
-    text = POSE_LINE;
+    text = lines.pose;
   } else if (call?.name === 'end_interview') {
     end = true;
-    text ||= END_LINE;
+    text ||= lines.end;
   }
   if (!text) throw new AiUnavailableError('The AI sent an empty reply');
   const turn: Turn = {
@@ -352,13 +367,32 @@ function tooEarly(
   call: AiToolCall | undefined,
   iv: Pick<
     Stored,
-    'kind' | 'minutes' | 'language' | 'answers' | 'turns' | 'codingQuestion'
+    | 'kind'
+    | 'minutes'
+    | 'language'
+    | 'answers'
+    | 'turns'
+    | 'codingQuestion'
+    | 'purpose'
   >,
 ): string | null {
   if (!call) return null;
   const last = iv.turns.findLast((t) => t.kind === 'candidate');
   const minutesLeft = last?.minutesLeft ?? iv.minutes;
   const used = 1 - minutesLeft / iv.minutes;
+  if (iv.purpose === 'coach') {
+    // A coach may set its exercise whenever it fits, and end once a few
+    // ideas are covered.
+    if (call.name !== 'end_interview') return null;
+    const done =
+      used >= 0.5 ||
+      (last?.answersLeft ?? answerLimit('coach')) <= 3 ||
+      iv.answers >= 6 ||
+      ASKS_TO_STOP.test(last?.text ?? '');
+    return done
+      ? null
+      : `Don't end the session yet: about ${minutesLeft} minutes are left. Carry on with the next idea.`;
+  }
   const planned = questionCount(iv);
   if (call.name === 'end_interview') {
     const done =

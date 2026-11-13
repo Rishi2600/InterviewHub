@@ -4,9 +4,10 @@ import { Model, Types } from 'mongoose';
 import { PrepAiClient } from '../ai/ai.types';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { ALL_TOPICS } from '../common/topics';
+import { PracticeInterview } from '../practice/schemas/practice-interview.schema';
 import { DrillService } from './drill.service';
 import { PrepUsageService } from './prep-usage.service';
-import { drillListItem } from './prep.views';
+import { coachListItem, drillListItem } from './prep.views';
 import { PrepDrill } from './schemas/prep-drill.schema';
 import { PrepProfile } from './schemas/prep-profile.schema';
 
@@ -19,6 +20,8 @@ export class PrepService {
     @InjectModel(PrepDrill.name) private readonly drills: Model<PrepDrill>,
     @InjectModel(PrepProfile.name)
     private readonly profiles: Model<PrepProfile>,
+    @InjectModel(PracticeInterview.name)
+    private readonly sessions: Model<PracticeInterview>,
     private readonly ai: PrepAiClient,
     private readonly usage: PrepUsageService,
     private readonly drill: DrillService,
@@ -27,9 +30,14 @@ export class PrepService {
   async overview(user: AuthUser, now = new Date()) {
     const userId = new Types.ObjectId(user.userId);
     await this.drill.closeIdle(userId, now);
-    const [today, running, profile, history] = await Promise.all([
+    const [today, running, coaching, profile, history] = await Promise.all([
       this.usage.today(userId, now),
       this.drills.findOne({ userId, active: true }).lean().exec(),
+      this.sessions
+        .findOne({ userId, purpose: 'coach', status: 'active' })
+        .select('topic level endsAt')
+        .lean()
+        .exec(),
       this.profiles.findOne({ userId }).lean().exec(),
       this.history(user),
     ]);
@@ -39,6 +47,14 @@ export class PrepService {
       today,
       running: {
         drill: running ? drillListItem(running) : null,
+        coach: coaching
+          ? {
+              id: coaching._id.toString(),
+              topic: coaching.topic,
+              level: coaching.level,
+              endsAt: coaching.endsAt,
+            }
+          : null,
       },
       focus: profile?.focus ?? [],
       ...history,
@@ -52,17 +68,37 @@ export class PrepService {
     if (until && Number.isNaN(until.getTime())) {
       throw new BadRequestException('Bad date');
     }
-    const rows = await this.drills
-      .find({ userId, ...(until && { startedAt: { $lt: until } }) })
-      .sort({ startedAt: -1 })
-      .limit(PAGE + 1)
-      .lean()
-      .exec();
-    const items = rows.slice(0, PAGE).map(drillListItem);
+    const when = until ? { startedAt: { $lt: until } } : {};
+    const [drills, coaching] = await Promise.all([
+      this.drills
+        .find({ userId, ...when })
+        .sort({ startedAt: -1 })
+        .limit(PAGE + 1)
+        .lean()
+        .exec(),
+      this.sessions
+        .find({
+          userId,
+          purpose: 'coach',
+          status: { $ne: 'cancelled' },
+          ...when,
+        })
+        .select('-turns -avoid -codingQuestion -feedback')
+        .sort({ startedAt: -1 })
+        .limit(PAGE + 1)
+        .lean()
+        .exec(),
+    ]);
+    // Both lists newest first; merged, then cut to a page.
+    const all = [
+      ...drills.map(drillListItem),
+      ...coaching.map(coachListItem),
+    ].sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+    const items = all.slice(0, PAGE);
     return {
       items,
       nextBefore:
-        rows.length > PAGE
+        all.length > PAGE
           ? items[items.length - 1].startedAt.toISOString()
           : null,
     };

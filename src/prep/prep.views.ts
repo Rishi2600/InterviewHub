@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { PracticeInterview } from '../practice/schemas/practice-interview.schema';
 import { PrepDrill } from './schemas/prep-drill.schema';
 import { PrepQuestion } from './schemas/prep-question.schema';
 
@@ -57,5 +58,18 @@ export function drillListItem(drill: Stored<PrepDrill>) {
     answered: drill.answered,
     right: drill.right,
     total: drill.items.length,
+  };
+}
+
+/** One coach session in the same list. Its recap opens like practice feedback. */
+export function coachListItem(s: Stored<PracticeInterview>) {
+  return {
+    id: s._id.toString(),
+    mode: 'coach' as const,
+    topic: s.topic,
+    level: s.level,
+    status: s.status,
+    startedAt: s.startedAt,
+    score: s.score,
   };
 }

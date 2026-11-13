@@ -24,6 +24,11 @@ export const PRACTICE_LANGUAGES = [
 ] as const;
 export type PracticeLanguage = (typeof PRACTICE_LANGUAGES)[number];
 
+// An interview tests the candidate; a coach session (from prep) teaches.
+// Both run on the same conversation engine. See docs/PREP_DESIGN.md §3.
+export const PRACTICE_PURPOSES = ['interview', 'coach'] as const;
+export type PracticePurpose = (typeof PRACTICE_PURPOSES)[number];
+
 export const PRACTICE_MODES = ['chat', 'voice'] as const;
 export type PracticeMode = (typeof PRACTICE_MODES)[number];
 
@@ -48,3 +53,13 @@ export const PRACTICE_LIMITS = {
   // Feedback that fails is retried this long, then given up.
   feedbackRetryMs: 24 * 60 * 60_000,
 } as const;
+
+/** A prep coach session: shorter than an interview. */
+export const COACH_LIMITS = {
+  minutes: 20,
+  maxAnswers: 20,
+} as const;
+
+/** Answers a session allows, by purpose. */
+export const answerLimit = (purpose?: PracticePurpose) =>
+  purpose === 'coach' ? COACH_LIMITS.maxAnswers : PRACTICE_LIMITS.maxAnswers;

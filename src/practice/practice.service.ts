@@ -17,6 +17,7 @@ import { isDuplicateKey } from '../common/mongo-errors';
 import { usageMonth } from '../contests/contest-hosting.service';
 import { AiBudgetService } from './ai-budget.service';
 import { StartPracticeDto } from './dto/start-practice.dto';
+import { PracticeEngines } from './practice-engines';
 import { PracticeFeedbackService } from './practice-feedback.service';
 import { PracticeNotifier } from './practice.notifier';
 import {
@@ -56,6 +57,7 @@ export class PracticeService {
     private readonly eventModel: Model<ActivityEvent>,
     private readonly ai: AiClient,
     private readonly budget: AiBudgetService,
+    private readonly engines: PracticeEngines,
     private readonly feedback: PracticeFeedbackService,
     private readonly notifier: PracticeNotifier,
   ) {}
@@ -133,7 +135,11 @@ export class PracticeService {
         .lean()
         .exec(),
       this.model
-        .find({ userId, status: { $ne: 'cancelled' } })
+        .find({
+          userId,
+          purpose: { $ne: 'coach' },
+          status: { $ne: 'cancelled' },
+        })
         .select('-turns -feedback -avoid -codingQuestion')
         .sort({ startedAt: -1 })
         .limit(100)
@@ -219,18 +225,29 @@ export class PracticeService {
         .exec());
     if (!iv) return null;
 
-    await this.budget.stopped(iv.quota);
+    const { budget } = this.engines.for(iv);
+    const coach = iv.purpose === 'coach';
+    await budget.stopped(iv.quota);
     if (iv.status === 'cancelled') {
-      await this.giveSlotBack(iv.userId, usageMonth(iv.startedAt));
-      await this.budget.settle(iv.quota, {
+      // A coach session's day slot is prep's: it stays used.
+      if (!coach) await this.giveSlotBack(iv.userId, usageMonth(iv.startedAt));
+      await budget.settle(iv.quota, {
         requests: iv.usedRequests,
         tokens: iv.usedTokens,
       });
     } else {
+      // A square on the graph: a practice interview, or prep.
       await this.eventModel
         .updateOne(
-          { kind: 'dummy', refId: iv._id, userId: iv.userId },
-          { $set: { at: now, data: { kind: iv.kind, topic: iv.topic } } },
+          { kind: coach ? 'prep' : 'dummy', refId: iv._id, userId: iv.userId },
+          {
+            $set: {
+              at: now,
+              data: coach
+                ? { mode: 'coach', topic: iv.topic, level: iv.level }
+                : { kind: iv.kind, topic: iv.topic },
+            },
+          },
           { upsert: true },
         )
         .exec();
@@ -256,7 +273,7 @@ export class PracticeService {
       .deleteOne({ _id: iv._id, status: { $ne: 'active' } })
       .exec();
     if (deletedCount && iv.status === 'ended') {
-      await this.budget.settle(iv.quota, {
+      await this.engines.for(iv).budget.settle(iv.quota, {
         requests: iv.usedRequests,
         tokens: iv.usedTokens,
       });
@@ -284,7 +301,7 @@ export class PracticeService {
   /** Topics and questions from recent interviews, for variety. */
   private async recent(userId: Types.ObjectId, kind: PracticeKind) {
     const rows = await this.model
-      .find({ userId, kind, status: 'done' })
+      .find({ userId, kind, purpose: { $ne: 'coach' }, status: 'done' })
       .select('topic feedback.questions.title')
       .sort({ startedAt: -1 })
       .limit(3)
