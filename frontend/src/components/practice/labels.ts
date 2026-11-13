@@ -9,6 +9,12 @@ export const TOPICS: Record<PracticeKind, string[]> = {
 /** Picks a topic at random, on the server. */
 export const MIXED = 'Mixed'
 
+/** The areas a review rates, 1 to 5. Mirrors skill areas on the server. */
+export const REVIEW_AREAS: Record<PracticeKind, string[]> = {
+  technical: ['Knowledge', 'Problem solving', 'Code quality', 'Edge cases', 'Communication'],
+  behavioural: ['Structure', 'Ownership', 'Communication', 'Self-awareness', 'Results'],
+}
+
 export const KIND_LABEL: Record<PracticeKind, string> = { technical: 'Technical', behavioural: 'Behavioural' }
 export const LEVEL_LABEL: Record<PracticeLevel, string> = { junior: 'Junior', mid: 'Mid', senior: 'Senior' }
 export const LEVELS: PracticeLevel[] = ['junior', 'mid', 'senior']

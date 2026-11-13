@@ -26,6 +26,7 @@ const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.P
 const Practice = lazy(() => import('@/pages/Practice').then((m) => ({ default: m.Practice })))
 const PracticeFeedback = lazy(() => import('@/pages/PracticeFeedback').then((m) => ({ default: m.PracticeFeedback })))
 const PracticeInterview = lazy(() => import('@/pages/PracticeInterview').then((m) => ({ default: m.PracticeInterview })))
+const RoomReview = lazy(() => import('@/pages/RoomReview').then((m) => ({ default: m.RoomReview })))
 const UserProfile = lazy(() => import('@/pages/UserProfile').then((m) => ({ default: m.UserProfile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 
@@ -67,6 +68,7 @@ export default function App() {
                   <Route element={<AppShell />}>
                     <Route index element={<Dashboard />} />
                     <Route path="/rooms/join" element={<JoinRoom />} />
+                    <Route path="/rooms/:id/review" element={<RoomReview />} />
                     <Route path="/contests/:id" element={<ContestDetails />} />
                     <Route path="/contests/:id/results" element={<ContestResults />} />
                     <Route element={<RoleRoute />}>

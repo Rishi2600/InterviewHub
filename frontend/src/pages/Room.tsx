@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import {
   ArrowLeft,
   ChevronDown,
+  ClipboardPen,
   Copy,
   Ellipsis,
   Link2,
@@ -166,6 +167,14 @@ function RoomScreen({ room }: { room: RoomType }) {
           <Button variant="outline" size="sm" className="hidden border-danger/40 text-danger hover:bg-danger/10 sm:inline-flex" onClick={() => setEndOpen(true)}>
             <Square aria-hidden />
             End room
+          </Button>
+        )}
+        {isEnded && (
+          <Button size="sm" asChild>
+            <Link to={`/rooms/${room._id}/review`}>
+              <ClipboardPen aria-hidden />
+              {isCandidate ? 'Your review' : 'Review candidates'}
+            </Link>
           </Button>
         )}
         <DropdownMenu>
