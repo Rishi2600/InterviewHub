@@ -11,9 +11,14 @@ import { configureApp } from '../src/app.setup';
 import { HttpThrottleGuard } from '../src/common/throttle/http-throttle.guard';
 import { FinalizeJob } from '../src/contests/finalize/finalize.job';
 import { PracticeJob } from '../src/practice/practice.job';
-import { AiClient } from '../src/ai/ai.types';
+import { AiClient, AiUnavailableError, PrepAiClient } from '../src/ai/ai.types';
 
 export const ORIGIN = 'http://localhost:5173';
+
+const AI_OFF = {
+  enabled: false,
+  chat: () => Promise.reject(new AiUnavailableError('AI is off in tests')),
+};
 export const PASSWORD = 'Quiet-river9';
 
 export interface TestApp {
@@ -31,7 +36,7 @@ export interface TestApp {
  */
 export async function startApp(
   // A second server sharing the first one's database keeps its data.
-  opts: { keepData?: boolean; ai?: AiClient } = {},
+  opts: { keepData?: boolean; ai?: AiClient; prepAi?: AiClient } = {},
 ): Promise<TestApp> {
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(HttpThrottleGuard)
@@ -43,6 +48,10 @@ export async function startApp(
     .overrideProvider(PracticeJob)
     .useValue({});
   if (opts.ai) builder = builder.overrideProvider(AiClient).useValue(opts.ai);
+  // Prep never reaches Groq from a test: a fake, or switched off.
+  builder = builder
+    .overrideProvider(PrepAiClient)
+    .useValue(opts.prepAi ?? AI_OFF);
   const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>({
     logger: ['error'],

@@ -14,6 +14,10 @@ export class DrillItem {
 
   @Prop({ type: Boolean, default: null })
   correct: boolean | null;
+
+  // The candidate flagged this question as wrong.
+  @Prop({ default: false })
+  flagged: boolean;
 }
 
 /** One drill: up to 10 bank questions, answered in order. Private. */

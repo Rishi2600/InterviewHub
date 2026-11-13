@@ -62,6 +62,13 @@ export class PrepQuestion {
 
   @Prop({ default: 0 })
   right: number;
+
+  // How often each option was picked, for spotting a wrong answer key later.
+  @Prop({
+    type: SchemaTypes.Mixed,
+    default: () => ({ a: 0, b: 0, c: 0, d: 0 }),
+  })
+  picks: Record<string, number>;
 }
 
 export const PrepQuestionSchema = SchemaFactory.createForClass(PrepQuestion);
