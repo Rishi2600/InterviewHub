@@ -209,6 +209,7 @@ export class RoomsService {
       );
     }
     room.state = state;
+    if (state === 'ended') room.endedAt = new Date();
     const saved = await room.save();
     if (state === 'ended') {
       await this.recordInterview(saved, new Date());

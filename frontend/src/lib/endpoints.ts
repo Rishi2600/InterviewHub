@@ -18,7 +18,10 @@ import type {
   PublicUser,
   Role,
   Room,
+  RoomReview,
+  RoomReviews,
   RoomState,
+  SaveReviewBody,
   Submission,
   User,
   UserActivity,
@@ -125,6 +128,20 @@ export function joinRoomByCode(code: string) {
 
 export function setRoomState(id: string, state: RoomState) {
   return http.patch<Room>(`/rooms/${id}/state`, { state })
+}
+
+/* ------------------------------------------------------- reviews ---- */
+
+export function getRoomReviews(roomId: string) {
+  return http.get<RoomReviews>(`/reviews/rooms/${roomId}`)
+}
+
+export function saveRoomReview(roomId: string, candidateId: string, body: SaveReviewBody) {
+  return http.put<RoomReview>(`/reviews/rooms/${roomId}/${candidateId}`, body)
+}
+
+export function getMyReviews() {
+  return http.get<RoomReview[]>('/reviews/mine')
 }
 
 export function pinQuestion(id: string, question: string) {

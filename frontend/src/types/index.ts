@@ -61,8 +61,48 @@ export interface Room {
   state: RoomState
   participants: Participant[]
   pinnedQuestion: string | null
+  endedAt?: string | null
   createdAt: string
   updatedAt: string
+}
+
+/* ----------------------------------------------------- room reviews ---- */
+
+export interface ReviewArea {
+  name: string
+  score: number
+}
+
+/** An interviewer's review of one candidate, after a room ends. */
+export interface RoomReview {
+  id: string
+  roomId: string
+  roomTitle: string
+  reviewerId: string
+  reviewerName: string
+  candidateId: string
+  kind: PracticeKind
+  topics: string[]
+  areas: ReviewArea[]
+  note: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RoomReviews {
+  role: 'reviewer' | 'candidate'
+  ended: boolean
+  open: boolean
+  closesAt: string | null
+  candidates: { userId: string; username: string }[]
+  reviews: RoomReview[]
+}
+
+export interface SaveReviewBody {
+  kind: PracticeKind
+  topics: string[]
+  areas: ReviewArea[]
+  note: string
 }
 
 export type MessageType = 'user' | 'system'
