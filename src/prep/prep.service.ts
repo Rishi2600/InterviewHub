@@ -8,6 +8,16 @@ import { PracticeInterview } from '../practice/schemas/practice-interview.schema
 import { DrillService } from './drill.service';
 import { PrepUsageService } from './prep-usage.service';
 import { coachListItem, drillListItem } from './prep.views';
+import {
+  Evidence,
+  fromCoach,
+  fromDrill,
+  fromInterview,
+  strengths,
+  STRENGTH,
+  suggestions,
+  TopicStrength,
+} from './strength';
 import { PrepDrill } from './schemas/prep-drill.schema';
 import { PrepProfile } from './schemas/prep-profile.schema';
 
@@ -30,17 +40,29 @@ export class PrepService {
   async overview(user: AuthUser, now = new Date()) {
     const userId = new Types.ObjectId(user.userId);
     await this.drill.closeIdle(userId, now);
-    const [today, running, coaching, profile, history] = await Promise.all([
-      this.usage.today(userId, now),
-      this.drills.findOne({ userId, active: true }).lean().exec(),
-      this.sessions
-        .findOne({ userId, purpose: 'coach', status: 'active' })
-        .select('topic level endsAt')
-        .lean()
-        .exec(),
-      this.profiles.findOne({ userId }).lean().exec(),
-      this.history(user),
-    ]);
+    const [today, running, coaching, profile, history, evidence] =
+      await Promise.all([
+        this.usage.today(userId, now),
+        this.drills.findOne({ userId, active: true }).lean().exec(),
+        this.sessions
+          .findOne({ userId, purpose: 'coach', status: 'active' })
+          .select('topic level endsAt')
+          .lean()
+          .exec(),
+        this.profiles.findOne({ userId }).lean().exec(),
+        this.history(user),
+        this.evidence(userId, now),
+      ]);
+    const focus = profile?.focus ?? [];
+    const topics = strengths(evidence, now);
+    // A suggested session's level when the topic has none of its own.
+    const lastLevel =
+      [...evidence].sort((a, b) => b.at.getTime() - a.at.getTime())[0]?.level ??
+      'junior';
+    const withLevel = (t: TopicStrength) => ({
+      ...t,
+      level: t.level ?? lastLevel,
+    });
     return {
       // Drills already in the bank work without the AI; coaching needs it.
       aiEnabled: this.ai.enabled,
@@ -56,7 +78,16 @@ export class PrepService {
             }
           : null,
       },
-      focus: profile?.focus ?? [],
+      focus,
+      // The tailored part of the page. See docs/PREP_DESIGN.md §5.
+      recommended: {
+        focus: focus
+          .map((f) => topics.find((t) => t.topic === f))
+          .filter((t): t is TopicStrength => !!t)
+          .map(withLevel),
+        suggestions: suggestions(topics, focus).map(withLevel),
+        topics,
+      },
       ...history,
     };
   }
@@ -102,6 +133,30 @@ export class PrepService {
           ? items[items.length - 1].startedAt.toISOString()
           : null,
     };
+  }
+
+  /** Finished practice interviews, coach sessions and drills, recent ones. */
+  private async evidence(userId: Types.ObjectId, now: Date) {
+    const since = new Date(now.getTime() - STRENGTH.windowDays * 86_400_000);
+    const [sessions, drills] = await Promise.all([
+      this.sessions
+        .find({ userId, status: 'done', endedAt: { $gte: since } })
+        .select('purpose topic level startedAt endedAt feedback')
+        .lean()
+        .exec(),
+      this.drills
+        .find({ userId, status: 'done', endedAt: { $gte: since } })
+        .select('topic level answered right items startedAt endedAt')
+        .lean()
+        .exec(),
+    ]);
+    const all: (Evidence | null)[] = [
+      ...sessions.map((s) =>
+        s.purpose === 'coach' ? fromCoach(s) : fromInterview(s),
+      ),
+      ...drills.map((d) => fromDrill({ ...d, total: d.items.length })),
+    ];
+    return all.filter((e): e is Evidence => e !== null);
   }
 
   /** The candidate's own focus topics, up to 3, from the shared list. */

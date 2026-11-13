@@ -279,4 +279,62 @@ describe('Interview prep: drills', () => {
     expect(overview.focus).toEqual(['React', 'Teamwork']);
     expect(overview.today.drill.limit).toBe(10);
   });
+
+  it('suggests weak topics from practice feedback and drills, with the reason', async () => {
+    const u = await signUp(t, 'drill_lou');
+    const userId = new Types.ObjectId(u.id);
+    const now = new Date();
+    await t.db.collection('practice_interviews').insertOne({
+      userId,
+      purpose: 'interview',
+      kind: 'technical',
+      topic: 'SQL',
+      mixed: false,
+      level: 'junior',
+      minutes: 30,
+      language: null,
+      mode: 'chat',
+      status: 'done',
+      startedAt: now,
+      endsAt: now,
+      endedAt: now,
+      feedback: {
+        summary: 'Shaky on joins.',
+        areas: [
+          { name: 'Knowledge', score: 3 },
+          { name: 'Edge cases', score: 1 },
+        ],
+        strengths: [],
+        improve: [],
+        questions: [],
+      },
+    });
+    await t
+      .api()
+      .put('/prep/focus')
+      .set(bearer(u))
+      .send({ topics: ['React'] });
+
+    interface Topic {
+      topic: string;
+      strength: number | null;
+      reason: { text: string } | null;
+      focus: string | null;
+      level: string;
+    }
+    const { recommended } = data<{
+      recommended: { focus: Topic[]; suggestions: Topic[]; topics: Topic[] };
+    }>(await t.api().get('/prep').set(bearer(u)).expect(200));
+    expect(recommended.suggestions).toHaveLength(1);
+    expect(recommended.suggestions[0]).toMatchObject({
+      topic: 'SQL',
+      focus: 'Edge cases',
+      level: 'junior',
+      reason: { text: '1/5 on Edge cases in your SQL practice interview' },
+    });
+    expect(recommended.focus).toEqual([
+      expect.objectContaining({ topic: 'React', strength: null }),
+    ]);
+    expect(recommended.topics).toHaveLength(15);
+  });
 });
