@@ -158,8 +158,8 @@ export class ScoreService {
 
   /**
    * Activity per UTC day for the contribution graph: the last 12 months, or
-   * one calendar year. Every kind of event counts, so interviews and prep
-   * add squares once they write events.
+   * one calendar year. Every kind of event counts (contests, live
+   * interviews, practice interviews, prep), with a count per kind.
    */
   async activity(
     userId: Types.ObjectId,
@@ -174,8 +174,8 @@ export class ScoreService {
     );
     const from = year ? Date.UTC(year, 0, 1) : today - 364 * DAY_MS;
     const to = year ? Math.min(today, Date.UTC(year, 11, 31)) : today;
-    const days = await this.eventModel
-      .aggregate<{ _id: string; count: number }>([
+    const rows = await this.eventModel
+      .aggregate<{ _id: { day: string; kind: string }; count: number }>([
         {
           $match: {
             userId,
@@ -184,20 +184,35 @@ export class ScoreService {
         },
         {
           $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$at' } },
+            _id: {
+              day: { $dateToString: { format: '%Y-%m-%d', date: '$at' } },
+              kind: '$kind',
+            },
             count: { $sum: 1 },
           },
         },
-        { $sort: { _id: 1 } },
+        { $sort: { '_id.day': 1 } },
       ])
       .exec();
+    // One entry per day, with its count per kind.
+    const byDay = new Map<
+      string,
+      { count: number; kinds: Record<string, number> }
+    >();
+    for (const r of rows) {
+      const d = byDay.get(r._id.day) ?? { count: 0, kinds: {} };
+      d.count += r.count;
+      d.kinds[r._id.kind] = r.count;
+      byDay.set(r._id.day, d);
+    }
+    const days = [...byDay].map(([date, d]) => ({ date, ...d }));
     const years: number[] = [];
     for (let y = now.getUTCFullYear(); y >= joinedAt.getUTCFullYear(); y--)
       years.push(y);
     return {
       from: utcDay(from),
       to: utcDay(Math.max(from, to)),
-      days: days.map((d) => ({ date: d._id, count: d.count })),
+      days,
       total: days.reduce((sum, d) => sum + d.count, 0),
       years,
     };

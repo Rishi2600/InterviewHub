@@ -13,6 +13,8 @@ export interface GraphCell {
   count: number
   // 0 for none, then 1 to 4 for more.
   level: number
+  // Count per kind of activity, when the day has any.
+  kinds?: Record<string, number>
 }
 
 export interface Graph {
@@ -30,8 +32,12 @@ const toDate = (t: number) => new Date(t).toISOString().slice(0, 10)
  * week columns starting on Sunday, with a month label over the first column
  * that starts in that month.
  */
-export function buildGraph(from: string, to: string, days: { date: string; count: number }[]): Graph {
-  const counts = new Map(days.map((d) => [d.date, d.count]))
+export function buildGraph(
+  from: string,
+  to: string,
+  days: { date: string; count: number; kinds?: Record<string, number> }[],
+): Graph {
+  const byDate = new Map(days.map((d) => [d.date, d]))
   const start = toTime(from)
   const end = toTime(to)
   const firstSunday = start - new Date(start).getUTCDay() * DAY
@@ -47,8 +53,9 @@ export function buildGraph(from: string, to: string, days: { date: string; count
         continue
       }
       const date = toDate(t)
-      const count = counts.get(date) ?? 0
-      column.push({ date, count, level: Math.min(4, count) })
+      const day = byDate.get(date)
+      const count = day?.count ?? 0
+      column.push({ date, count, level: Math.min(4, count), ...(day?.kinds && { kinds: day.kinds }) })
     }
     // Label a month on the week its first shown day falls in.
     const firstShown = Math.max(w, start)
@@ -89,4 +96,20 @@ export function formatChange(change: number): string {
 
 export function formatDay(iso: string, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }) {
   return new Date(iso).toLocaleDateString('en-GB', { ...opts, timeZone: 'UTC' })
+}
+
+const KIND_NAMES: Record<string, [string, string]> = {
+  contest: ['contest', 'contests'],
+  interview: ['live interview', 'live interviews'],
+  dummy: ['practice interview', 'practice interviews'],
+  prep: ['prep session', 'prep sessions'],
+}
+
+/** "2 contests, 1 prep session" for a graph day. */
+export function describeKinds(kinds: Record<string, number> | undefined): string {
+  if (!kinds) return ''
+  return Object.entries(KIND_NAMES)
+    .filter(([k]) => kinds[k])
+    .map(([k, [one, many]]) => `${kinds[k]} ${kinds[k] === 1 ? one : many}`)
+    .join(', ')
 }

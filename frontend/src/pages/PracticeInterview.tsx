@@ -41,6 +41,7 @@ import { PracticeEditor } from '@/components/practice/PracticeEditor'
 import { AiTile, YouTile } from '@/components/practice/Tiles'
 import { VoicePanel } from '@/components/practice/VoicePanel'
 import type { AiState } from '@/components/practice/Tiles'
+import { sessionWords } from '@/components/practice/words'
 import { KIND_LABEL, practiceTitle } from '@/components/practice/labels'
 import { useAuth } from '@/hooks/useAuth'
 import { useNow } from '@/hooks/useNow'
@@ -79,6 +80,7 @@ export function PracticeInterview() {
 }
 
 function InterviewScreen({ interview }: { interview: Interview }) {
+  const w = sessionWords(interview.purpose)
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const live = usePracticeSocket(interview)
@@ -92,7 +94,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
   const end = useMutation({
     mutationFn: () => endPractice(interview.id),
     onSuccess: (iv) => queryClient.setQueryData(['practice', interview.id], iv),
-    onError: (err) => toast.error(errorMessage(err, "Couldn't end the interview")),
+    onError: (err) => toast.error(errorMessage(err, `Couldn't end the ${w.thing}`)),
   })
 
   // Ended by the AI, the answer limit or the clock: show the ending screen.
@@ -141,7 +143,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
     <div className="min-h-svh bg-background">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur sm:gap-3 sm:px-4">
         <Button variant="ghost" size="icon-sm" asChild>
-          <Link to="/practice" aria-label="Back to AI practice">
+          <Link to={w.home} aria-label={`Back to ${w.homeLabel}`}>
             <ArrowLeft aria-hidden />
           </Link>
         </Button>
@@ -149,7 +151,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
           <h1 className="truncate font-heading text-base font-semibold">{practiceTitle(interview)}</h1>
           <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-brand">
             <Bot className="size-3" aria-hidden />
-            Practice
+            {w.tag}
           </span>
           <span className="hidden items-center gap-3 sm:inline-flex">
             <span className={cn('tnum inline-flex items-center gap-1 text-sm', msLeft < 120_000 ? 'text-danger' : 'text-muted-foreground')}>
@@ -171,7 +173,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
         )}
         <Button variant="outline" size="sm" className="border-danger/40 text-danger hover:bg-danger/10" onClick={() => setEndOpen(true)} disabled={end.isPending}>
           <Square aria-hidden />
-          <span className="hidden sm:inline">End interview</span>
+          <span className="hidden sm:inline">End {w.thing}</span>
           <span className="sm:hidden">End</span>
         </Button>
       </header>
@@ -211,7 +213,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
                 <section className="rounded-xl border bg-card px-4 py-3">
                   <div className="mb-1 text-xs font-medium text-muted-foreground">Latest question</div>
                   <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                    {lastAi ? <InlineText text={lastAi.text} /> : <span className="text-muted-foreground">The interviewer is getting ready…</span>}
+                    {lastAi ? <InlineText text={lastAi.text} /> : <span className="text-muted-foreground">The {w.ai} is getting ready…</span>}
                   </p>
                 </section>
               )}
@@ -257,7 +259,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
                   <PracticeComposer
                     onSend={send}
                     disabled={!canAnswer}
-                    disabledReason={live.waiting ? 'The interviewer is writing…' : live.status !== 'connected' ? 'Reconnecting…' : undefined}
+                    disabledReason={live.waiting ? `The ${w.ai} is writing…` : live.status !== 'connected' ? 'Reconnecting…' : undefined}
                     restore={live.retracted}
                     extra={
                       support.listen && (
@@ -297,8 +299,8 @@ function InterviewScreen({ interview }: { interview: Interview }) {
               if (speaker) stopSpeaking()
               setSpeaker((s) => !s)
             }}
-            aria-label={speaker ? "Mute the interviewer's voice" : "Hear the interviewer's voice"}
-            title={speaker ? "Mute the interviewer's voice" : "Hear the interviewer's voice"}
+            aria-label={speaker ? `Mute the ${w.ai}'s voice` : `Hear the ${w.ai}'s voice`}
+            title={speaker ? `Mute the ${w.ai}'s voice` : `Hear the ${w.ai}'s voice`}
             className="grid size-9 place-items-center rounded-full border bg-card hover:bg-muted"
           >
             {speaker && mode === 'voice' ? <Volume2 className="size-4" aria-hidden /> : <VolumeX className="size-4" aria-hidden />}
@@ -317,17 +319,17 @@ function InterviewScreen({ interview }: { interview: Interview }) {
       <AlertDialog open={endOpen} onOpenChange={setEndOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>End the interview now?</AlertDialogTitle>
+            <AlertDialogTitle>End the {w.thing} now?</AlertDialogTitle>
             <AlertDialogDescription>
               {answers
-                ? 'Your feedback is written from what you have answered so far. The chat is deleted once it is ready.'
-                : "You haven't answered anything yet, so there's no feedback and it won't count toward this month."}
+                ? `Your ${w.report} is written from what you have answered so far. The chat is deleted once it is ready.`
+                : w.noAnswerNote}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep going</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={() => end.mutate()}>
-              End interview
+              End {w.thing}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -378,6 +380,7 @@ function EndingScreen({ interview }: { interview: Interview }) {
     refetchInterval: (q) => (q.state.data?.status === 'ended' ? 4_000 : false),
   })
   const iv = query.data ?? interview
+  const w = sessionWords(iv.purpose)
   const cancelled = iv.status === 'cancelled'
   const done = iv.status === 'done'
   const failed = iv.status === 'failed'
@@ -389,38 +392,36 @@ function EndingScreen({ interview }: { interview: Interview }) {
         <span className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground">
           <Bot className="size-5" aria-hidden />
         </span>
-        <h1 className="mt-4 text-xl font-semibold">{cancelled ? 'Interview cancelled' : "That's the interview done"}</h1>
+        <h1 className="mt-4 text-xl font-semibold">{cancelled ? `${w.Thing} cancelled` : `That's the ${w.thing} done`}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {practiceTitle(iv)} · {KIND_LABEL[iv.kind]}
         </p>
         {cancelled ? (
-          <p className="mt-5 text-sm leading-relaxed">
-            You ended it before answering, so there's no feedback, and it doesn't count toward this month's interviews.
-          </p>
+          <p className="mt-5 text-sm leading-relaxed">{w.cancelledNote}</p>
         ) : (
           <ol className="mt-6 grid gap-4">
-            <Step state="done" title="Interview ended" detail={`${minutes} min · ${iv.answers} ${iv.answers === 1 ? 'answer' : 'answers'}`} />
+            <Step state="done" title={`${w.Thing} ended`} detail={`${minutes} min · ${iv.answers} ${iv.answers === 1 ? 'answer' : 'answers'}`} />
             <Step
               state={done ? 'done' : failed ? 'failed' : 'now'}
-              title={done ? 'Feedback written' : failed ? "The feedback couldn't be written" : 'Writing your feedback'}
+              title={done ? `${w.Report} written` : failed ? `The ${w.report} couldn't be written` : `Writing your ${w.report}`}
               detail={done ? 'Ready to read' : failed ? 'The AI service was busy for too long.' : 'Usually about 20 seconds. You can leave this page.'}
             />
-            <Step state={done || failed ? 'done' : 'next'} title="Chat deleted" detail="Only the feedback is kept" />
+            <Step state={done || failed ? 'done' : 'next'} title="Chat deleted" detail={`Only the ${w.report} is kept`} />
           </ol>
         )}
         <div className="mt-7 flex flex-wrap items-center gap-3">
           {done ? (
             <Button asChild>
               <Link to={`/practice/${iv.id}/feedback`}>
-                View feedback
+                View {w.report}
                 <ArrowRight aria-hidden />
               </Link>
             </Button>
           ) : (
             <Button variant="outline" asChild>
-              <Link to="/practice">
+              <Link to={w.home}>
                 <ArrowLeft aria-hidden />
-                Back to AI practice
+                Back to {w.homeLabel}
               </Link>
             </Button>
           )}

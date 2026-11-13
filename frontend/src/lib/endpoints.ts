@@ -31,6 +31,11 @@ import type {
   PracticeInterview,
   PracticeOverview,
   StartPracticeBody,
+  PracticeLevel,
+  PrepDrill,
+  PrepHistory,
+  PrepOverview,
+  StartCoachBody,
 } from '@/types'
 
 /**
@@ -305,4 +310,43 @@ export function endPractice(id: string) {
 /** Deletes the feedback for good; the activity square stays. */
 export function deletePractice(id: string) {
   return http.delete<void>(`/practice/${id}`)
+}
+
+/* ------------------------------------------------------------ prep ---- */
+
+export function getPrepOverview() {
+  return http.get<PrepOverview>('/prep')
+}
+
+export function getPrepHistory(before: string) {
+  return http.get<PrepHistory>('/prep/history', { params: { before } })
+}
+
+export function setPrepFocus(topics: string[]) {
+  return http.put<{ focus: string[] }>('/prep/focus', { topics })
+}
+
+export function startDrill(topic: string, level: PracticeLevel) {
+  return http.post<PrepDrill>('/prep/drills', { topic, level })
+}
+
+export function getDrill(id: string) {
+  return http.get<PrepDrill>(`/prep/drills/${id}`)
+}
+
+export function answerDrill(id: string, questionId: string, optionId: string) {
+  return http.post<PrepDrill>(`/prep/drills/${id}/answers`, { questionId, optionId })
+}
+
+export function endDrill(id: string) {
+  return http.post<PrepDrill | { id: string; removed: true }>(`/prep/drills/${id}/end`)
+}
+
+export function flagDrillQuestion(id: string, questionId: string) {
+  return http.post<PrepDrill>(`/prep/drills/${id}/questions/${questionId}/flag`)
+}
+
+/** Starts a coach session; it then runs on the practice interview screen. */
+export function startCoach(body: StartCoachBody) {
+  return http.post<PracticeInterview>('/prep/coach', body)
 }

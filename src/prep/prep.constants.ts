@@ -23,3 +23,10 @@ export const PREP_LIMITS = {
 
 export const PREP_MODES = ['drill', 'coach'] as const;
 export type PrepMode = (typeof PREP_MODES)[number];
+
+/** A coach topic the candidate types. Not counted in recommendations. */
+export const OWN_TOPIC = {
+  min: 2,
+  max: 60,
+  pattern: /^[\p{L}\p{N}][\p{L}\p{N} .,+#&/()'-]*$/u,
+} as const;

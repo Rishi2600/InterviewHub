@@ -11,6 +11,7 @@ import {
   Code2,
   CloudOff,
   Gauge,
+  GraduationCap,
   Grid3x3,
   Lightbulb,
   Lock,
@@ -37,6 +38,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { EmptyState, ErrorState } from '@/components/common/States'
 import { InlineText } from '@/components/practice/Conversation'
 import { KIND_LABEL, formatScore, practiceTitle } from '@/components/practice/labels'
+import { sessionWords } from '@/components/practice/words'
 import { errorMessage, errorStatus } from '@/lib/api'
 import { deletePractice, getPractice } from '@/lib/endpoints'
 import { formatDay } from '@/lib/score'
@@ -54,17 +56,18 @@ export function PracticeFeedback() {
     refetchInterval: (q) => (q.state.data?.status === 'ended' ? 4_000 : false),
   })
   const iv = query.data
+  const w = sessionWords(iv?.purpose)
 
   return (
     <>
       <PageHeader
         title={
           <span className="flex min-w-0 items-center gap-1.5">
-            <Link to="/practice" className="hidden text-muted-foreground hover:text-foreground sm:inline">
-              AI practice
+            <Link to={w.home} className="hidden text-muted-foreground hover:text-foreground sm:inline">
+              {w.homeLabel}
             </Link>
             <ChevronRight className="hidden size-3.5 text-muted-foreground sm:inline" aria-hidden />
-            <span className="truncate font-medium">{iv ? practiceTitle(iv) : 'Feedback'}</span>
+            <span className="truncate font-medium">{iv ? practiceTitle(iv) : w.Report}</span>
           </span>
         }
       />
@@ -79,7 +82,7 @@ export function PracticeFeedback() {
               description="It may have been deleted."
               action={
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/practice">Back to AI practice</Link>
+                  <Link to={w.home}>Back to {w.homeLabel}</Link>
                 </Button>
               }
             />
@@ -109,6 +112,12 @@ function TitleBlock({ iv }: { iv: PracticeInterview }) {
           <KindIcon className="size-3" aria-hidden />
           {KIND_LABEL[iv.kind]}
         </span>
+        {iv.purpose === 'coach' && (
+          <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium">
+            <GraduationCap className="size-3" aria-hidden />
+            Coach recap{iv.focus && ` · focus: ${iv.focus.toLowerCase()}`}
+          </span>
+        )}
         <span className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground">
           <Lock className="size-3" aria-hidden />
           Private
@@ -210,7 +219,7 @@ function Report({ iv, feedback }: { iv: PracticeInterview; feedback: Feedback })
             ))}
           </ul>
         </Card>
-        <Card title="What to work on">
+        <Card title={iv.purpose === 'coach' ? 'What to review' : 'What to work on'}>
           <ol className="grid gap-3 p-5">
             {feedback.improve.map((item, i) => (
               <li key={item.point} className="flex gap-2.5 text-sm leading-relaxed">
@@ -225,7 +234,10 @@ function Report({ iv, feedback }: { iv: PracticeInterview; feedback: Feedback })
       </div>
 
       {feedback.questions.length > 0 && (
-        <Card title="Question by question" extra={`${feedback.questions.length} ${feedback.questions.length === 1 ? 'question' : 'questions'}`}>
+        <Card
+          title={iv.purpose === 'coach' ? 'Idea by idea' : 'Question by question'}
+          extra={`${feedback.questions.length} ${feedback.questions.length === 1 ? (iv.purpose === 'coach' ? 'idea' : 'question') : iv.purpose === 'coach' ? 'ideas' : 'questions'}`}
+        >
           <ul className="divide-y px-5">
             {feedback.questions.map((q, i) => (
               <li key={i} className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 py-4">
@@ -257,6 +269,7 @@ function Report({ iv, feedback }: { iv: PracticeInterview; feedback: Feedback })
 }
 
 function Footer({ iv }: { iv: PracticeInterview }) {
+  const w = sessionWords(iv.purpose)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [confirm, setConfirm] = useState(false)
@@ -265,10 +278,11 @@ function Footer({ iv }: { iv: PracticeInterview }) {
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ['practice', iv.id] })
       void queryClient.invalidateQueries({ queryKey: ['practice'] })
-      toast.success('Feedback deleted')
-      navigate('/practice')
+      void queryClient.invalidateQueries({ queryKey: ['prep'] })
+      toast.success(`${w.Report} deleted`)
+      navigate(w.home)
     },
-    onError: (err) => toast.error(errorMessage(err, "Couldn't delete the feedback")),
+    onError: (err) => toast.error(errorMessage(err, `Couldn't delete the ${w.report}`)),
   })
   const fact = (Icon: typeof Lock, text: string, brand = false) => (
     <span className="inline-flex items-center gap-1.5">
@@ -286,28 +300,30 @@ function Footer({ iv }: { iv: PracticeInterview }) {
       </div>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" asChild>
-          <Link to="/practice">
+          <Link to={w.home}>
             <RotateCcw aria-hidden />
-            Practise again
+            {iv.purpose === 'coach' ? 'Back to prep' : 'Practise again'}
           </Link>
         </Button>
         <Button variant="outline" size="sm" onClick={() => setConfirm(true)} disabled={remove.isPending}>
           <Trash2 aria-hidden />
-          Delete feedback
+          Delete {w.report}
         </Button>
       </div>
       <AlertDialog open={confirm} onOpenChange={setConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this feedback?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this {w.report}?</AlertDialogTitle>
             <AlertDialogDescription>
-              It's gone for good. The square on your activity graph stays, and it still counts as one of this month's interviews.
+              {iv.purpose === 'coach'
+                ? "It's gone for good, and it stops counting towards your recommendations. The square on your activity graph stays."
+                : "It's gone for good. The square on your activity graph stays, and it still counts as one of this month's interviews."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={() => remove.mutate()}>
-              Delete feedback
+              Delete {w.report}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -318,6 +334,7 @@ function Footer({ iv }: { iv: PracticeInterview }) {
 
 /** Still being written, given up on, or cancelled. */
 function NotReady({ iv }: { iv: PracticeInterview }) {
+  const w = sessionWords(iv.purpose)
   if (iv.status === 'ended') {
     return (
       <section className="grid gap-6 rounded-xl border bg-card p-6 sm:p-8">
@@ -326,7 +343,7 @@ function NotReady({ iv }: { iv: PracticeInterview }) {
             <Bot className="size-5" aria-hidden />
           </span>
           <div>
-            <h2 className="text-lg font-semibold">Writing your feedback</h2>
+            <h2 className="text-lg font-semibold">Writing your {w.report}</h2>
             <p className="text-sm text-muted-foreground">Usually about 20 seconds. If the AI service is busy, it's retried for up to a day; this page updates on its own.</p>
           </div>
         </div>
@@ -345,16 +362,16 @@ function NotReady({ iv }: { iv: PracticeInterview }) {
         <CloudOff className="size-5" aria-hidden />
       </span>
       <div>
-        <h2 className="text-lg font-semibold">{iv.status === 'cancelled' ? 'No feedback for this one' : "The feedback couldn't be written"}</h2>
+        <h2 className="text-lg font-semibold">{iv.status === 'cancelled' ? `No ${w.report} for this one` : `The ${w.report} couldn't be written`}</h2>
         <p className="mt-1 max-w-prose text-sm text-muted-foreground">
           {iv.status === 'cancelled'
-            ? 'The interview ended before any answers, so it has no feedback and didn\'t count toward the month.'
-            : 'The AI service was busy for a whole day after the interview. The chat has been deleted, as it always is.'}
+            ? w.cancelledNote
+            : `The AI service was busy for a whole day after the ${w.thing}. The chat has been deleted, as it always is.`}
         </p>
       </div>
       <div>
         <Button variant="outline" size="sm" asChild>
-          <Link to="/practice">Back to AI practice</Link>
+          <Link to={w.home}>Back to {w.homeLabel}</Link>
         </Button>
       </div>
     </section>

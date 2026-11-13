@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ActivityModule } from '../activity/activity.module';
 import { AiModule } from '../ai/ai.module';
 import { AuthModule } from '../auth/auth.module';
-import { PrepBudgetModule } from '../prep/prep-budget.module';
+import { PrepSharedModule } from '../prep/prep-shared.module';
 import { AiBudgetService } from './ai-budget.service';
 import { PracticeConversationService } from './practice-conversation.service';
 import { PracticeEngines } from './practice-engines';
@@ -37,7 +37,7 @@ import {
     ActivityModule, // a square on the activity graph
     AuthModule, // SocketAuthService for the gateway
     AiModule,
-    PrepBudgetModule, // coach sessions are charged to prep's budget
+    PrepSharedModule, // coach sessions use prep's budget and daily limit
   ],
   controllers: [PracticeController],
   providers: [

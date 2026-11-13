@@ -1,6 +1,6 @@
 // The signed-in navigation, in one place, so the sidebar and the command
 // menu always list the same pages.
-import { Bot, LayoutDashboard, LogIn, Trophy, UserRound } from 'lucide-react'
+import { Bot, GraduationCap, LayoutDashboard, LogIn, Trophy, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Role } from '@/types'
 
@@ -16,6 +16,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Contests', href: '/contests', icon: Trophy },
   { label: 'AI practice', href: '/practice', icon: Bot, roles: ['candidate'] },
+  { label: 'Prep', href: '/prep', icon: GraduationCap, roles: ['candidate'] },
   { label: 'Join a room', href: '/rooms/join', icon: LogIn },
   { label: 'Profile', href: '/profile', icon: UserRound },
 ]

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildGraph, canSeeScore, formatChange } from './score'
+import { buildGraph, canSeeScore, describeKinds, formatChange } from './score'
 
 describe('buildGraph', () => {
   it('lays days out in Sunday-first week columns', () => {
@@ -52,5 +52,13 @@ describe('canSeeScore', () => {
     expect(canSeeScore({ id: 'b', role: 'interviewer' }, 'a')).toBe(true)
     expect(canSeeScore({ id: 'b', role: 'admin' }, 'a')).toBe(true)
     expect(canSeeScore(null, 'a')).toBe(false)
+  })
+})
+
+describe('describeKinds', () => {
+  it('names each kind of activity on a day, in a fixed order', () => {
+    expect(describeKinds({ prep: 2, contest: 1 })).toBe('1 contest, 2 prep sessions')
+    expect(describeKinds({ dummy: 1, interview: 1 })).toBe('1 live interview, 1 practice interview')
+    expect(describeKinds(undefined)).toBe('')
   })
 })

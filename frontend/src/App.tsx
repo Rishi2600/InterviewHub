@@ -26,6 +26,8 @@ const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.P
 const Practice = lazy(() => import('@/pages/Practice').then((m) => ({ default: m.Practice })))
 const PracticeFeedback = lazy(() => import('@/pages/PracticeFeedback').then((m) => ({ default: m.PracticeFeedback })))
 const PracticeInterview = lazy(() => import('@/pages/PracticeInterview').then((m) => ({ default: m.PracticeInterview })))
+const Prep = lazy(() => import('@/pages/Prep').then((m) => ({ default: m.Prep })))
+const PrepDrill = lazy(() => import('@/pages/PrepDrill').then((m) => ({ default: m.PrepDrill })))
 const RoomReview = lazy(() => import('@/pages/RoomReview').then((m) => ({ default: m.RoomReview })))
 const UserProfile = lazy(() => import('@/pages/UserProfile').then((m) => ({ default: m.UserProfile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
@@ -65,6 +67,7 @@ export default function App() {
                   <Route path="/contests/:id/play" element={<ContestWorkspace />} />
                   <Route path="/rooms/:id" element={<Room />} />
                   <Route path="/practice/:id" element={<PracticeInterview />} />
+                  <Route path="/prep/drills/:id" element={<PrepDrill />} />
                   <Route element={<AppShell />}>
                     <Route index element={<Dashboard />} />
                     <Route path="/rooms/join" element={<JoinRoom />} />
@@ -76,6 +79,7 @@ export default function App() {
                     </Route>
                     <Route path="/practice" element={<Practice />} />
                     <Route path="/practice/:id/feedback" element={<PracticeFeedback />} />
+                    <Route path="/prep" element={<Prep />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/users/:id" element={<UserProfile />} />
 

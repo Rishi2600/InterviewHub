@@ -5,6 +5,7 @@ import { PrepAiClient } from '../ai/ai.types';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { ALL_TOPICS } from '../common/topics';
 import { PracticeInterview } from '../practice/schemas/practice-interview.schema';
+import { ReviewsService } from '../rooms/reviews/reviews.service';
 import { DrillService } from './drill.service';
 import { PrepUsageService } from './prep-usage.service';
 import { coachListItem, drillListItem } from './prep.views';
@@ -13,6 +14,7 @@ import {
   fromCoach,
   fromDrill,
   fromInterview,
+  fromReview,
   strengths,
   STRENGTH,
   suggestions,
@@ -32,6 +34,7 @@ export class PrepService {
     private readonly profiles: Model<PrepProfile>,
     @InjectModel(PracticeInterview.name)
     private readonly sessions: Model<PracticeInterview>,
+    private readonly reviews: ReviewsService,
     private readonly ai: PrepAiClient,
     private readonly usage: PrepUsageService,
     private readonly drill: DrillService,
@@ -135,10 +138,10 @@ export class PrepService {
     };
   }
 
-  /** Finished practice interviews, coach sessions and drills, recent ones. */
+  /** Recent finished practice interviews, coach sessions, drills and reviews. */
   private async evidence(userId: Types.ObjectId, now: Date) {
     const since = new Date(now.getTime() - STRENGTH.windowDays * 86_400_000);
-    const [sessions, drills] = await Promise.all([
+    const [sessions, drills, reviews] = await Promise.all([
       this.sessions
         .find({ userId, status: 'done', endedAt: { $gte: since } })
         .select('purpose topic level startedAt endedAt feedback')
@@ -149,12 +152,14 @@ export class PrepService {
         .select('topic level answered right items startedAt endedAt')
         .lean()
         .exec(),
+      this.reviews.since(userId, since),
     ]);
     const all: (Evidence | null)[] = [
       ...sessions.map((s) =>
         s.purpose === 'coach' ? fromCoach(s) : fromInterview(s),
       ),
       ...drills.map((d) => fromDrill({ ...d, total: d.items.length })),
+      ...reviews.flatMap((r) => fromReview({ ...r, at: r.updatedAt })),
     ];
     return all.filter((e): e is Evidence => e !== null);
   }

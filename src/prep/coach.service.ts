@@ -40,8 +40,9 @@ export class CoachService {
         error: 'PrepCoachOff',
       });
     }
-    const kind = topicKind(dto.topic);
-    if (!kind) throw new BadRequestException('Unknown topic');
+    // A listed topic has its own type; the candidate's own one says.
+    const topic = dto.topic;
+    const kind = topicKind(topic) ?? dto.kind ?? 'technical';
     const language = kind === 'technical' ? (dto.language ?? null) : null;
     if (dto.focus && !skillAreas(kind, !!language).includes(dto.focus)) {
       throw new BadRequestException('Unknown focus area for this topic');
@@ -75,7 +76,7 @@ export class CoachService {
         purpose: 'coach',
         focus: dto.focus ?? null,
         kind,
-        topic: dto.topic,
+        topic,
         mixed: false,
         level: dto.level,
         minutes: COACH_LIMITS.minutes,

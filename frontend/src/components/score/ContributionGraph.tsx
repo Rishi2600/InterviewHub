@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getUserActivity } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/api'
-import { buildGraph, formatDay } from '@/lib/score'
+import { buildGraph, describeKinds, formatDay } from '@/lib/score'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -88,7 +88,8 @@ export function ContributionGraph({ userId }: { userId: string }) {
                     style={{ fill: `var(--graph-${cell.level})` }}
                   >
                     <title>
-                      {cell.count ? `${cell.count} on` : 'Nothing on'} {formatDay(cell.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                      {formatDay(cell.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}:{' '}
+                      {cell.count ? describeKinds(cell.kinds) || `${cell.count} activities` : 'nothing'}
                     </title>
                   </rect>
                 ) : null,
@@ -99,7 +100,7 @@ export function ContributionGraph({ userId }: { userId: string }) {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span>Contests for now; interviews and prep will add squares later.</span>
+        <span>Contests, interviews, practice interviews and prep.</span>
         <span className="flex items-center gap-1" aria-hidden>
           Less
           {[0, 1, 2, 3, 4].map((l) => (

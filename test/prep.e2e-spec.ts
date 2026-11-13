@@ -337,4 +337,46 @@ describe('Interview prep: drills', () => {
     ]);
     expect(recommended.topics).toHaveLength(15);
   });
+
+  it('counts an interviewer review towards weak spots', async () => {
+    const host = await signUp(t, 'drill_host', 'interviewer');
+    const u = await signUp(t, 'drill_max');
+    const room = data<{ _id: string; code: string }>(
+      await t
+        .api()
+        .post('/rooms')
+        .set(bearer(host))
+        .send({ title: 'SQL round' })
+        .expect(201),
+    );
+    await t.api().post(`/rooms/${room.code}/join`).set(bearer(u)).expect(201);
+    await t
+      .api()
+      .patch(`/rooms/${room._id}/state`)
+      .set(bearer(host))
+      .send({ state: 'ended' })
+      .expect(200);
+    await t
+      .api()
+      .put(`/reviews/rooms/${room._id}/${u.id}`)
+      .set(bearer(host))
+      .send({
+        kind: 'technical',
+        topics: ['SQL'],
+        areas: [
+          { name: 'Knowledge', score: 1 },
+          { name: 'Edge cases', score: 2 },
+        ],
+      })
+      .expect(200);
+    const { recommended } = data<{
+      recommended: {
+        suggestions: { topic: string; reason: { text: string } }[];
+      };
+    }>(await t.api().get('/prep').set(bearer(u)).expect(200));
+    expect(recommended.suggestions[0]).toMatchObject({
+      topic: 'SQL',
+      reason: { text: 'Interviewer review: 1/5 on Knowledge' },
+    });
+  });
 });

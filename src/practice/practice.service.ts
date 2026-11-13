@@ -18,6 +18,8 @@ import { usageMonth } from '../contests/contest-hosting.service';
 import { AiBudgetService } from './ai-budget.service';
 import { StartPracticeDto } from './dto/start-practice.dto';
 import { PracticeEngines } from './practice-engines';
+import { PrepUsageService } from '../prep/prep-usage.service';
+import { utcDay } from '../ai/daily-budget';
 import { PracticeFeedbackService } from './practice-feedback.service';
 import { PracticeNotifier } from './practice.notifier';
 import {
@@ -58,6 +60,7 @@ export class PracticeService {
     private readonly ai: AiClient,
     private readonly budget: AiBudgetService,
     private readonly engines: PracticeEngines,
+    private readonly prepUsage: PrepUsageService,
     private readonly feedback: PracticeFeedbackService,
     private readonly notifier: PracticeNotifier,
   ) {}
@@ -229,8 +232,12 @@ export class PracticeService {
     const coach = iv.purpose === 'coach';
     await budget.stopped(iv.quota);
     if (iv.status === 'cancelled') {
-      // A coach session's day slot is prep's: it stays used.
-      if (!coach) await this.giveSlotBack(iv.userId, usageMonth(iv.startedAt));
+      // No answers: the month's interview, or the day's coach session, back.
+      if (coach) {
+        await this.prepUsage.giveBack(iv.userId, 'coach', utcDay(iv.startedAt));
+      } else {
+        await this.giveSlotBack(iv.userId, usageMonth(iv.startedAt));
+      }
       await budget.settle(iv.quota, {
         requests: iv.usedRequests,
         tokens: iv.usedTokens,

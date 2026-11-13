@@ -428,7 +428,7 @@ export interface UserScore {
 export interface UserActivity {
   from: string
   to: string
-  days: { date: string; count: number }[]
+  days: { date: string; count: number; kinds?: Record<string, number> }[]
   total: number
   years: number[]
 }
@@ -479,6 +479,10 @@ export interface PracticeFeedback {
 
 export interface PracticeInterview {
   id: string
+  /** An AI practice interview, or a prep coach session on the same screen. */
+  purpose: 'interview' | 'coach'
+  /** A coach session's focus area, such as "Edge cases". */
+  focus: string | null
   kind: PracticeKind
   topic: string
   mixed: boolean
@@ -526,4 +530,101 @@ export interface StartPracticeBody {
   minutes: number
   language?: CodeLanguage
   mode: PracticeMode
+}
+
+/* ------------------------------------------------------------ prep ---- */
+
+export type PrepMode = 'drill' | 'coach'
+
+/** How strong a topic looks from recent results (docs/PREP_DESIGN.md §5). */
+export interface PrepTopic {
+  topic: string
+  kind: PracticeKind
+  /** 0 to 1, or null when there isn't enough to go on. */
+  strength: number | null
+  evidence: number
+  weak: boolean
+  reason: { text: string; at: string } | null
+  /** The area a coach session should focus on. */
+  focus: string | null
+  level: PracticeLevel
+}
+
+export interface PrepDrillListItem {
+  id: string
+  mode: 'drill'
+  topic: string
+  level: PracticeLevel
+  status: 'active' | 'done'
+  startedAt: string
+  answered: number
+  right: number
+  total: number
+}
+
+export interface PrepCoachListItem {
+  id: string
+  mode: 'coach'
+  topic: string
+  level: PracticeLevel
+  status: PracticeStatus
+  startedAt: string
+  score: number | null
+}
+
+export type PrepHistoryItem = PrepDrillListItem | PrepCoachListItem
+
+export interface PrepHistory {
+  items: PrepHistoryItem[]
+  nextBefore: string | null
+}
+
+export interface PrepOverview extends PrepHistory {
+  aiEnabled: boolean
+  today: {
+    drill: { used: number; limit: number }
+    coach: { used: number; limit: number }
+    resetsAt: string
+  }
+  running: {
+    drill: PrepDrillListItem | null
+    coach: { id: string; topic: string; level: PracticeLevel; endsAt: string } | null
+  }
+  focus: string[]
+  recommended: { focus: PrepTopic[]; suggestions: PrepTopic[]; topics: PrepTopic[] }
+}
+
+export interface DrillItem {
+  questionId: string
+  prompt: string
+  code: string | null
+  options: { id: string; text: string }[]
+  // Set once answered.
+  chosen?: string
+  correct?: boolean
+  correctOptionId?: string | null
+  explanation?: string
+  flagged?: boolean
+}
+
+export interface PrepDrill {
+  id: string
+  topic: string
+  level: PracticeLevel
+  status: 'active' | 'done'
+  total: number
+  answered: number
+  right: number
+  startedAt: string
+  endedAt: string | null
+  /** Answered questions, then the current one. */
+  items: DrillItem[]
+}
+
+export interface StartCoachBody {
+  topic: string
+  level: PracticeLevel
+  kind?: PracticeKind
+  focus?: string
+  language?: CodeLanguage
 }

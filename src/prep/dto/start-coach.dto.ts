@@ -1,5 +1,19 @@
-import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
-import { LEVELS, type Level } from '../../common/topics';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import {
+  LEVELS,
+  TOPIC_KINDS,
+  type Level,
+  type TopicKind,
+} from '../../common/topics';
+import { OWN_TOPIC } from '../prep.constants';
+import { Transform } from 'class-transformer';
 import {
   PRACTICE_LANGUAGES,
   PRACTICE_MODES,
@@ -8,10 +22,23 @@ import {
 } from '../../practice/practice.constants';
 
 export class StartCoachDto {
-  // A topic from the shared list; checked in the service.
+  // A topic from the shared list, or the candidate's own: a short name in
+  // plain words, so it can't carry instructions to the AI.
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
+  )
   @IsString()
-  @MaxLength(40)
+  @MinLength(OWN_TOPIC.min)
+  @MaxLength(OWN_TOPIC.max)
+  @Matches(OWN_TOPIC.pattern, {
+    message: 'Use letters, numbers, spaces and simple punctuation',
+  })
   topic: string;
+
+  // Only for the candidate's own topic: technical or behavioural.
+  @IsOptional()
+  @IsIn(TOPIC_KINDS)
+  kind?: TopicKind;
 
   @IsIn(LEVELS)
   level: Level;

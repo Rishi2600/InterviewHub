@@ -17,7 +17,7 @@ import { withChange } from './setup'
 import type { Setup } from './setup'
 
 /** A word in the sentence that opens its choices. */
-function Pill({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
+export function Pill({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -36,7 +36,7 @@ function Pill({ label, children, wide }: { label: string; children: ReactNode; w
   )
 }
 
-function Choices<T extends string | number>({
+export function Choices<T extends string | number>({
   value,
   options,
   label,
