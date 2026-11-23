@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 
 /** Square buttons, as on the rest of the landing page. */
 export const BTN =
-  'inline-flex h-[52px] items-center justify-center gap-2.5 px-6 text-[17px] font-semibold whitespace-nowrap transition active:translate-y-px'
-export const BTN_GOLD = cn(BTN, 'bg-gold text-[#16241a] hover:bg-gold-deep')
+  'inline-flex h-[52px] items-center justify-center gap-2.5 rounded-lg px-6 text-[17px] font-semibold whitespace-nowrap transition active:translate-y-px'
+export const BTN_GOLD = cn(BTN, 'bg-fruit text-fruit-ink hover:bg-fruit-deep')
 export const BTN_SOFT = cn(BTN, 'bg-foreground/8 hover:bg-foreground/14')
 
 /** Stagger index for a .reveal element. */

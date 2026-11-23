@@ -5,116 +5,125 @@
    the script in index.html, toggled by ThemeToggle). */
 @custom-variant dark (&:is(.dark *));
 
+/* ── Palette ─────────────────────────────────────────────────────────────────
+   The named colours of the current palette, taken from nature: pineapple.
+   Every token below refers to these by role, so another palette (pistachio,
+   a pink sunset) means changing only this block and its dark twin.
+     fruit  the main colour, for actions (pineapple flesh)
+     stem   the second colour, for accent text and "live" (the crown)
+     tint   a pale field of the fruit
+     ground the page; paper the cards; ink the text
+     night  a panel that stays dark in both themes */
+:root {
+  --fruit: #ffc72c;
+  --fruit-deep: #f0a81c;
+  --fruit-ink: #16241a;
+  --stem: #2d6a39;
+  --stem-deep: #1c4626;
+  --stem-light: #86b547;
+  --cream: #fff6d8;
+  --tint: #fff4cc;
+  --tint-strong: #fbecb3;
+  --ground: #f6f3e9;
+  --paper: #ffffff;
+  --shade: #eeeadc;
+  --line: #e4dec6;
+  --ink: #16241a;
+  --ink-soft: #5c685e;
+  --night: #16241a;
+  --night-soft: #223326;
+  --night-ink: #f4efdb;
+}
+
+.dark {
+  --fruit-deep: #ffd65c;
+  --stem: #2f6e3b;
+  --stem-deep: #173a20;
+  --stem-light: #9bcb5c;
+  --tint: #16211a;
+  --tint-strong: #1d2b21;
+  --ground: #0d150f;
+  --paper: #16211a;
+  --shade: #1d2b21;
+  --line: #26352a;
+  --ink: #f4efdb;
+  --ink-soft: #a9af9c;
+  --night: #050a06;
+}
+
 /* ── Design tokens ───────────────────────────────────────────────────────────
-   shadcn/ui tokens in the pineapple palette: gold flesh, green crown and a
-   dark leaf ink. Text on gold is the dark ink; gold is unreadable as text on
-   light surfaces, so accent text there is the crown green (--brand-text). */
+   shadcn/ui tokens, by role. Cards sit a tone above the page instead of
+   behind an outline. The fruit is unreadable as text on light surfaces, so
+   accent text there is the stem (--brand-text). */
 :root {
   color-scheme: light;
-  --radius: 0.625rem;
-  --background: #fbfaf6;
-  --foreground: #16241a;
-  --card: #ffffff;
-  --card-foreground: #16241a;
-  --popover: #ffffff;
-  --popover-foreground: #16241a;
-  --primary: #ffc72c;
-  --primary-foreground: #16241a;
-  --secondary: #f3f0e4;
-  --secondary-foreground: #16241a;
-  --muted: #f3f0e4;
-  --muted-foreground: #5c685e;
-  --accent: #f3f0e4;
-  --accent-foreground: #16241a;
+  --radius: 4px;
+  --background: var(--ground);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--fruit);
+  --primary-foreground: var(--fruit-ink);
+  --secondary: var(--shade);
+  --secondary-foreground: var(--ink);
+  --muted: var(--shade);
+  --muted-foreground: var(--ink-soft);
+  --accent: var(--shade);
+  --accent-foreground: var(--ink);
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #e9e3cc;
-  --input: #e9e3cc;
-  --ring: #f0a81c;
-  /* Charts and progress bars: gold, crown, leaf, amber, deep crown. */
-  --chart-1: #ffc72c;
-  --chart-2: #2d6a39;
-  --chart-3: #86b547;
-  --chart-4: #f0a81c;
-  --chart-5: #1c4626;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #16241a;
-  --sidebar-primary: #ffc72c;
-  --sidebar-primary-foreground: #16241a;
-  --sidebar-accent: #f3f0e4;
-  --sidebar-accent-foreground: #16241a;
-  --sidebar-border: #e9e3cc;
-  --sidebar-ring: #f0a81c;
-  /* Semantic text colours: the accent and red as readable text. */
-  --brand-text: #2d6a39;
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--fruit-deep);
+  /* Charts and progress bars. */
+  --chart-1: var(--fruit);
+  --chart-2: var(--stem);
+  --chart-3: var(--stem-light);
+  --chart-4: var(--fruit-deep);
+  --chart-5: var(--stem-deep);
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--fruit);
+  --sidebar-primary-foreground: var(--fruit-ink);
+  --sidebar-accent: var(--shade);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--fruit-deep);
+  /* Semantic colours: accent text, red text, and "live right now". */
+  --brand-text: var(--stem);
   --danger-text: #dc2626;
+  --live: var(--stem);
+  --live-foreground: var(--cream);
   /* Code: strings and numbers; keywords use --brand-text. */
   --code-string: #a16207;
   --code-number: #b9750a;
   /* Contribution graph, from no activity to the most. */
   --graph-0: #eeebdd;
   --graph-1: #ffe69a;
-  --graph-2: #ffc72c;
-  --graph-3: #86b547;
-  --graph-4: #2d6a39;
-  /* The palette by name, for the landing page and the logo. */
-  --gold: #ffc72c;
-  --gold-deep: #f0a81c;
-  --crown: #2d6a39;
-  --crown-deep: #1c4626;
-  --leaf: #86b547;
-  --cream: #fff6d8;
-  --flesh: #fff4cc;
-  --flesh-strong: #fbecb3;
-  --ink: #16241a;
+  --graph-2: var(--fruit);
+  --graph-3: var(--stem-light);
+  --graph-4: var(--stem);
 }
 
 .dark {
   color-scheme: dark;
-  --background: #0d150f;
-  --foreground: #f4efdb;
-  --card: #16211a;
-  --card-foreground: #f4efdb;
-  --popover: #16211a;
-  --popover-foreground: #f4efdb;
-  --primary: #ffc72c;
-  --primary-foreground: #16241a;
-  --secondary: #1d2b21;
-  --secondary-foreground: #f4efdb;
-  --muted: #1d2b21;
-  --muted-foreground: #a9af9c;
-  --accent: #1d2b21;
-  --accent-foreground: #f4efdb;
   --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  --border: #26352a;
-  --input: #26352a;
-  --ring: #ffc72c;
-  --chart-2: #9bcb5c;
+  --chart-2: var(--stem-light);
   --chart-5: #5e8f3a;
   --sidebar: #121c15;
-  --sidebar-foreground: #f4efdb;
-  --sidebar-primary: #ffc72c;
-  --sidebar-primary-foreground: #16241a;
-  --sidebar-accent: #1d2b21;
-  --sidebar-accent-foreground: #f4efdb;
-  --sidebar-border: #26352a;
-  --sidebar-ring: #ffc72c;
-  --brand-text: #ffc72c;
+  --brand-text: var(--fruit);
   --danger-text: #f87171;
+  --live: var(--stem-light);
+  --live-foreground: var(--fruit-ink);
   --code-string: #e9c46a;
-  --code-number: #9bcb5c;
+  --code-number: var(--stem-light);
   --graph-0: #1b271e;
   --graph-1: #34502a;
   --graph-2: #5e8f3a;
   --graph-3: #c9a227;
-  --graph-4: #ffc72c;
-  --crown: #2f6e3b;
-  --crown-deep: #173a20;
-  --leaf: #9bcb5c;
-  --flesh: #16211a;
-  --flesh-strong: #1d2b21;
-  --ink: #f4efdb;
+  --graph-4: var(--fruit);
 }
 
 @theme inline {
@@ -122,10 +131,13 @@
   --font-heading: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* One corner radius for cards, panels, buttons and fields; sm for tiny
+     marks. Pills and circles (rounded-full) stay for tags and avatars. */
+  --radius-sm: 2px;
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -161,15 +173,20 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-brand: var(--brand-text);
   --color-danger: var(--danger-text);
-  --color-gold: var(--gold);
-  --color-gold-deep: var(--gold-deep);
-  --color-crown: var(--crown);
-  --color-crown-deep: var(--crown-deep);
-  --color-leaf: var(--leaf);
+  --color-live: var(--live);
+  --color-live-foreground: var(--live-foreground);
+  --color-fruit: var(--fruit);
+  --color-fruit-deep: var(--fruit-deep);
+  --color-fruit-ink: var(--fruit-ink);
+  --color-stem: var(--stem);
+  --color-stem-deep: var(--stem-deep);
+  --color-stem-light: var(--stem-light);
   --color-cream: var(--cream);
-  --color-flesh: var(--flesh);
-  --color-flesh-strong: var(--flesh-strong);
-  --color-ink: var(--ink);
+  --color-tint: var(--tint);
+  --color-tint-strong: var(--tint-strong);
+  --color-night: var(--night);
+  --color-night-soft: var(--night-soft);
+  --color-night-ink: var(--night-ink);
 }
 
 @layer base {
@@ -181,11 +198,18 @@
     @apply bg-background font-sans text-foreground antialiased;
   }
 
+  /* Weights by role: page titles bold, section and card titles semibold.
+     A font-* class on the element still wins. */
   h1,
   h2,
   h3,
   h4 {
     @apply font-heading;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-weight: 700;
   }
 
   h1,
@@ -197,8 +221,8 @@
   }
 
   ::selection {
-    background: var(--gold);
-    color: #16241a;
+    background: var(--fruit);
+    color: var(--fruit-ink);
   }
 
   /* Thin scrollbars, as in the CRM. */
@@ -213,17 +237,6 @@
     background: var(--border);
     border-radius: 2px;
   }
-}
-
-/* Headings are bold everywhere. Unlayered, so it wins over the
-   font-semibold that shadcn parts put on titles; spacing stays in the base
-   layer above, so a tracking-* class can still change it. */
-h1,
-h2,
-h3,
-h4,
-.font-heading {
-  font-weight: 700;
 }
 
 /* AI practice: bars that rise and fall while the interviewer writes or speaks. */

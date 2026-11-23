@@ -4,15 +4,15 @@ import type { ReactNode } from 'react'
 import { Mic, MonitorUp, PhoneOff, Play, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const FRAME = 'overflow-hidden rounded-[10px] border bg-card text-left text-sm text-card-foreground'
+const FRAME = 'overflow-hidden rounded-lg border bg-card text-left text-sm text-card-foreground'
 const BAR = 'flex flex-wrap items-center gap-2.5 border-b px-3.5 py-2.5'
 
-function Chip({ children, tone }: { children: ReactNode; tone?: 'gold' | 'crown' }) {
+function Chip({ children, tone }: { children: ReactNode; tone?: 'fruit' | 'stem' }) {
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold whitespace-nowrap',
-        tone === 'gold' ? 'bg-gold text-[#16241a]' : tone === 'crown' ? 'bg-crown text-cream' : 'bg-muted',
+        tone === 'fruit' ? 'bg-fruit text-fruit-ink' : tone === 'stem' ? 'bg-stem text-cream' : 'bg-muted',
       )}
     >
       {children}
@@ -25,7 +25,7 @@ function Disc({ initials, you, className }: { initials: string; you?: boolean; c
     <span
       className={cn(
         'inline-grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-bold',
-        you ? 'bg-gold text-[#16241a]' : 'bg-crown text-cream',
+        you ? 'bg-fruit text-fruit-ink' : 'bg-stem text-cream',
         className,
       )}
     >
@@ -53,8 +53,8 @@ function Tile({ initials, name, talking }: { initials: string; name: string; tal
   return (
     <div
       className={cn(
-        'relative grid min-h-24 place-items-center rounded-lg bg-[#1f2d22] text-[#f4efdb] md:min-h-28',
-        talking && 'ring-2 ring-gold ring-inset',
+        'relative grid min-h-24 place-items-center rounded-lg bg-night-soft text-night-ink md:min-h-28',
+        talking && 'ring-2 ring-fruit ring-inset',
       )}
     >
       <Disc initials={initials} you={talking} className="size-[52px] text-[17px]" />
@@ -88,7 +88,7 @@ export function RoomPreview() {
           <div className="flex items-center gap-2 border-b px-2.5 py-2">
             <b className="font-semibold">solution.js</b>
             <Chip>JavaScript</Chip>
-            <span className="ml-auto inline-flex h-6 items-center gap-1 rounded-md bg-crown px-2.5 text-xs font-semibold text-cream">
+            <span className="ml-auto inline-flex h-6 items-center gap-1 rounded-md bg-stem px-2.5 text-xs font-semibold text-cream">
               <Play className="size-3" /> Run
             </span>
           </div>
@@ -110,7 +110,7 @@ export function RoomPreview() {
           </pre>
         </div>
         <div className="grid min-w-0 content-start gap-2.5 border-t p-2.5 text-[13px] md:border-t-0 md:border-l">
-          <div className="rounded-lg bg-gold p-2.5 text-[#16241a]">
+          <div className="rounded-lg bg-fruit p-2.5 text-fruit-ink">
             <b className="block text-xs font-semibold">Pinned question</b>
             Return the indices of the two numbers that add up to target.
           </div>
@@ -126,62 +126,6 @@ export function RoomPreview() {
           ))}
         </div>
       </div>
-    </div>
-  )
-}
-
-// ── Contest leaderboard ──────────────────────────────────────────────────────
-const BOARD = [
-  { rank: 1, name: 'lena.p', initials: 'LP', points: 400, time: '18:40' },
-  { rank: 2, name: 'arjun_v', initials: 'AV', points: 400, time: '22:05' },
-  { rank: 3, name: 'sam.r', initials: 'SR', points: 380, time: '19:12', you: true },
-  { rank: 4, name: 'priya.n', initials: 'PN', points: 360, time: '25:30' },
-  { rank: 5, name: 'tomas', initials: 'TO', points: 340, time: '27:44' },
-]
-
-export function LeaderboardPreview() {
-  return (
-    <div data-ui role="img" aria-label="A contest leaderboard: Arrays sprint, rated, 34 starters" className={FRAME}>
-      <div className={BAR}>
-        <b className="font-semibold">Arrays sprint</b>
-        <Chip tone="crown">Rated</Chip>
-        <span className="ml-auto text-muted-foreground">Ended 21 Nov · 34 starters</span>
-      </div>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-left text-xs text-muted-foreground">
-            <th className="px-3.5 py-2 font-semibold">#</th>
-            <th className="px-3.5 py-2 font-semibold">Name</th>
-            <th className="px-3.5 py-2 text-right font-semibold">Points</th>
-            <th className="hidden px-3.5 py-2 text-right font-semibold sm:table-cell">Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {BOARD.map((row) => (
-            <tr key={row.rank} className={cn('border-b last:border-0', row.you && 'bg-gold/25')}>
-              <td className="px-3.5 py-2.5">
-                <span
-                  className={cn(
-                    'inline-grid size-6 place-items-center rounded-md text-xs font-bold',
-                    row.rank === 1 ? 'bg-gold text-[#16241a]' : 'bg-muted',
-                  )}
-                >
-                  {row.rank}
-                </span>
-              </td>
-              <td className="px-3.5 py-2.5">
-                <span className="flex items-center gap-2">
-                  <Disc initials={row.initials} you={row.you} />
-                  {row.name}
-                  {row.you && <span className="text-muted-foreground">(you)</span>}
-                </span>
-              </td>
-              <td className="px-3.5 py-2.5 text-right tabular-nums">{row.points}</td>
-              <td className="hidden px-3.5 py-2.5 text-right text-muted-foreground tabular-nums sm:table-cell">{row.time}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   )
 }
@@ -210,7 +154,7 @@ export function FeedbackPreview() {
               <span>{name}</span>
               <span className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <i key={i} className={cn('h-2 flex-1 rounded-sm border', i <= score ? 'border-gold bg-gold' : 'bg-muted')} />
+                  <i key={i} className={cn('h-2 flex-1 rounded-sm border', i <= score ? 'border-fruit bg-fruit' : 'bg-muted')} />
                 ))}
               </span>
               <b className="font-semibold tabular-nums">{score}/5</b>
@@ -226,7 +170,7 @@ export function FeedbackPreview() {
           Edge cases: an empty array only came up when you were asked.
         </p>
         <span>
-          <Chip tone="gold">Next: a drill on edge cases</Chip>
+          <Chip tone="fruit">Next: a drill on edge cases</Chip>
         </span>
       </div>
     </div>

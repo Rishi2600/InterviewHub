@@ -25,7 +25,7 @@ export function AuthLayout({
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 font-heading text-lg">
+          <Link to="/" className="flex items-center gap-2.5 font-heading text-lg font-bold">
             <LogoMark />
             InterviewHub
           </Link>
@@ -43,17 +43,17 @@ export function AuthLayout({
           </div>
         </div>
       </div>
-      <aside className="hidden flex-col justify-center gap-10 bg-crown p-10 text-cream lg:flex xl:p-16">{aside}</aside>
+      <aside className="hidden flex-col justify-center gap-10 bg-stem p-10 text-cream lg:flex xl:p-16">{aside}</aside>
     </div>
   )
 }
 
-const PANEL_H2 = 'text-[clamp(36px,3.6vw,56px)] leading-[0.98]'
+const PANEL_H2 = 'text-[clamp(36px,3.6vw,56px)] leading-[0.98] font-bold'
 
 function Block({ title, items, className, bullet }: { title?: string; items: string[]; className: string; bullet: string }) {
   return (
-    <div className={cn('grid gap-3.5 p-7', className)}>
-      {title && <h3 className="text-[28px]">{title}</h3>}
+    <div className={cn('grid gap-3.5 rounded-lg p-7', className)}>
+      {title && <h3 className="text-[28px] font-bold">{title}</h3>}
       <SquareList bullet={bullet} items={items} />
     </div>
   )
@@ -67,14 +67,14 @@ export function AccountKinds() {
       <div className="grid gap-2">
         <Block
           title="Candidate"
-          className="bg-gold text-[#16241a]"
-          bullet="bg-crown"
+          className="bg-fruit text-fruit-ink"
+          bullet="bg-stem"
           items={['Join interview rooms with a code', 'Practise with the AI interviewer and drills', 'Enter contests and build a score out of 10']}
         />
         <Block
           title="Interviewer"
-          className="bg-crown-deep"
-          bullet="bg-gold"
+          className="bg-stem-deep"
+          bullet="bg-fruit"
           items={['Run interview rooms and review each candidate', 'Host 2 contests a month for free', "See candidates' scores on their profiles"]}
         />
       </div>
@@ -89,8 +89,8 @@ export function WelcomeBack() {
     <>
       <h2 className={PANEL_H2}>Welcome back</h2>
       <Block
-        className="bg-crown-deep"
-        bullet="bg-gold"
+        className="bg-stem-deep"
+        bullet="bg-fruit"
         items={['Your interview rooms and their reviews', "Contests you've joined, and their results", 'Practice, drills and your score']}
       />
     </>

@@ -13,11 +13,11 @@ import { BTN, activityLevels } from '@/lib/landing'
 export function LandingNav() {
   const { isAuthenticated, isBootstrapping } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const small = 'inline-flex h-[42px] items-center px-[18px] text-[15px] font-semibold whitespace-nowrap'
+  const small = 'inline-flex h-[42px] items-center rounded-lg px-[18px] text-[15px] font-semibold whitespace-nowrap'
   return (
     <header className="landing-wrap">
       <nav aria-label="Main" className="flex h-[76px] items-center gap-3 sm:gap-8">
-        <Link to="/" className="flex items-center gap-2.5 font-heading text-[17px] sm:text-[19px]">
+        <Link to="/" className="flex items-center gap-2.5 font-heading text-[17px] font-bold sm:text-[19px]">
           <LogoMark />
           InterviewHub
         </Link>
@@ -33,12 +33,12 @@ export function LandingNav() {
             type="button"
             onClick={toggleTheme}
             aria-label="Switch theme"
-            className="grid size-10 place-items-center hover:bg-foreground/8 [&_svg]:size-5"
+            className="grid size-10 place-items-center rounded-lg hover:bg-foreground/8 [&_svg]:size-5"
           >
             {theme === 'dark' ? <Sun aria-hidden /> : <Moon aria-hidden />}
           </button>
           {isBootstrapping ? null : isAuthenticated ? (
-            <Link to="/dashboard" className={cn(small, 'bg-gold text-[#16241a] hover:bg-gold-deep')}>
+            <Link to="/dashboard" className={cn(small, 'bg-fruit text-fruit-ink hover:bg-fruit-deep')}>
               Open dashboard
             </Link>
           ) : (
@@ -46,7 +46,7 @@ export function LandingNav() {
               <Link to="/login" className="hidden font-medium underline-offset-[5px] hover:underline sm:inline">
                 Sign in
               </Link>
-              <Link to="/register" className={cn(small, 'bg-gold text-[#16241a] hover:bg-gold-deep')}>
+              <Link to="/register" className={cn(small, 'bg-fruit text-fruit-ink hover:bg-fruit-deep')}>
                 Create account
               </Link>
             </>
@@ -92,9 +92,9 @@ export function JoinCodeForm() {
             setCode(next)
             setHint(`${next.length} of ${JOIN_CODE_LENGTH} characters`)
           }}
-          className="h-[52px] w-0 min-w-0 flex-1 bg-flesh px-4 font-heading text-xl font-semibold tracking-[0.18em] uppercase placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-deep"
+          className="h-[52px] w-0 min-w-0 flex-1 rounded-l-lg bg-tint px-4 font-heading text-xl font-semibold tracking-[0.18em] uppercase placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fruit-deep"
         />
-        <button type="submit" className={cn(BTN, 'bg-foreground text-background hover:bg-foreground/85')}>
+        <button type="submit" className={cn(BTN, 'rounded-l-none bg-foreground text-background hover:bg-foreground/85')}>
           Join room
         </button>
       </div>
@@ -106,7 +106,7 @@ export function JoinCodeForm() {
 }
 
 /** A list with small square bullets. */
-export function SquareList({ items, bullet = 'bg-gold' }: { items: ReactNode[]; bullet?: string }) {
+export function SquareList({ items, bullet = 'bg-fruit' }: { items: ReactNode[]; bullet?: string }) {
   return (
     <ul className="grid gap-2.5">
       {items.map((item, i) => (
@@ -140,8 +140,8 @@ export function ActivityField() {
   )
 }
 
-// On the dark score panel the graph runs from deep green to gold.
-const PANEL_BG = ['bg-[#223326]', 'bg-[#4c6a2f]', 'bg-[#86b547]', 'bg-[#f0a81c]', 'bg-[#ffc72c]']
+// On the dark score panel the graph runs from the stem to the fruit.
+const PANEL_BG = ['bg-night-soft', 'bg-[#4c6a2f]', 'bg-stem-light', 'bg-fruit-deep', 'bg-fruit']
 
 /** A year of days for the score panel; phones show the last half year. */
 export function YearGraph() {

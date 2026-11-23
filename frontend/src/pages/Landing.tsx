@@ -1,17 +1,26 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { LogoMark } from '@/components/common/LogoMark'
-import { FeedbackPreview, LeaderboardPreview, RoomPreview } from '@/components/landing/previews'
+import { FeedbackPreview, RoomPreview } from '@/components/landing/previews'
 import { ActivityField, JoinCodeForm, LandingNav, SquareList, YearGraph } from '@/components/landing/parts'
 import { useAuth } from '@/hooks/useAuth'
 import { useReveal } from '@/hooks/useReveal'
 import { BTN_GOLD, BTN_SOFT, at } from '@/lib/landing'
 import { cn } from '@/lib/utils'
 
-const H2 = 'text-[clamp(36px,4.6vw,72px)] leading-[0.98] text-balance'
+const H2 = 'text-[clamp(36px,4.6vw,72px)] leading-[0.98] font-bold text-balance'
 const GRID = 'grid gap-6 lg:grid-cols-12'
 const SECTION = 'landing-wrap pt-[clamp(112px,13vw,200px)]'
 const YEAR = new Date().getFullYear()
+
+// How a contest works, one fact per line.
+const CONTEST_RULES = [
+  ['Public', 'Browse every contest without an account. Anyone but the host can enter.'],
+  ['Timed', "A fixed start and end. Join late if you like; the clock doesn't wait."],
+  ['Judged', 'Quiz answers and code are checked automatically.'],
+  ['Ranked', 'The leaderboard is out the moment the contest ends.'],
+  ['Rated', "With 10 or more starters, it counts towards each entrant's score."],
+]
 
 /** The public front page, for everyone, signed in or not. */
 export function Landing() {
@@ -77,36 +86,36 @@ export function Landing() {
               </div>
             </div>
           </div>
-          <div className="reveal bg-gold p-4 sm:p-[clamp(20px,4vw,64px)]">
+          <div className="reveal rounded-lg bg-fruit p-4 sm:p-[clamp(20px,4vw,64px)]">
             <RoomPreview />
           </div>
         </section>
 
         <section id="contests" aria-labelledby="contests-h" className={SECTION}>
-          <div className={cn(GRID, 'items-center')}>
-            <div className="reveal min-w-0 bg-flesh p-4 sm:p-[clamp(20px,4vw,64px)] lg:col-span-7">
-              <LeaderboardPreview />
-            </div>
-            <div className="-order-1 grid gap-5 lg:order-none lg:col-span-5 lg:col-start-8">
-              <h2 id="contests-h" className={cn('reveal', H2)}>
-                Contests anyone can enter
-              </h2>
+          <div className={cn(GRID, 'mb-14 items-end')}>
+            <h2 id="contests-h" className={cn('reveal lg:col-span-6', H2)}>
+              Contests anyone can enter
+            </h2>
+            <div className="grid gap-4 lg:col-span-5 lg:col-start-8">
               <p className="reveal" style={at(1)}>
-                Timed quiz and code contests with a fixed start and end. Answers are judged automatically and the
-                leaderboard is out the moment the contest ends.
+                Timed quiz and code contests, hosted by interviewers. Any interviewer can host 2 a month for free.
               </p>
-              <div className="reveal" style={at(2)}>
-                <SquareList
-                  bullet="bg-crown"
-                  items={[
-                    'Every contest is public; browse them without an account',
-                    'Contests with 10 or more starters are rated and count towards the score',
-                    'Any interviewer can host 2 contests a month for free',
-                  ]}
-                />
-              </div>
+              <Link to="/contests" className="reveal font-semibold text-brand underline-offset-4 hover:underline" style={at(2)}>
+                Browse contests →
+              </Link>
             </div>
           </div>
+          <dl className="grid gap-y-10">
+            {CONTEST_RULES.map(([term, text], i) => (
+              <div key={term} className={cn('reveal', GRID, 'items-baseline')} style={at(i)}>
+                <dt className="flex items-center gap-4 font-heading text-[clamp(28px,3vw,44px)] leading-none font-bold lg:col-span-4">
+                  <span aria-hidden className="size-3 shrink-0 bg-fruit" />
+                  {term}
+                </dt>
+                <dd className="text-xl lg:col-span-7 lg:col-start-6">{text}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
         <section id="practice" aria-labelledby="practice-h" className={SECTION}>
@@ -115,21 +124,12 @@ export function Landing() {
               <h2 id="practice-h" className={cn('reveal', H2)}>
                 Practise before it counts
               </h2>
-              <p className="reveal" style={at(1)}>
-                An AI interviewer asks questions by chat or voice, sets a coding problem in the editor and writes
-                feedback when you finish.
+              <p className="reveal text-xl" style={at(1)}>
+                An AI interviewer asks questions by chat or voice, sets a coding problem and writes feedback in five
+                areas. Drills and a coach then work on your weak spots.
               </p>
-              <div className="reveal" style={at(2)}>
-                <SquareList
-                  items={[
-                    'Feedback scored in five areas, with what went well and what to work on',
-                    'Short drills and a coach for the areas that need it',
-                    'Weak spots found from your practice, contests and interview reviews',
-                  ]}
-                />
-              </div>
             </div>
-            <div className="reveal min-w-0 bg-gold p-4 sm:p-[clamp(20px,4vw,64px)] lg:col-span-7 lg:col-start-6">
+            <div className="reveal min-w-0 rounded-lg bg-tint p-4 sm:p-8 lg:col-span-6 lg:col-start-7">
               <FeedbackPreview />
             </div>
           </div>
@@ -139,7 +139,7 @@ export function Landing() {
         <Pricing signedIn={isAuthenticated} />
 
         <section aria-labelledby="close-h" className="landing-wrap flex flex-wrap items-end justify-between gap-8 pt-[clamp(112px,13vw,200px)] pb-12">
-          <h2 id="close-h" className="reveal max-w-[12em] text-[clamp(40px,6vw,96px)] leading-[0.98]">
+          <h2 id="close-h" className="reveal max-w-[12em] text-[clamp(40px,6vw,96px)] leading-[0.98] font-bold">
             {isAuthenticated ? 'Pick up where you left off' : 'Start with a free account'}
           </h2>
           <div className="reveal flex flex-wrap gap-3" style={at(1)}>
@@ -156,7 +156,7 @@ export function Landing() {
       </main>
 
       <footer className="landing-wrap pt-14 pb-24">
-        <p aria-hidden className="flex items-end gap-[clamp(8px,1.4vw,20px)] font-heading text-[clamp(40px,11.5vw,220px)] leading-[0.8]">
+        <p aria-hidden className="flex items-end gap-[clamp(8px,1.4vw,20px)] font-heading text-[clamp(40px,11.5vw,220px)] leading-[0.8] font-bold">
           <LogoMark className="mb-[0.12em] size-[0.42em] [&>span]:rounded-none" />
           InterviewHub
         </p>
@@ -186,15 +186,15 @@ function ScoreSection() {
     <section
       id="score"
       aria-labelledby="score-h"
-      className="mt-[clamp(112px,13vw,200px)] bg-[#16241a] py-[clamp(96px,11vw,176px)] text-[#f4efdb] dark:bg-[#050a06]"
+      className="mt-[clamp(112px,13vw,200px)] bg-night py-[clamp(96px,11vw,176px)] text-night-ink"
     >
       <div className="landing-wrap">
         <div className={cn(GRID, 'items-end')}>
-          <p aria-hidden className="reveal font-heading text-[clamp(120px,24vw,380px)] leading-[0.8] tracking-[-0.06em] text-gold lg:col-span-7">
-            7.4<span className="text-[0.22em] tracking-[-0.02em] text-[#f4efdb]"> / 10</span>
+          <p aria-hidden className="reveal font-heading font-bold text-[clamp(120px,24vw,380px)] leading-[0.8] tracking-[-0.06em] text-fruit lg:col-span-7">
+            7.4<span className="text-[0.22em] tracking-[-0.02em] text-night-ink"> / 10</span>
           </p>
           <div className="grid gap-5 pb-3 lg:col-span-5 lg:col-start-8">
-            <h2 id="score-h" className="reveal text-[clamp(40px,5.6vw,88px)] leading-[0.98] text-balance">
+            <h2 id="score-h" className="reveal text-[clamp(40px,5.6vw,88px)] leading-[0.98] font-bold text-balance">
               One score out of 10
             </h2>
             <p className="reveal text-lg" style={at(1)}>
@@ -205,7 +205,7 @@ function ScoreSection() {
               {['Podium', 'Top 10%', 'Streak', 'First rated'].map((badge, i) => (
                 <span
                   key={badge}
-                  className={cn('rounded-full px-3 py-1.5 text-[15px] font-semibold', i === 0 ? 'bg-gold text-[#16241a]' : 'bg-[#223326]')}
+                  className={cn('rounded-full px-3 py-1.5 text-[15px] font-semibold', i === 0 ? 'bg-fruit text-fruit-ink' : 'bg-night-soft')}
                 >
                   {badge}
                 </span>
@@ -216,7 +216,7 @@ function ScoreSection() {
         <div className="reveal mt-16">
           <YearGraph />
         </div>
-        <p className="mt-4 flex flex-wrap justify-between gap-4 text-[15px] text-[#c9ccb8]">
+        <p className="mt-4 flex flex-wrap justify-between gap-4 text-[15px] text-night-ink/80">
           <span>Every square is a day with an interview, a contest, a drill or a practice session.</span>
           <span>sam.r · last 12 months</span>
         </p>
@@ -225,21 +225,20 @@ function ScoreSection() {
   )
 }
 
-/** Three plans as tiles that step up in height. Credit packs arrive with payments. */
+/** Two free plans side by side, and a plain line for what payments will add. */
 function Pricing({ signedIn }: { signedIn: boolean }) {
   const cta = signedIn ? { to: '/dashboard', label: 'Open dashboard' } : { to: '/register', label: 'Create account' }
-  const strip = 'flex h-16 items-center justify-between px-7 font-semibold'
   const plans = [
     {
       name: 'Candidates',
-      tile: 'bg-flesh lg:min-h-[400px]',
-      bullet: 'bg-gold',
+      tile: 'bg-tint',
+      bullet: 'bg-fruit',
       items: ['AI practice interviews and drills, within monthly limits', 'Enter any contest', 'Your score, badges and profile'],
     },
     {
       name: 'Interviewers',
-      tile: 'bg-gold text-[#16241a] lg:min-h-[470px]',
-      bullet: 'bg-crown',
+      tile: 'bg-fruit text-fruit-ink',
+      bullet: 'bg-stem',
       items: ['Interview rooms with video, chat and the editor', 'Reviews after each room', 'Candidate scores on their profiles', 'Host 2 contests a month'],
     },
   ]
@@ -253,38 +252,26 @@ function Pricing({ signedIn }: { signedIn: boolean }) {
           Candidates never pay. Interviewers pay only to host more than 2 contests in a month.
         </p>
       </div>
-      <div className="grid items-end gap-6 lg:grid-cols-3 lg:gap-2">
+      <div className="grid gap-6 lg:grid-cols-2 lg:gap-2">
         {plans.map((plan, i) => (
-          <div key={plan.name} className={cn('reveal grid grid-rows-[auto_1fr_auto]', plan.tile)} style={at(i)}>
-            <div className="grid gap-2 px-7 pt-7 pb-5">
-              <h3 className="text-[28px]">{plan.name}</h3>
-              <p className="font-heading text-[clamp(40px,4vw,56px)] leading-none">Free</p>
+          <div key={plan.name} className={cn('reveal grid grid-rows-[auto_1fr_auto] overflow-hidden rounded-lg', plan.tile)} style={at(i)}>
+            <div className="flex items-baseline justify-between gap-4 px-7 pt-7 pb-5">
+              <h3 className="text-[28px] font-bold">{plan.name}</h3>
+              <p className="font-heading text-[clamp(40px,4vw,56px)] leading-none font-bold">Free</p>
             </div>
             <div className="px-7 pb-7">
               <SquareList bullet={plan.bullet} items={plan.items} />
             </div>
-            <Link to={cta.to} className={cn(strip, 'bg-foreground/8 hover:bg-foreground/15')}>
+            <Link to={cta.to} className="flex h-16 items-center justify-between bg-foreground/8 px-7 font-semibold hover:bg-foreground/15">
               {cta.label} <ArrowRight className="size-5" aria-hidden />
             </Link>
           </div>
         ))}
-        <div className="reveal grid grid-rows-[auto_1fr_auto] bg-crown text-cream lg:min-h-[540px]" style={at(2)}>
-          <div className="grid gap-2 px-7 pt-7 pb-5">
-            <h3 className="text-[28px]">More contests</h3>
-            <p className="font-heading text-[clamp(40px,4vw,56px)] leading-none">From ₹99</p>
-            <p className="text-[15px] opacity-90">Credit packs, coming soon. One credit hosts one contest; credits never expire.</p>
-          </div>
-          <div className="grid content-start gap-1.5 px-7 pb-7 tabular-nums">
-            {[['1 credit', '₹99'], ['5 credits', '₹449'], ['10 credits', '₹799']].map(([pack, price]) => (
-              <div key={pack} className="flex justify-between bg-cream/12 px-3.5 py-3">
-                <span>{pack}</span>
-                <b>{price}</b>
-              </div>
-            ))}
-          </div>
-          <span className={cn(strip, 'bg-crown-deep')}>Coming soon</span>
-        </div>
       </div>
+      <p className="reveal mt-8 max-w-[44em] text-muted-foreground">
+        Hosting more than 2 contests in a month will use credits: 1 for ₹99, 5 for ₹449 or 10 for ₹799. Credit packs
+        arrive with payments, and credits never expire.
+      </p>
     </section>
   )
 }
