@@ -185,7 +185,15 @@
   h2,
   h3,
   h4 {
-    @apply font-heading tracking-tight;
+    @apply font-heading;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-heading {
+    letter-spacing: -0.03em;
   }
 
   ::selection {
@@ -207,15 +215,15 @@
   }
 }
 
-/* Headings are bold and tight everywhere. Unlayered, so it wins over the
-   font-semibold that shadcn parts put on titles. */
+/* Headings are bold everywhere. Unlayered, so it wins over the
+   font-semibold that shadcn parts put on titles; spacing stays in the base
+   layer above, so a tracking-* class can still change it. */
 h1,
 h2,
 h3,
 h4,
 .font-heading {
   font-weight: 700;
-  letter-spacing: -0.03em;
 }
 
 /* AI practice: bars that rise and fall while the interviewer writes or speaks. */

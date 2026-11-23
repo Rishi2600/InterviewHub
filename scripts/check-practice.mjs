@@ -62,7 +62,7 @@ await page.goto(`${WEB}/login`)
 await page.getByLabel('Email').fill(email)
 await page.getByLabel('Password').fill(PASSWORD)
 await page.getByRole('button', { name: 'Sign in' }).click()
-await page.waitForURL(`${WEB}/`)
+await page.waitForURL(`${WEB}/dashboard`)
 
 // The setup: a 15-minute technical Python interview with a coding question.
 await page.getByRole('link', { name: 'AI practice' }).first().click()

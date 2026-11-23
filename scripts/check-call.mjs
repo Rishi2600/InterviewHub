@@ -50,7 +50,7 @@ async function open(email, name) {
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Password').fill(PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await page.waitForURL(`${WEB}/`)
+  await page.waitForURL(`${WEB}/dashboard`)
   await page.goto(`${WEB}/rooms/${room._id}`)
   await page.getByRole('button', { name: 'Join call' }).waitFor()
   return page
