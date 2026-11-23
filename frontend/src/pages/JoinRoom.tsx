@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,7 +13,9 @@ import { errorMessage } from '@/lib/api'
 export function JoinRoom() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [code, setCode] = useState('')
+  const [params] = useSearchParams()
+  // A code from the landing page's form arrives as ?code=.
+  const [code, setCode] = useState(() => (params.get('code') ?? '').toUpperCase().slice(0, JOIN_CODE_LENGTH))
   const [error, setError] = useState<string | null>(null)
 
   const join = useMutation({

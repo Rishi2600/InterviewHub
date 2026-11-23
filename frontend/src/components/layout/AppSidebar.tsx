@@ -43,7 +43,7 @@ export function AppSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
 
   function signOut() {
     logout()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const hasLive = live.rooms.length > 0 || live.contests.length > 0
@@ -54,7 +54,7 @@ export function AppSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link to="/">
+              <Link to="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center">
                   <LogoMark />
                 </div>

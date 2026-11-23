@@ -7,7 +7,7 @@ export function RedirectIfAuthed() {
   const { isAuthenticated, isBootstrapping } = useAuth()
 
   if (isBootstrapping) return <FullPageLoader label="Restoring your session…" />
-  if (isAuthenticated) return <Navigate to="/" replace />
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
   return <Outlet />
 }

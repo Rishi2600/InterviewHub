@@ -2,8 +2,8 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { FullPageLoader } from './FullPageLoader'
 
-/** Gate for any authenticated screen. Remembers where the user was headed so
- *  login can send them back there. */
+/** Gate for any authenticated screen. Remembers where the user was headed,
+ *  query included (a room code, say), so login can send them back there. */
 export function ProtectedRoute() {
   const { isAuthenticated, isBootstrapping } = useAuth()
   const location = useLocation()
@@ -11,7 +11,7 @@ export function ProtectedRoute() {
   if (isBootstrapping) return <FullPageLoader label="Restoring your session…" />
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
   }
 
   return <Outlet />
@@ -25,7 +25,7 @@ export function RoleRoute() {
   if (isBootstrapping) return <FullPageLoader label="Checking permissions…" />
 
   if (user?.role !== 'interviewer' && user?.role !== 'admin') {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Outlet />

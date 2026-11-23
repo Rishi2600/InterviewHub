@@ -12,6 +12,7 @@ import { PublicOrAppShell } from '@/components/layout/PublicShell'
 
 // Route-level code splitting: the socket-heavy Room/Contest screens stay out
 // of the initial bundle, so login loads fast.
+const Landing = lazy(() => import('@/pages/Landing').then((m) => ({ default: m.Landing })))
 const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
 const Register = lazy(() => import('@/pages/Register').then((m) => ({ default: m.Register })))
 const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })))
@@ -50,6 +51,9 @@ export default function App() {
           <TooltipProvider>
             <Suspense fallback={<FullPageLoader />}>
               <Routes>
+                {/* The front page, for everyone. */}
+                <Route path="/" element={<Landing />} />
+
                 {/* Public */}
                 <Route element={<RedirectIfAuthed />}>
                   <Route path="/login" element={<Login />} />
@@ -69,7 +73,7 @@ export default function App() {
                   <Route path="/practice/:id" element={<PracticeInterview />} />
                   <Route path="/prep/drills/:id" element={<PrepDrill />} />
                   <Route element={<AppShell />}>
-                    <Route index element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/rooms/join" element={<JoinRoom />} />
                     <Route path="/rooms/:id/review" element={<RoomReview />} />
                     <Route path="/contests/:id" element={<ContestDetails />} />
@@ -86,7 +90,7 @@ export default function App() {
                     {/* Host-only area. Kept as a nested guard so adding
                         interviewer-only screens later needs no new plumbing. */}
                     <Route element={<RoleRoute />}>
-                      <Route path="/host" element={<Navigate to="/" replace />} />
+                      <Route path="/host" element={<Navigate to="/dashboard" replace />} />
                     </Route>
 
                     <Route path="*" element={<NotFound />} />

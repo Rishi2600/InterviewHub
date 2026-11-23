@@ -15,7 +15,7 @@ export function NotFound() {
         description="That link doesn't lead anywhere in InterviewHub."
         action={
           <Button variant="outline" size="sm" asChild>
-            <Link to="/">
+            <Link to="/dashboard">
               <ArrowLeft aria-hidden />
               Back to the dashboard
             </Link>

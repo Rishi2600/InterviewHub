@@ -19,7 +19,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex items-center justify-between">
-          <Link to="/login" className="flex items-center gap-2 font-heading font-semibold">
+          <Link to="/" className="flex items-center gap-2 font-heading font-semibold">
             <LogoMark />
             InterviewHub
           </Link>

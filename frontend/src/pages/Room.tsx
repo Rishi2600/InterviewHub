@@ -140,7 +140,7 @@ function RoomScreen({ room }: { room: RoomType }) {
     <div className="min-h-svh bg-background">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur sm:gap-3 sm:px-4">
         <Button variant="ghost" size="icon-sm" asChild>
-          <Link to="/" aria-label="Back to the dashboard">
+          <Link to="/dashboard" aria-label="Back to the dashboard">
             <ArrowLeft aria-hidden />
           </Link>
         </Button>

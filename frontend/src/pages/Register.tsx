@@ -63,7 +63,7 @@ export function Register() {
     try {
       await registerUser(values)
       // Registration returns a token, so the user is signed in straight away.
-      navigate('/', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (err) {
       setFormError(errorMessage(err, 'Could not create your account'))
     }

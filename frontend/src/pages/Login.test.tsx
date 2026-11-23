@@ -11,7 +11,7 @@ function renderLogin(login = vi.fn().mockResolvedValue(TEST_USER), from?: string
       <MemoryRouter initialEntries={[{ pathname: '/login', state: from ? { from } : null }]}>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<p>Dashboard page</p>} />
+          <Route path="/dashboard" element={<p>Dashboard page</p>} />
           <Route path="/rooms/r1" element={<p>Room page</p>} />
         </Routes>
       </MemoryRouter>

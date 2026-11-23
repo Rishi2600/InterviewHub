@@ -16,7 +16,7 @@ export function PublicShell() {
     <div className="min-h-svh bg-background">
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
-          <Link to="/contests" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <LogoMark />
             <span className="font-heading text-sm font-semibold">InterviewHub</span>
           </Link>

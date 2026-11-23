@@ -25,7 +25,7 @@ export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [formError, setFormError] = useState<string | null>(null)
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
+  const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
   const {
     register,
