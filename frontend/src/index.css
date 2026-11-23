@@ -6,97 +6,115 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ── Design tokens ───────────────────────────────────────────────────────────
-   shadcn/ui tokens with the CRM project's neutral values and one accent,
-   turquoise #14C8B4. Text on the accent is dark (#042F2A) for contrast; the
-   accent as text on light surfaces uses --brand-text. */
+   shadcn/ui tokens in the pineapple palette: gold flesh, green crown and a
+   dark leaf ink. Text on gold is the dark ink; gold is unreadable as text on
+   light surfaces, so accent text there is the crown green (--brand-text). */
 :root {
   color-scheme: light;
   --radius: 0.625rem;
-  --background: #fafafa;
-  --foreground: #0a0a0a;
+  --background: #fbfaf6;
+  --foreground: #16241a;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
+  --card-foreground: #16241a;
   --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #14c8b4;
-  --primary-foreground: #042f2a;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #171717;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --accent: #f5f5f5;
-  --accent-foreground: #171717;
+  --popover-foreground: #16241a;
+  --primary: #ffc72c;
+  --primary-foreground: #16241a;
+  --secondary: #f3f0e4;
+  --secondary-foreground: #16241a;
+  --muted: #f3f0e4;
+  --muted-foreground: #5c685e;
+  --accent: #f3f0e4;
+  --accent-foreground: #16241a;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #14c8b4;
-  /* Turquoise ramp, strongest first, for charts and progress bars. */
-  --chart-1: #14c8b4;
-  --chart-2: #0fa192;
-  --chart-3: #7de3d6;
-  --chart-4: #0b7f72;
-  --chart-5: #c3f3ec;
+  --border: #e9e3cc;
+  --input: #e9e3cc;
+  --ring: #f0a81c;
+  /* Charts and progress bars: gold, crown, leaf, amber, deep crown. */
+  --chart-1: #ffc72c;
+  --chart-2: #2d6a39;
+  --chart-3: #86b547;
+  --chart-4: #f0a81c;
+  --chart-5: #1c4626;
   --sidebar: #ffffff;
-  --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #14c8b4;
-  --sidebar-primary-foreground: #042f2a;
-  --sidebar-accent: #f5f5f5;
-  --sidebar-accent-foreground: #171717;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #14c8b4;
+  --sidebar-foreground: #16241a;
+  --sidebar-primary: #ffc72c;
+  --sidebar-primary-foreground: #16241a;
+  --sidebar-accent: #f3f0e4;
+  --sidebar-accent-foreground: #16241a;
+  --sidebar-border: #e9e3cc;
+  --sidebar-ring: #f0a81c;
   /* Semantic text colours: the accent and red as readable text. */
-  --brand-text: #0b7f72;
+  --brand-text: #2d6a39;
   --danger-text: #dc2626;
   /* Code: strings and numbers; keywords use --brand-text. */
   --code-string: #a16207;
-  --code-number: #0fa192;
+  --code-number: #b9750a;
   /* Contribution graph, from no activity to the most. */
-  --graph-0: #ebedf0;
-  --graph-1: #c3f3ec;
-  --graph-2: #7de3d6;
-  --graph-3: #14c8b4;
-  --graph-4: #0b7f72;
+  --graph-0: #eeebdd;
+  --graph-1: #ffe69a;
+  --graph-2: #ffc72c;
+  --graph-3: #86b547;
+  --graph-4: #2d6a39;
+  /* The palette by name, for the landing page and the logo. */
+  --gold: #ffc72c;
+  --gold-deep: #f0a81c;
+  --crown: #2d6a39;
+  --crown-deep: #1c4626;
+  --leaf: #86b547;
+  --cream: #fff6d8;
+  --flesh: #fff4cc;
+  --flesh-strong: #fbecb3;
+  --ink: #16241a;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #080808;
-  --foreground: #fafafa;
-  --card: #161616;
-  --card-foreground: #fafafa;
-  --popover: #161616;
-  --popover-foreground: #fafafa;
-  --primary: #14c8b4;
-  --primary-foreground: #042f2a;
-  --secondary: #262626;
-  --secondary-foreground: #fafafa;
-  --muted: #262626;
-  --muted-foreground: #a1a1a1;
-  --accent: #262626;
-  --accent-foreground: #fafafa;
+  --background: #0d150f;
+  --foreground: #f4efdb;
+  --card: #16211a;
+  --card-foreground: #f4efdb;
+  --popover: #16211a;
+  --popover-foreground: #f4efdb;
+  --primary: #ffc72c;
+  --primary-foreground: #16241a;
+  --secondary: #1d2b21;
+  --secondary-foreground: #f4efdb;
+  --muted: #1d2b21;
+  --muted-foreground: #a9af9c;
+  --accent: #1d2b21;
+  --accent-foreground: #f4efdb;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #262626;
-  --input: #262626;
-  --ring: #14c8b4;
-  --sidebar: #161616;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #14c8b4;
-  --sidebar-primary-foreground: #042f2a;
-  --sidebar-accent: #262626;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #262626;
-  --sidebar-ring: #14c8b4;
-  --brand-text: #14c8b4;
+  --border: #26352a;
+  --input: #26352a;
+  --ring: #ffc72c;
+  --chart-2: #9bcb5c;
+  --chart-5: #5e8f3a;
+  --sidebar: #121c15;
+  --sidebar-foreground: #f4efdb;
+  --sidebar-primary: #ffc72c;
+  --sidebar-primary-foreground: #16241a;
+  --sidebar-accent: #1d2b21;
+  --sidebar-accent-foreground: #f4efdb;
+  --sidebar-border: #26352a;
+  --sidebar-ring: #ffc72c;
+  --brand-text: #ffc72c;
   --danger-text: #f87171;
   --code-string: #e9c46a;
-  --code-number: #7de3d6;
-  --graph-0: #1f1f1f;
-  --graph-1: #0d3b36;
-  --graph-2: #0f6e64;
-  --graph-3: #14a896;
-  --graph-4: #4fe3d0;
+  --code-number: #9bcb5c;
+  --graph-0: #1b271e;
+  --graph-1: #34502a;
+  --graph-2: #5e8f3a;
+  --graph-3: #c9a227;
+  --graph-4: #ffc72c;
+  --crown: #2f6e3b;
+  --crown-deep: #173a20;
+  --leaf: #9bcb5c;
+  --flesh: #16211a;
+  --flesh-strong: #1d2b21;
+  --ink: #f4efdb;
 }
 
 @theme inline {
@@ -143,6 +161,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-brand: var(--brand-text);
   --color-danger: var(--danger-text);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-crown: var(--crown);
+  --color-crown-deep: var(--crown-deep);
+  --color-leaf: var(--leaf);
+  --color-cream: var(--cream);
+  --color-flesh: var(--flesh);
+  --color-flesh-strong: var(--flesh-strong);
+  --color-ink: var(--ink);
 }
 
 @layer base {
@@ -161,6 +188,11 @@
     @apply font-heading tracking-tight;
   }
 
+  ::selection {
+    background: var(--gold);
+    color: #16241a;
+  }
+
   /* Thin scrollbars, as in the CRM. */
   ::-webkit-scrollbar {
     width: 4px;
@@ -173,6 +205,17 @@
     background: var(--border);
     border-radius: 2px;
   }
+}
+
+/* Headings are bold and tight everywhere. Unlayered, so it wins over the
+   font-semibold that shadcn parts put on titles. */
+h1,
+h2,
+h3,
+h4,
+.font-heading {
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 /* AI practice: bars that rise and fall while the interviewer writes or speaks. */

@@ -1,4 +1,4 @@
-/** A join code shown one character per tile, in turquoise. */
+/** A join code shown one character per tile, in the accent colour. */
 export function JoinCodeTiles({ code }: { code: string }) {
   return (
     <div className="flex gap-1.5" aria-label={`Join code ${code.split('').join(' ')}`}>

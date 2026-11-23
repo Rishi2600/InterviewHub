@@ -8,7 +8,7 @@ const LABEL: Record<Status, string> = {
   error: 'Offline',
 }
 
-/** The chat socket's state: a turquoise dot when live. */
+/** The chat socket's state: a gold dot when live. */
 export function ConnectionStatus({ status }: { status: Status }) {
   return (
     <span role="status" className={cn('inline-flex items-center gap-1.5', status === 'error' && 'text-danger')}>

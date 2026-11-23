@@ -43,8 +43,8 @@ export function AiTile({
   name?: string
 }) {
   return (
-    <div className={cn('relative overflow-hidden rounded-xl bg-[#0d1312]', className)}>
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(80% 90% at 50% 30%, #14c8b433 0%, #0d1312 70%)' }} />
+    <div className={cn('relative overflow-hidden rounded-xl bg-[#0d150f]', className)}>
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(80% 90% at 50% 30%, #ffc72c33 0%, #0d150f 70%)' }} />
       {compact ? (
         <div className="relative flex h-full items-center gap-3 px-4">
           <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
@@ -77,7 +77,7 @@ export function YouTile({ name, listening, className }: { name: string; listenin
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-xl bg-[#0d1312]',
+        'relative overflow-hidden rounded-xl bg-[#0d150f]',
         listening && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
         className,
       )}

@@ -7,7 +7,7 @@ const LABEL: Record<RoomState, string> = {
   ended: 'Ended',
 }
 
-/** One look per room state: active is filled turquoise, waiting is grey and
+/** One look per room state: active is filled gold, waiting is grey and
  *  ended is outlined and dimmed. Contests use PhaseBadge. */
 export function StatusBadge({ state }: { state: RoomState }) {
   if (state === 'active') return <Badge>{LABEL[state]}</Badge>

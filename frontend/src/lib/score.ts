@@ -78,11 +78,11 @@ export interface BadgeInfo {
 }
 
 export const BADGE_INFO: Record<BadgeId, BadgeInfo> = {
-  'first-rated': { name: 'First rated', rule: 'Started a first rated contest', hue: '#14c8b4' },
-  winner: { name: 'Winner', rule: 'Finished 1st in a rated contest', hue: '#d99a0b' },
-  podium: { name: 'Podium', rule: 'Finished in the top 3 of a rated contest', hue: '#c0632e' },
-  'top-10': { name: 'Top 10%', rule: 'Ahead of 90% of starters in a rated contest', hue: '#0b7f72' },
-  finisher: { name: 'Finisher', rule: 'Pressed Submit in 10 contests', hue: '#4f6bd8' },
+  'first-rated': { name: 'First rated', rule: 'Started a first rated contest', hue: '#2d6a39' },
+  winner: { name: 'Winner', rule: 'Finished 1st in a rated contest', hue: '#e0a100' },
+  podium: { name: 'Podium', rule: 'Finished in the top 3 of a rated contest', hue: '#b9750a' },
+  'top-10': { name: 'Top 10%', rule: 'Ahead of 90% of starters in a rated contest', hue: '#1c4626' },
+  finisher: { name: 'Finisher', rule: 'Pressed Submit in 10 contests', hue: '#5e8f3a' },
   regular: { name: 'Regular', rule: 'Took part in 10 rated contests', hue: '#525252' },
   streak: { name: 'Streak', rule: 'Started a contest 4 weeks running', hue: '#e8590c' },
 }

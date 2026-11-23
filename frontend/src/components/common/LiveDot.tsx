@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-/** A turquoise dot with a slow ping: something is live right now. */
+/** A gold dot with a slow ping: something is live right now. */
 export function LiveDot({ className }: { className?: string }) {
   return (
     <span className={cn('relative flex size-2 shrink-0', className)} aria-hidden>

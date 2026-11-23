@@ -50,7 +50,7 @@ export function VideoTile({
 }) {
   const showVideo = cam && !!stream?.getVideoTracks().length
   return (
-    <div className={cn('relative aspect-video overflow-hidden rounded-lg bg-[#0d1312]', className)}>
+    <div className={cn('relative aspect-video overflow-hidden rounded-lg bg-[#0d150f]', className)}>
       {/* Always mounted, so the person is heard even with the camera off. */}
       <StreamVideo stream={stream} muted={self} mirrored={self} className={cn(!showVideo && 'invisible')} />
       {!showVideo && (
