@@ -85,7 +85,7 @@ function PracticeHome({ data, onRefresh }: { data: PracticeOverview; onRefresh: 
   const blocked = running ? 'running' : !data.enabled ? 'PracticeOff' : used ? 'PracticeMonthUsed' : refused
   return (
     <>
-      <section className="rounded-2xl border border-primary/30 bg-primary/[0.06] p-5 sm:p-8">
+      <section className="rounded-2xl bg-tint p-5 sm:p-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 text-sm font-medium text-brand">
             <Bot className="size-4" aria-hidden />
@@ -148,7 +148,7 @@ function RunningNote({ id, title, endsAt }: { id: string; title: string; endsAt:
   const now = useNow(30_000)
   const minutes = Math.max(0, Math.ceil((new Date(endsAt).getTime() - now) / 60_000))
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/40 bg-primary/10 px-3.5 py-3 text-sm">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg bg-tint px-3.5 py-3 text-sm">
       <LiveDot />
       <div className="min-w-0 flex-1">
         <div className="font-medium">{title} is still running</div>

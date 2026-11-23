@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Copy, DoorOpen, Pin, Plus } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { JoinCodeTiles } from '@/components/common/JoinCodeTiles'
+import { StatusBadge } from '@/components/common/StatusBadge'
 import { LiveDot } from '@/components/common/LiveDot'
 import { UserAvatar } from '@/components/common/UserAvatar'
 import { useCopy } from '@/hooks/useCopy'
@@ -24,7 +24,7 @@ export function LiveRoomCard({ room, userId }: { room: Room; userId?: string }) 
         </CardTitle>
         <CardDescription>In progress. Opened at {formatTime(room.createdAt)}.</CardDescription>
         <CardAction>
-          <Badge>Active</Badge>
+          <StatusBadge state="active" />
         </CardAction>
       </CardHeader>
       <CardContent className="grid min-w-0 gap-6">

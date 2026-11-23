@@ -209,7 +209,7 @@ function Screen({ ws }: { ws: QuizWorkspace }) {
     <div className="min-h-svh bg-background">
       <TopBar title={ws.contest.title} endAt={ws.contest.endAt} contestId={contestId} pct={elapsedPct}>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5" role="timer" aria-label="Time left">
+          <div className="flex items-center gap-2 rounded-lg bg-tint px-3 py-1.5" role="timer" aria-label="Time left">
             <Timer className="size-4 text-brand" aria-hidden />
             <span className="font-heading text-lg leading-none font-semibold text-brand tabular-nums">{countdown(end - now)}</span>
             <span className="hidden text-xs text-muted-foreground sm:inline">left</span>
@@ -292,7 +292,7 @@ function Screen({ ws }: { ws: QuizWorkspace }) {
                     onClick={() => pick(q._id, o.id, multiple)}
                     className={cn(
                       'flex w-full items-center gap-3 rounded-lg border p-4 text-left text-sm transition-colors',
-                      on ? 'border-primary bg-primary/5' : 'bg-card hover:bg-muted/60',
+                      on ? 'border-primary bg-tint' : 'bg-card hover:bg-muted/60',
                     )}
                   >
                     {multiple ? (

@@ -169,7 +169,7 @@ export function CodeWorkspace({ ws }: { ws: Workspace }) {
     <div className="min-h-svh bg-background">
       <WorkspaceTopBar wide title={ws.contest.title} endAt={ws.contest.endAt} contestId={contestId} pct={elapsedPct}>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5" role="timer" aria-label="Time left">
+          <div className="flex items-center gap-2 rounded-lg bg-tint px-3 py-1.5" role="timer" aria-label="Time left">
             <Timer className="size-4 text-brand" aria-hidden />
             <span className="font-heading text-lg leading-none font-semibold text-brand tabular-nums">{countdown(end - now)}</span>
             <span className="hidden text-xs text-muted-foreground sm:inline">left</span>
@@ -199,7 +199,7 @@ export function CodeWorkspace({ ws }: { ws: Workspace }) {
         </div>
 
         <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_24rem]">
-          <section className="flex flex-col overflow-hidden rounded-xl border bg-card lg:h-[calc(100svh-15.5rem)] lg:min-h-[30rem]">
+          <section className="flex flex-col overflow-hidden rounded-xl bg-card lg:h-[calc(100svh-15.5rem)] lg:min-h-[30rem]">
             <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
               <LanguagePicker value={program.language} onChange={setLanguage} />
               <span className="hidden items-center gap-1 text-xs text-muted-foreground md:inline-flex">
@@ -240,7 +240,7 @@ export function CodeWorkspace({ ws }: { ws: Workspace }) {
             />
           </section>
 
-          <section className="flex flex-col overflow-hidden rounded-xl border bg-card lg:h-[calc(100svh-15.5rem)] lg:min-h-[30rem]">
+          <section className="flex flex-col overflow-hidden rounded-xl bg-card lg:h-[calc(100svh-15.5rem)] lg:min-h-[30rem]">
             <div role="tablist" className="flex border-b px-2 text-sm">
               {(['problem', 'submissions'] as const).map((t) => (
                 <button
@@ -365,7 +365,7 @@ function ProblemCard({
         <span
           className={cn(
             'grid size-6 shrink-0 place-items-center rounded-md font-heading text-xs font-semibold tabular-nums',
-            on ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-brand',
+            on ? 'bg-primary text-primary-foreground' : 'bg-tint text-brand',
           )}
         >
           {n}
@@ -391,7 +391,7 @@ function Pre({ text, tone }: { text: string; tone?: 'good' | 'bad' }) {
     <pre
       className={cn(
         'max-h-40 overflow-auto rounded-md px-2.5 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap',
-        tone === 'good' ? 'bg-primary/10' : tone === 'bad' ? 'bg-danger/10' : 'bg-muted',
+        tone === 'good' ? 'bg-stem/10' : tone === 'bad' ? 'bg-danger/10' : 'bg-muted',
       )}
     >
       {text}
@@ -541,7 +541,7 @@ function ProblemTab({ q, n }: { q: CodeQuestionView; n: number }) {
           </div>
         </section>
       ))}
-      <div className="grid gap-1.5 rounded-lg bg-primary/10 p-3 text-xs">
+      <div className="grid gap-1.5 rounded-lg bg-tint p-3 text-xs">
         <span className="flex items-center gap-1.5 font-medium">
           <Scale className="size-3.5 text-brand" aria-hidden />
           How it's scored

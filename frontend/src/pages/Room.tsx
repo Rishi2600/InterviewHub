@@ -231,7 +231,7 @@ function RoomScreen({ room }: { room: RoomType }) {
             <Stage joined={call.joined} peers={call.peers} participants={room.participants.filter((p) => p.role === 'candidate').map((p) => p.username)} />
           )}
 
-          <section className="flex h-[26rem] flex-col overflow-hidden rounded-xl border bg-card lg:h-[calc(100svh-15rem)] lg:min-h-[28rem]">
+          <section className="flex h-[26rem] flex-col overflow-hidden rounded-xl bg-card lg:h-[calc(100svh-15rem)] lg:min-h-[28rem]">
             <div role="tablist" className="flex border-b px-2 text-sm">
               {tabs.map((t) => (
                 <button
@@ -373,7 +373,7 @@ function VideoStrip({ call, name, ended }: { call: ReturnType<typeof useCall>; n
 function ShareStrip({ joined, sharing, onShare, onStop }: { joined: boolean; sharing: boolean; onShare: () => void; onStop: () => void }) {
   if (sharing) {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-tint px-3 py-2 text-sm">
         <LiveDot />
         <span className="font-medium">You're sharing your screen</span>
         <span className="hidden text-muted-foreground sm:inline">The interviewers see your editor and output.</span>
@@ -384,7 +384,7 @@ function ShareStrip({ joined, sharing, onShare, onStop }: { joined: boolean; sha
     )
   }
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg bg-tint px-3 py-2.5 text-sm">
       <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
         <ScreenShare className="size-4" aria-hidden />
       </span>
@@ -406,7 +406,7 @@ function ShareStrip({ joined, sharing, onShare, onStop }: { joined: boolean; sha
 
 function QuestionStrip({ question }: { question: string }) {
   return (
-    <details open className="group rounded-xl border bg-card">
+    <details open className="group rounded-xl bg-card">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm">
         <span className="grid size-6 shrink-0 place-items-center rounded-md bg-primary/15 text-brand">
           <Pin className="size-3.5" aria-hidden />
@@ -440,7 +440,7 @@ function Stage({ joined, peers, participants }: { joined: boolean; peers: CallPe
     )
   }
   return (
-    <section ref={frame} className={cn('flex flex-col overflow-hidden rounded-xl border bg-card', height)}>
+    <section ref={frame} className={cn('flex flex-col overflow-hidden rounded-xl bg-card', height)}>
       <div className="flex items-center gap-2 border-b px-3 py-2 text-sm">
         <LiveDot />
         <span className="font-medium">{sharer.username}'s screen</span>

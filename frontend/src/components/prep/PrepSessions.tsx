@@ -56,7 +56,7 @@ export function PrepSessions({ items, nextBefore }: { items: PrepHistoryItem[]; 
   })
   const all = [...items, ...more]
   return (
-    <section className="mt-8 rounded-xl border bg-card">
+    <section className="mt-8 rounded-xl bg-card">
       <div className="flex items-center gap-2 border-b px-5 py-3.5">
         <h2 className="text-base font-semibold">Your drills and coach sessions</h2>
       </div>

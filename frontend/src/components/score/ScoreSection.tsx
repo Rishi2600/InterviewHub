@@ -28,12 +28,12 @@ export function ScoreSection({ userId, isSelf }: { userId: string; isSelf: boole
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)_minmax(0,4fr)]">
-        <section className="grid gap-4 rounded-xl border border-primary/30 bg-primary/10 p-5 md:col-span-2 lg:col-span-1">
+        <section className="grid gap-4 rounded-xl bg-tint p-5 md:col-span-2 lg:col-span-1">
           <ScoreFigure s={s} isSelf={isSelf} />
           {s.score !== null && <TrendLine history={s.history} />}
         </section>
         <CompletionTile s={s} />
-        <section className="rounded-xl border bg-card p-5">
+        <section className="rounded-xl bg-card p-5">
           <dl className="grid h-full grid-cols-2 content-center gap-4">
             <Stat label="Rated contests" value={s.ratedCount} />
             <Stat label="Contests entered" value={s.enteredCount} />
@@ -139,7 +139,7 @@ function CompletionTile({ s }: { s: UserScore }) {
   const r = 26
   const c = 2 * Math.PI * r
   return (
-    <section className="flex items-center gap-4 rounded-xl border bg-card p-5">
+    <section className="flex items-center gap-4 rounded-xl bg-card p-5">
       <svg viewBox="0 0 64 64" className="size-16 shrink-0 -rotate-90" aria-hidden>
         <circle cx={32} cy={32} r={r} fill="none" stroke="var(--muted)" strokeWidth={7} />
         {f && <circle cx={32} cy={32} r={r} fill="none" stroke="var(--primary)" strokeWidth={7} strokeLinecap="round" strokeDasharray={`${c * share} ${c}`} />}

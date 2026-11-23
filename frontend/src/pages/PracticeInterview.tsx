@@ -210,7 +210,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
                   </Button>
                 </div>
               ) : (
-                <section className="rounded-xl border bg-card px-4 py-3">
+                <section className="rounded-xl bg-card px-4 py-3">
                   <div className="mb-1 text-xs font-medium text-muted-foreground">Latest question</div>
                   <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
                     {lastAi ? <InlineText text={lastAi.text} /> : <span className="text-muted-foreground">The {w.ai} is getting ready…</span>}
@@ -221,7 +221,7 @@ function InterviewScreen({ interview }: { interview: Interview }) {
           )}
         </div>
 
-        <section className="flex h-[30rem] flex-col overflow-hidden rounded-xl border bg-card lg:sticky lg:top-[4.5rem] lg:h-[calc(100svh-5.5rem)]">
+        <section className="flex h-[30rem] flex-col overflow-hidden rounded-xl bg-card lg:sticky lg:top-[4.5rem] lg:h-[calc(100svh-5.5rem)]">
           <div role="tablist" className="flex border-b px-2 text-sm">
             {(coding ? (['chat', 'question'] as const) : (['chat'] as const)).map((t) => (
               <button
@@ -388,7 +388,7 @@ function EndingScreen({ interview }: { interview: Interview }) {
 
   return (
     <div className="grid min-h-svh place-items-center bg-background p-4">
-      <section className="w-full max-w-md rounded-2xl border bg-card p-6 sm:p-8">
+      <section className="w-full max-w-md rounded-2xl bg-card p-6 sm:p-8">
         <span className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground">
           <Bot className="size-5" aria-hidden />
         </span>

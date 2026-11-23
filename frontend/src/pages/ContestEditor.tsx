@@ -747,7 +747,7 @@ function QuestionEditor({
                       onClick={() => mark(o.id)}
                       className={cn(
                         'flex h-9 w-24 shrink-0 items-center gap-1.5 rounded-md border px-2 text-xs font-medium',
-                        on ? 'border-primary bg-primary/10 text-brand' : 'bg-card text-muted-foreground',
+                        on ? 'border-primary bg-tint text-brand' : 'bg-card text-muted-foreground',
                       )}
                     >
                       {multiple ? (

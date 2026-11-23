@@ -44,7 +44,7 @@ export function ContestResults() {
     if (errorStatus(results.error) === 409) {
       return (
         <div className="mx-auto grid max-w-md justify-items-center gap-4 py-16 text-center">
-          <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-brand">
+          <span className="grid size-12 place-items-center rounded-full bg-tint text-brand">
             <Loader2 className="size-6 animate-spin" aria-hidden />
           </span>
           <h1 className="text-2xl font-semibold">Results are not out yet</h1>
@@ -117,7 +117,7 @@ function ResultStrip({ results: r }: { results: Results }) {
   const me = r.me!
   const rated = r.contest.rated
   return (
-    <section className="grid gap-5 rounded-xl bg-primary/10 p-5 sm:p-6 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-10">
+    <section className="grid gap-5 rounded-xl bg-tint p-5 sm:p-6 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-10">
       <div className="flex items-baseline gap-2">
         <span className="font-heading text-5xl font-semibold text-brand tabular-nums">#{me.rank}</span>
         <span className="text-muted-foreground">of {r.contest.starters} starters</span>
@@ -158,7 +158,7 @@ function ResultStrip({ results: r }: { results: Results }) {
 
 function BoardTableRow({ row, me }: { row: BoardRow; me: boolean }) {
   return (
-    <tr className={me ? 'bg-primary/10' : 'border-t'}>
+    <tr className={me ? 'bg-tint' : 'border-t'}>
       <td
         className={cn(
           'w-12 py-2.5 pr-2 pl-5 font-heading font-semibold tabular-nums',
@@ -419,7 +419,7 @@ function ReviewItem({ q, entered, starters }: { q: ResultQuestion; entered: bool
               key={o.id}
               className={cn(
                 'flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border px-3 py-2.5 text-sm',
-                isCorrect ? 'border-primary/50 bg-primary/5' : isPicked ? 'border-danger/40 bg-danger/5' : '',
+                isCorrect ? 'border-stem/50 bg-stem/5' : isPicked ? 'border-danger/40 bg-danger/5' : '',
               )}
             >
               {isCorrect ? (

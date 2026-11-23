@@ -15,7 +15,7 @@ export function ScoreChart({ items }: { items: PracticeListItem[] }) {
   const scored = items.filter((i) => i.score !== null).slice(0, SHOWN).reverse()
   if (scored.length < 2) {
     return (
-      <section className="mt-6 rounded-xl border bg-card p-5">
+      <section className="mt-6 rounded-xl bg-card p-5">
         <h2 className="text-base font-semibold">Your practice scores</h2>
         <p className="mt-1 text-sm text-muted-foreground">Your trend shows here after two interviews with feedback.</p>
       </section>
@@ -26,7 +26,7 @@ export function ScoreChart({ items }: { items: PracticeListItem[] }) {
   const change = (latest.score ?? 0) - (first.score ?? 0)
   const Trend = change >= 0 ? TrendingUp : TrendingDown
   return (
-    <section className="mt-6 grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-[13rem_minmax(0,1fr)] sm:items-center">
+    <section className="mt-6 grid gap-4 rounded-xl bg-card p-5 sm:grid-cols-[13rem_minmax(0,1fr)] sm:items-center">
       <div>
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-base font-semibold">Your practice scores</h2>

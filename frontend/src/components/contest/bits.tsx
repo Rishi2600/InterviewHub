@@ -13,8 +13,8 @@ export function PhaseBadge({ phase }: { phase: ContestPhase }) {
   switch (phase) {
     case 'live':
       return (
-        <span className={cn(PILL, 'gap-1.5 bg-primary text-primary-foreground')}>
-          <span className="size-1.5 rounded-full bg-primary-foreground/70" />
+        <span className={cn(PILL, 'gap-1.5 bg-live text-live-foreground')}>
+          <span className="size-1.5 rounded-full bg-live-foreground/70" />
           Live
         </span>
       )
@@ -42,7 +42,7 @@ export function CodeBadge() {
 export function RatedBadge({ rated }: { rated: boolean | null }) {
   if (rated === null) return null
   return rated ? (
-    <span className={cn(PILL, 'border border-primary/40 text-brand')}>
+    <span className={cn(PILL, 'border border-brand/40 text-brand')}>
       <Award className="size-3" aria-hidden />
       Rated
     </span>
@@ -53,7 +53,7 @@ export function RatedBadge({ rated }: { rated: boolean | null }) {
 
 export function JoinedBadge() {
   return (
-    <span className={cn(PILL, 'bg-primary/10 text-brand')}>
+    <span className={cn(PILL, 'bg-tint text-brand')}>
       <Check className="size-3" aria-hidden />
       Joined
     </span>
@@ -105,7 +105,7 @@ export function Panel({
   className?: string
 }) {
   return (
-    <section className={cn('rounded-xl border bg-card', className)}>
+    <section className={cn('rounded-xl bg-card', className)}>
       {title && (
         <div className="flex items-center gap-2 border-b px-5 py-3.5">
           <h2 className="text-base font-semibold">{title}</h2>

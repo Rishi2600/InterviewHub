@@ -111,7 +111,7 @@ function Row({ c }: { c: ContestHistoryItem }) {
       </td>
       <td className="px-3 py-2.5 whitespace-nowrap">
         {c.submitted ? (
-          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-brand">Submitted</span>
+          <span className="rounded-md bg-tint px-1.5 py-0.5 text-[11px] font-medium text-brand">Submitted</span>
         ) : (
           <span className="rounded-md border border-dashed px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">Time ran out</span>
         )}

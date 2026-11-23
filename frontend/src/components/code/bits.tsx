@@ -98,7 +98,7 @@ export function VerdictGrid({ verdicts }: { verdicts: (TestVerdict | 'wait')[] }
             aria-label={`Test ${i + 1}: ${label}`}
             className={cn(
               'grid aspect-square place-items-center content-center gap-0.5 rounded-md',
-              v === 'passed' ? 'bg-primary/15 text-brand' : v === 'wait' ? 'bg-muted text-muted-foreground' : 'bg-danger/10 text-danger',
+              v === 'passed' ? 'bg-live/15 text-live' : v === 'wait' ? 'bg-muted text-muted-foreground' : 'bg-danger/10 text-danger',
             )}
           >
             <Icon className={cn('size-3.5', v === 'wait' && 'animate-spin')} aria-hidden />

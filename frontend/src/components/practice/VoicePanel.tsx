@@ -46,7 +46,7 @@ export function VoicePanel({
   const status = speaking ? 'The interviewer is speaking' : waiting ? 'The interviewer is writing…' : listening ? 'Listening' : 'Starting the microphone…'
   return (
     <div className={cn('rounded-xl bg-card', listening && 'shadow-sm')}>
-      <div className="rounded-xl border border-primary/50 bg-primary/[0.06] p-3">
+      <div className="rounded-xl bg-tint p-3">
         <div className="flex items-start gap-3">
           <span
             className={cn(

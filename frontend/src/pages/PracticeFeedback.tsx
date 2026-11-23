@@ -181,7 +181,7 @@ const ScoreChip = ({ score }: { score: number }) => (
 
 function Card({ title, extra, children }: { title: string; extra?: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border bg-card">
+    <section className="rounded-xl bg-card">
       <div className="flex items-center gap-2 border-b px-5 py-3.5">
         <h2 className="text-base font-semibold">{title}</h2>
         {extra && <span className="ml-auto text-xs text-muted-foreground">{extra}</span>}
@@ -194,7 +194,7 @@ function Card({ title, extra, children }: { title: string; extra?: string; child
 function Report({ iv, feedback }: { iv: PracticeInterview; feedback: Feedback }) {
   return (
     <>
-      <section className="rounded-xl border bg-card">
+      <section className="rounded-xl bg-card">
         <div className="grid gap-6 p-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:p-6">
           <div>
             <div className="flex items-baseline gap-2">
@@ -337,7 +337,7 @@ function NotReady({ iv }: { iv: PracticeInterview }) {
   const w = sessionWords(iv.purpose)
   if (iv.status === 'ended') {
     return (
-      <section className="grid gap-6 rounded-xl border bg-card p-6 sm:p-8">
+      <section className="grid gap-6 rounded-xl bg-card p-6 sm:p-8">
         <div className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Bot className="size-5" aria-hidden />
@@ -357,7 +357,7 @@ function NotReady({ iv }: { iv: PracticeInterview }) {
     )
   }
   return (
-    <section className="grid gap-4 rounded-xl border bg-card p-6 sm:p-8">
+    <section className="grid gap-4 rounded-xl bg-card p-6 sm:p-8">
       <span className="grid size-10 place-items-center rounded-lg bg-muted">
         <CloudOff className="size-5" aria-hidden />
       </span>

@@ -6,7 +6,7 @@ export function JoinCodeTiles({ code }: { code: string }) {
         <span
           key={i}
           aria-hidden
-          className="grid h-11 w-10 place-items-center rounded-md border border-primary/35 bg-primary/10 font-mono text-lg font-medium text-brand"
+          className="grid h-11 w-10 place-items-center rounded-md border border-primary/35 bg-tint font-mono text-lg font-medium text-brand"
         >
           {char}
         </span>

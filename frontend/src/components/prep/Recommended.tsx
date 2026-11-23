@@ -217,7 +217,7 @@ export function Recommended({
         </div>
         <HowItWorks />
       </div>
-      <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="overflow-hidden rounded-xl bg-card">
         <SubHead icon={<Pin />} title="Your focus" hint={`up to ${MAX_FOCUS}`} />
         <FocusRow data={data} focus={focus} busy={busy} onStart={onStart} onFocusChange={onFocusChange} />
 

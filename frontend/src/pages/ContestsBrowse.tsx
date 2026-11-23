@@ -153,7 +153,7 @@ export function ContestsBrowse() {
                     <span className="font-medium">{dayLabel(group.items[0].startAt!, now)}</span>
                     <span className="text-muted-foreground"> · {longDay(group.items[0].startAt!)}</span>
                   </div>
-                  <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+                  <ul className="divide-y overflow-hidden rounded-xl bg-card">
                     {group.items.map((c) => (
                       <UpcomingRow key={c._id} contest={c} now={now} />
                     ))}
@@ -268,7 +268,7 @@ function LiveCard({ contest: c, now }: { contest: ContestCard; now: number }) {
   const end = new Date(c.endAt!).getTime()
   const elapsed = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100))
   return (
-    <article className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+    <article className="flex flex-col gap-4 rounded-xl bg-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
           <PhaseBadge phase="live" />
@@ -381,7 +381,7 @@ function PastTable({ items }: { items: ContestCard[] }) {
       ? navigate(c.phase === 'ended' ? `/contests/${c._id}/results` : `/contests/${c._id}`)
       : navigate('/login', { state: { from: `/contests/${c._id}` } })
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
+    <div className="overflow-hidden rounded-xl bg-card">
       <table className="w-full text-sm">
         <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
           <tr>

@@ -150,7 +150,7 @@ export function ContestDetails() {
               <ul className="grid gap-4 p-5 text-sm">
                 {rules(c).map(([icon, text], i) => (
                   <li key={i} className="flex gap-3">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-brand [&_svg]:size-4">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-tint text-brand [&_svg]:size-4">
                       {icon}
                     </span>
                     <span className="pt-1.5">{text}</span>
@@ -250,7 +250,7 @@ function TimePanel({ contest: c, phase, now }: { contest: Details; phase: Contes
       </Right>
     )
   return (
-    <div className="grid gap-3 rounded-xl bg-primary/10 p-5">
+    <div className="grid gap-3 rounded-xl bg-tint p-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         {range}
         {right}
@@ -575,7 +575,7 @@ function ResultsTeaser({ contest: c, phase }: { contest: Details; phase: Contest
   if (phase === 'pending') {
     return (
       <Panel className="flex items-center gap-4 p-5">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-brand">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-tint text-brand">
           <Loader2 className="size-5 animate-spin" aria-hidden />
         </span>
         <div>

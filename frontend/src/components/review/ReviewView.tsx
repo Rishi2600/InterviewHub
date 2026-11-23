@@ -48,7 +48,7 @@ export function ReviewView({
       {review.topics.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {review.topics.map((t) => (
-            <span key={t} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand">
+            <span key={t} className="rounded-full bg-tint px-2.5 py-0.5 text-xs font-medium text-brand">
               {t}
             </span>
           ))}

@@ -64,7 +64,7 @@ export function RoomEditor({ roomId, readOnly, className }: { roomId: string; re
   }
 
   return (
-    <section className={cn('flex flex-col overflow-hidden rounded-xl border bg-card', className)}>
+    <section className={cn('flex flex-col overflow-hidden rounded-xl bg-card', className)}>
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         <LanguagePicker value={draft.language} onChange={(language) => setDraft((d) => ({ ...d, language }))} disabled={readOnly} />
         <span className="hidden items-center gap-1 text-xs text-muted-foreground md:inline-flex">

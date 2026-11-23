@@ -96,7 +96,7 @@ export function PracticeEditor({
   }
 
   return (
-    <section className={cn('flex flex-col overflow-hidden rounded-xl border bg-card', className)}>
+    <section className={cn('flex flex-col overflow-hidden rounded-xl bg-card', className)}>
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         <span className="inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium">
           <FileCode2 className="size-4" aria-hidden />

@@ -23,7 +23,7 @@ export function Pill({ label, children, wide }: { label: string; children: React
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-baseline gap-1 rounded-md px-1.5 text-brand underline decoration-primary decoration-2 underline-offset-[6px] outline-none hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-primary/10"
+          className="inline-flex items-baseline gap-1 rounded-md px-1.5 text-brand underline decoration-primary decoration-2 underline-offset-[6px] outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-tint"
         >
           {label}
           <ChevronDown className="size-4 self-center opacity-60" aria-hidden />

@@ -68,7 +68,7 @@ export function RoomReview() {
 function RoomSummary({ room }: { room: Room }) {
   const candidates = room.participants.filter((p) => p.role === 'candidate')
   return (
-    <section className="grid gap-3 rounded-xl border bg-card p-5">
+    <section className="grid gap-3 rounded-xl bg-card p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="font-heading text-xl font-semibold">{room.title}</h1>
         <span className="rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground">
@@ -99,7 +99,7 @@ function Candidate({ room, data }: { room: Room; data: RoomReviews }) {
         />
       ) : (
         data.reviews.map((r) => (
-          <section key={r.id} className="rounded-xl border bg-card p-6">
+          <section key={r.id} className="rounded-xl bg-card p-6">
             <ReviewView review={r} />
           </section>
         ))
@@ -176,7 +176,7 @@ function Reviewer({ room, data }: { room: Room; data: RoomReviews }) {
         )}
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/[0.06] px-4 py-3 text-sm">
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl bg-tint px-4 py-3 text-sm">
         <ClipboardPen className="size-4 text-brand" aria-hidden />
         <span className="flex-1">
           {data.open && data.closesAt
@@ -242,7 +242,7 @@ function ReviewPanel({
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <section className="rounded-xl border bg-card">
+      <section className="rounded-xl bg-card">
         <div className="p-6">
           <ReviewForm draft={draft} onChange={setDraft} disabled={!data.open || save.isPending} />
         </div>
@@ -269,7 +269,7 @@ function ReviewPanel({
           </p>
         </div>
       </section>
-      <section className="rounded-xl border bg-card lg:sticky lg:top-24">
+      <section className="rounded-xl bg-card lg:sticky lg:top-24">
         <div className="flex items-center gap-2 border-b px-5 py-3.5">
           <h2 className="text-base font-semibold">What {candidate.username} sees</h2>
           <span className="ml-auto text-xs text-muted-foreground">Preview</span>

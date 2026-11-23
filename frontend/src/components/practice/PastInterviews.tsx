@@ -42,7 +42,7 @@ function ScoreCell({ item }: { item: PracticeListItem }) {
 /** Past interviews, newest first. The chat itself isn't kept, only feedback. */
 export function PastInterviews({ items }: { items: PracticeListItem[] }) {
   return (
-    <section className="mt-6 overflow-hidden rounded-xl border bg-card">
+    <section className="mt-6 overflow-hidden rounded-xl bg-card">
       <div className="flex items-center gap-2 border-b px-5 py-3.5">
         <h2 className="text-base font-semibold">Past interviews</h2>
         <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">We keep the feedback, not the chat</span>

@@ -1,5 +1,5 @@
-// Local edit to the shadcn/ui source: shadow classes removed. The design uses
-// hairline borders only (as in the CRM project).
+// Local edit to the shadcn/ui source: no shadow and no outline. A card sits
+// one tone above the page instead.
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
@@ -9,7 +9,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground",
+        "flex flex-col gap-6 rounded-xl bg-card py-6 text-card-foreground",
         className
       )}
       {...props}

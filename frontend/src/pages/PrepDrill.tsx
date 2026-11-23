@@ -126,7 +126,7 @@ function DrillBody({ drill }: { drill: Drill }) {
       <Rail drill={drill} shown={shown} onPick={setShown} />
       <div className="grid gap-4">
         <Progress drill={drill} className="lg:hidden" />
-        <section className="grid gap-5 rounded-xl border bg-card p-6">
+        <section className="grid gap-5 rounded-xl bg-card p-6">
           <div className="text-xs font-medium text-muted-foreground">Question {shown + 1}</div>
           <h1 className="-mt-3 text-xl leading-snug font-semibold">
             <InlineText text={item.prompt} />
@@ -191,8 +191,8 @@ function Option({
       onClick={onClick}
       className={cn(
         'flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm disabled:cursor-default',
-        state === 'open' && 'bg-card hover:border-primary/60 hover:bg-primary/5',
-        state === 'right' && 'border-primary bg-primary/10',
+        state === 'open' && 'bg-card hover:border-primary/60 hover:bg-tint',
+        state === 'right' && 'border-stem bg-stem/10',
         state === 'wrong' && 'border-danger/60 bg-danger/5',
         state === 'other' && 'bg-card opacity-60',
       )}
@@ -211,7 +211,7 @@ function Explanation({ item, flagging, onFlag }: { item: DrillItem; flagging: bo
   const right = item.correct
   const letter = LETTERS[item.options.findIndex((o) => o.id === item.correctOptionId)]
   return (
-    <div className={cn('grid gap-2 rounded-lg border px-4 py-3', right ? 'border-primary/40 bg-primary/[0.06]' : 'border-danger/30 bg-danger/[0.04]')}>
+    <div className={cn('grid gap-2 rounded-lg border px-4 py-3', right ? 'border-stem/40 bg-stem/[0.06]' : 'border-danger/30 bg-danger/[0.04]')}>
       <div className={cn('flex items-center gap-2 text-sm font-semibold', right ? 'text-brand' : 'text-danger')}>
         {right ? <CircleCheck className="size-4" aria-hidden /> : <CircleX className="size-4" aria-hidden />}
         {right ? 'Right' : `Not quite: it's ${letter}`}
@@ -256,7 +256,7 @@ function Progress({ drill, className }: { drill: Drill; className?: string }) {
 /** Every question: answered ones by title, the rest by number. */
 function Rail({ drill, shown, onPick }: { drill: Drill; shown: number; onPick: (i: number) => void }) {
   return (
-    <aside className="hidden rounded-xl border bg-card lg:sticky lg:top-20 lg:block">
+    <aside className="hidden rounded-xl bg-card lg:sticky lg:top-20 lg:block">
       <div className="grid gap-0.5 p-2">
         {Array.from({ length: drill.total }, (_, i) => {
           const it = drill.items[i]
@@ -300,7 +300,7 @@ function Results({ drill, onReview }: { drill: Drill; onReview: (i: number) => v
   const missed = drill.items.filter((i) => i.correct === false)
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-6">
-      <section className="grid gap-5 rounded-2xl border border-primary/30 bg-primary/[0.06] p-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+      <section className="grid gap-5 rounded-2xl bg-tint p-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
         <div className="font-heading text-6xl font-semibold tabular-nums">
           {drill.right}
           <span className="text-3xl text-muted-foreground">/{drill.answered}</span>
@@ -332,7 +332,7 @@ function Results({ drill, onReview }: { drill: Drill; onReview: (i: number) => v
           </div>
         </div>
       </section>
-      <section className="rounded-xl border bg-card">
+      <section className="rounded-xl bg-card">
         <div className="flex items-center gap-2 border-b px-5 py-3.5">
           <h2 className="text-base font-semibold">Your answers</h2>
           <span className="ml-auto text-xs text-muted-foreground">Open one for its explanation</span>

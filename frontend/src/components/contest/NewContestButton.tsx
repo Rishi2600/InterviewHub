@@ -62,7 +62,7 @@ export function NewContestButton({ variant = 'default' }: { variant?: 'default' 
                 onClick={() => setFormat(value)}
                 className={cn(
                   'grid gap-1 rounded-lg border p-3 text-left text-sm',
-                  format === value ? 'border-primary bg-primary/10' : 'hover:bg-muted',
+                  format === value ? 'border-primary bg-tint' : 'hover:bg-muted',
                 )}
               >
                 <span className="flex items-center gap-1.5 font-medium">
