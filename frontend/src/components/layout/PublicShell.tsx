@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { MessagesSquare, Moon, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
+import { LogoMark } from '@/components/common/LogoMark'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/hooks/use-theme'
 import { useAuth } from '@/hooks/useAuth'
@@ -16,9 +17,7 @@ export function PublicShell() {
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
           <Link to="/contests" className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <MessagesSquare className="size-4" aria-hidden />
-            </span>
+            <LogoMark />
             <span className="font-heading text-sm font-semibold">InterviewHub</span>
           </Link>
           <nav className="hidden text-sm sm:flex">

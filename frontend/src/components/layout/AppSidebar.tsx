@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ChevronsUpDown, LogOut, MessagesSquare, Moon, Search, Sun, UserRound } from 'lucide-react'
+import { ChevronsUpDown, LogOut, Moon, Search, Sun, UserRound } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Kbd } from '@/components/ui/kbd'
 import { UserAvatar } from '@/components/common/UserAvatar'
+import { LogoMark } from '@/components/common/LogoMark'
 import { LiveDot } from '@/components/common/LiveDot'
 import { useAuth } from '@/hooks/useAuth'
 import { useLiveNow } from '@/hooks/useLiveNow'
@@ -54,8 +55,8 @@ export function AppSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <MessagesSquare className="size-4" aria-hidden />
+                <div className="flex aspect-square size-8 items-center justify-center">
+                  <LogoMark />
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate font-heading text-sm font-semibold">InterviewHub</span>

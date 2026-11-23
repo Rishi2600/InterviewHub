@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { MessagesSquare, Moon, Pin, Sun, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LogoMark } from '@/components/common/LogoMark'
 import { useTheme } from '@/hooks/use-theme'
 
 const HIGHLIGHTS = [
@@ -19,9 +20,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex items-center justify-between">
           <Link to="/login" className="flex items-center gap-2 font-heading font-semibold">
-            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <MessagesSquare className="size-4" aria-hidden />
-            </span>
+            <LogoMark />
             InterviewHub
           </Link>
           <Button variant="ghost" size="icon-sm" onClick={toggleTheme} aria-label="Switch theme">
