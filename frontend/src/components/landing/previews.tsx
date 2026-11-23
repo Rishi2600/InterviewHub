@@ -66,7 +66,7 @@ function Tile({ initials, name, talking }: { initials: string; name: string; tal
 export function RoomPreview() {
   const control = 'grid size-8 place-items-center rounded-full bg-muted [&_svg]:size-4'
   return (
-    <div role="img" aria-label="An interview room: video call, code editor and chat with a pinned question" className={FRAME}>
+    <div data-ui role="img" aria-label="An interview room: video call, code editor and chat with a pinned question" className={FRAME}>
       <div className={BAR}>
         <span className="size-2 shrink-0 rounded-full bg-[#e5484d]" />
         <b className="font-semibold">Frontend round</b>
@@ -141,7 +141,7 @@ const BOARD = [
 
 export function LeaderboardPreview() {
   return (
-    <div role="img" aria-label="A contest leaderboard: Arrays sprint, rated, 34 starters" className={FRAME}>
+    <div data-ui role="img" aria-label="A contest leaderboard: Arrays sprint, rated, 34 starters" className={FRAME}>
       <div className={BAR}>
         <b className="font-semibold">Arrays sprint</b>
         <Chip tone="crown">Rated</Chip>
@@ -197,7 +197,7 @@ const AREAS: [string, number][] = [
 
 export function FeedbackPreview() {
   return (
-    <div role="img" aria-label="Written feedback from an AI practice interview, scored in five areas" className={FRAME}>
+    <div data-ui role="img" aria-label="Written feedback from an AI practice interview, scored in five areas" className={FRAME}>
       <div className={BAR}>
         <b className="font-semibold">Practice feedback</b>
         <Chip>JavaScript · Mid level · Voice</Chip>

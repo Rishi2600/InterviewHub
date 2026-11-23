@@ -8,7 +8,7 @@ import { useReveal } from '@/hooks/useReveal'
 import { BTN_GOLD, BTN_SOFT, at } from '@/lib/landing'
 import { cn } from '@/lib/utils'
 
-const H2 = 'text-[clamp(36px,4.6vw,72px)] leading-[0.98]'
+const H2 = 'text-[clamp(36px,4.6vw,72px)] leading-[0.98] text-balance'
 const GRID = 'grid gap-6 lg:grid-cols-12'
 const SECTION = 'landing-wrap pt-[clamp(112px,13vw,200px)]'
 const YEAR = new Date().getFullYear()
@@ -51,7 +51,7 @@ export function Landing() {
             </div>
           </div>
           <ActivityField />
-          <p className="landing-wrap pt-3 text-sm text-muted-foreground lg:absolute lg:right-0 lg:bottom-8 lg:z-10 lg:w-auto lg:max-w-[30em] lg:text-right">
+          <p className="px-[clamp(20px,3.2vw,48px)] pt-3 text-sm text-muted-foreground lg:absolute lg:right-0 lg:bottom-8 lg:z-10 lg:max-w-[36em] lg:text-right">
             Each square is a day: an interview, a contest, a drill or a practice session. Together they feed the score.
           </p>
         </section>
@@ -194,7 +194,7 @@ function ScoreSection() {
             7.4<span className="text-[0.22em] tracking-[-0.02em] text-[#f4efdb]"> / 10</span>
           </p>
           <div className="grid gap-5 pb-3 lg:col-span-5 lg:col-start-8">
-            <h2 id="score-h" className="reveal text-[clamp(40px,5.6vw,88px)] leading-[0.98]">
+            <h2 id="score-h" className="reveal text-[clamp(40px,5.6vw,88px)] leading-[0.98] text-balance">
               One score out of 10
             </h2>
             <p className="reveal text-lg" style={at(1)}>
