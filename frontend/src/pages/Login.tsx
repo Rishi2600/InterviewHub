@@ -10,7 +10,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { errorMessage } from '@/lib/api'
-import { AuthLayout } from './AuthLayout'
+import { AuthLayout, WelcomeBack } from './AuthLayout'
 
 // Mirrors the backend LoginDto.
 const schema = z.object({
@@ -44,7 +44,7 @@ export function Login() {
   }
 
   return (
-    <AuthLayout title="Sign in" subtitle="Run interviews, join rooms and follow live contests.">
+    <AuthLayout title="Sign in" subtitle="Run interviews, join rooms and follow live contests." aside={<WelcomeBack />}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <FieldGroup>
           <Field data-invalid={Boolean(errors.email) || undefined}>

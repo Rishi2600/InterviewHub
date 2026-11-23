@@ -22,7 +22,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useAuth } from '@/hooks/useAuth'
 import { errorMessage } from '@/lib/api'
 import { PASSWORD_HINT, isValidPassword } from '@/lib/password'
-import { AuthLayout } from './AuthLayout'
+import { AccountKinds, AuthLayout } from './AuthLayout'
 import { LIMITS } from '@/lib/limits'
 
 // Mirrors the backend RegisterDto: username min 2, the password policy, optional role.
@@ -70,7 +70,7 @@ export function Register() {
   }
 
   return (
-    <AuthLayout title="Create your account" subtitle="One account for interview rooms, chat and contests.">
+    <AuthLayout title="Create your account" subtitle="Free for candidates and interviewers." aside={<AccountKinds />}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <FieldGroup>
           <Field data-invalid={Boolean(errors.username) || undefined}>
